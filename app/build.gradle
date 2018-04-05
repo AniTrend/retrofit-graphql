@@ -1,0 +1,43 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion versions.compileSdk
+    buildToolsVersion versions.buildTools
+    defaultConfig {
+        applicationId "io.github.wax911.retgraph"
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
+        versionName versions.versionName
+        versionCode versions.versionCode
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(":library")
+
+    implementation"org.jetbrains.kotlin:kotlin-stdlib-jre7:${versions.kotlin}"
+
+    implementation "com.android.support:appcompat-v7:${versions.supportLibrary}"
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+
+    /** Retrofit Libraries */
+    implementation "com.squareup.retrofit2:retrofit:${versions.retrofit}"
+    implementation "com.squareup.retrofit2:converter-gson:${versions.retrofit}"
+    implementation "com.squareup.okhttp3:logging-interceptor:3.9.1"
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+}
