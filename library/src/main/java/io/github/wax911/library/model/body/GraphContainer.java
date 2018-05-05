@@ -17,7 +17,7 @@ public class GraphContainer<T> {
         return errors;
     }
 
-    public boolean isSuccess() {
-        return data != null && errors == null;
+    public boolean isEmpty() {
+        return data == null;
     }
 }

@@ -1,0 +1,27 @@
+query Trending($type: FeedType!, $offset: Int, $limit: Int) {
+  feed(type: $type, offset: $offset, limit: $limit) {
+    id
+    hotScore
+    repository {
+      ...repository
+    }
+    postedBy {
+      ...user
+    }
+  }
+}
+
+fragment repository on Repository {
+  name
+  full_name
+  owner {
+    ...user
+  }
+  stargazers_count
+}
+
+fragment user on User {
+  login
+  avatar_url
+  html_url
+}

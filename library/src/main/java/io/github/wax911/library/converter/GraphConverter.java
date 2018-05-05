@@ -2,14 +2,17 @@ package io.github.wax911.library.converter;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import io.github.wax911.library.annotation.processor.GraphProcessor;
+import io.github.wax911.library.model.request.QueryContainer;
 import io.github.wax911.library.model.request.QueryContainerBuilder;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -22,12 +25,20 @@ import retrofit2.Retrofit;
  * Body for GraphQL requests and responses
  */
 
-public abstract class GraphConverter extends Converter.Factory {
+public class GraphConverter extends Converter.Factory {
 
     protected GraphProcessor graphProcessor;
+
     protected final Gson gson = new GsonBuilder()
             .enableComplexMapKeySerialization()
-            .setLenient().create();
+            .serializeNulls()
+            .setLenient()
+            .create();
+
+
+    public static GraphConverter create(Context context) {
+        return new GraphConverter(context);
+    }
 
     /**
      * Protected constructor because we want to make use of the
@@ -37,7 +48,7 @@ public abstract class GraphConverter extends Converter.Factory {
      * @param context Any valid application context
      */
     protected GraphConverter(Context context) {
-        graphProcessor = new GraphProcessor(context);
+        this.graphProcessor = GraphProcessor.getInstance(context);
     }
 
     /**
@@ -53,7 +64,9 @@ public abstract class GraphConverter extends Converter.Factory {
      */
     @Override
     public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations, Retrofit retrofit) {
-        return super.responseBodyConverter(type, annotations, retrofit);
+        if(type instanceof ResponseBody)
+            return super.responseBodyConverter(type, annotations, retrofit);
+        return new GraphResponseConverter<>(type);
     }
 
     /**
@@ -68,10 +81,8 @@ public abstract class GraphConverter extends Converter.Factory {
      * @param type The type of the parameter of the request
      */
     @Override
-    public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
-        if(type instanceof QueryContainerBuilder)
-            return new GraphRequestConverter(methodAnnotations);
-        return super.requestBodyConverter(type, parameterAnnotations, methodAnnotations, retrofit);
+    public Converter<QueryContainerBuilder, RequestBody> requestBodyConverter(Type type, Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+        return new GraphRequestConverter(methodAnnotations);
     }
 
 
@@ -80,7 +91,7 @@ public abstract class GraphConverter extends Converter.Factory {
      * GraphQL response body converter to unwrap nested object results,
      * resulting in a smaller generic tree for requests
      */
-    protected abstract class GraphResponseConverter<T> implements Converter<ResponseBody, T> {
+    protected class GraphResponseConverter<T> implements Converter<ResponseBody, T> {
         protected Type type;
 
         protected GraphResponseConverter(Type type) {
@@ -97,7 +108,15 @@ public abstract class GraphConverter extends Converter.Factory {
          * @return The type declared in the Call of the request
          */
         @Override
-        public abstract T convert(@NonNull ResponseBody responseBody);
+        public T convert(@NonNull ResponseBody responseBody) {
+            T response = null;
+            try {
+                response = gson.fromJson(responseBody.string(), type);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return response;
+        }
     }
 
     /**
@@ -120,10 +139,11 @@ public abstract class GraphConverter extends Converter.Factory {
          */
         @Override
         public RequestBody convert(@NonNull QueryContainerBuilder containerBuilder) {
-            QueryContainerBuilder.QueryContainer queryContainer = containerBuilder
+            QueryContainer queryContainer = containerBuilder
                     .setQuery(graphProcessor.getQuery(methodAnnotations))
                     .build();
             String queryJson = gson.toJson(queryContainer);
+            Log.d("GraphRequestConverter", queryJson);
             return RequestBody.create(MediaType.parse("application/graphql"), queryJson);
         }
     }

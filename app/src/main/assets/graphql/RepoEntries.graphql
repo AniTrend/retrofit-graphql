@@ -1,0 +1,34 @@
+query RepoEntries($repoFullName: String!) {
+  entry(repoFullName: $repoFullName) {
+    id
+	repository {
+		...repository
+	}
+	postedBy {
+		...user
+	}
+	vote {
+		...vote
+	}
+	score
+  }
+}
+
+fragment repository on Repository {
+  name
+  full_name
+  owner {
+    ...user
+  }
+  stargazers_count
+}
+
+fragment user on User {
+  login
+  avatar_url
+  html_url
+}
+
+fragment vote on Vote {
+	vote_value
+}

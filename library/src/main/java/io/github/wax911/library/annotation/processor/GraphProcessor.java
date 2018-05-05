@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 import io.github.wax911.library.annotation.GraphQuery;
 
@@ -19,49 +19,32 @@ import io.github.wax911.library.annotation.GraphQuery;
  */
 public class GraphProcessor {
 
-    private final Map<String, String> graphFiles;
-    private String qualifier = ".graphql", rootFolder = "graphql";
+    private static GraphProcessor ourInstance;
+    private final static Object lock = new Object();
+    private final static String defaultExtension = ".graphql", defaultDirectory = "graphql";
 
-    /**
-     * Creates a new GraphQL annotation processor,
-     * that looks for a rootFolder called graphql
-     * containing .graphql files
-     * <br/>
-     *
-     * @param context Any valid application context
-     */
-    public GraphProcessor(Context context) {
-        this.graphFiles = new WeakHashMap<>();
-        findAllFiles(rootFolder, context);
+    public static GraphProcessor getInstance(Context context) {
+        if(ourInstance == null)
+            ourInstance = new GraphProcessor(context);
+        return ourInstance;
     }
 
-    /**
-     * Creates a new GraphQL annotation processor
-     * <br/>
-     *
-     * @param context Any valid application context
-     * @param qualifier The extension of the file to look for (default is .graphql)
-     */
-    public GraphProcessor(Context context, String qualifier) {
-        this.graphFiles = new WeakHashMap<>();
-        this.qualifier = qualifier;
-        findAllFiles(rootFolder, context);
+    private GraphProcessor(Context context) {
+        synchronized (lock) {
+            Log.d("GraphProcessor", Thread.currentThread().getName() + ": has obtained a synchronized lock on the object");
+            if(this.graphFiles == null)
+                this.graphFiles = new HashMap<>();
+            if(isEmpty()) {
+                Log.d("GraphProcessor", Thread.currentThread().getName() + ": is initializing query files");
+                initialize(defaultDirectory, context);
+                Log.d("GraphProcessor", Thread.currentThread().getName() + ": has completed initializing all files");
+                Log.d("GraphProcessor", Thread.currentThread().getName() + ": Total count of graphFiles -> size: "+ graphFiles.size());
+            } else
+                Log.d("GraphProcessor", Thread.currentThread().getName() + ": skipped initialization of graphFiles -> size: "+ graphFiles.size());
+        }
     }
 
-    /**
-     * Creates a new GraphQL annotation processor
-     * <br/>
-     *
-     * @param context Any valid application context
-     * @param qualifier The extension of the file to look for (default is .graphql)
-     * @param rootFolder The name of the root folder to search
-     */
-    public GraphProcessor(Context context, String qualifier, String rootFolder) {
-        this.graphFiles = new WeakHashMap<>();
-        this.qualifier = qualifier;
-        this.rootFolder = rootFolder;
-        findAllFiles(rootFolder, context);
-    }
+    private volatile Map<String, String> graphFiles;
 
     public String getQuery(Annotation[] annotations) {
         GraphQuery graphQuery = null;
@@ -73,23 +56,28 @@ public class GraphProcessor {
             }
 
         if(graphFiles != null && graphQuery != null) {
-            String fileName = String.format("%s%s", graphQuery.value(), qualifier);
+            String fileName = String.format("%s%s", graphQuery.value(), defaultExtension);
+            Log.d("GraphProcessor", fileName);
             if(graphFiles.containsKey(fileName))
                 return graphFiles.get(fileName);
-            Log.w(this.toString(), String.format("The request query %s could not be found!", graphQuery.value()));
+            Log.e(this.toString(), String.format("The request query %s could not be found!", graphQuery.value()));
+            Log.e(this.toString(), String.format("Current size of graphFiles -> size: %d", graphFiles.size()));
         }
         return null;
     }
 
-    private void findAllFiles(String path, Context context) {
-        String[] paths;
+    private synchronized boolean isEmpty() {
+        return graphFiles.size() < 1;
+    }
+
+    private synchronized void initialize(String path, Context context) {
         try {
-            paths = context.getAssets().list(path);
+            String[] paths = context.getAssets().list(path);
             if (paths.length > 0) {
                 for (String item : paths) {
                     String absolute = path + "/" + item;
-                    if(!item.endsWith(qualifier))
-                        findAllFiles(absolute, context);
+                    if (!item.endsWith(defaultExtension))
+                        initialize(absolute, context);
                     else
                         graphFiles.put(item, getFileContents(context.getAssets().open(absolute)));
                 }
@@ -99,7 +87,7 @@ public class GraphProcessor {
         }
     }
 
-    private String getFileContents(InputStream inputStream) {
+    private synchronized String getFileContents(InputStream inputStream) {
         StringBuilder queryBuffer = new StringBuilder();
         try {
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
