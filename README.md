@@ -1,6 +1,25 @@
-# Retrofit Converter - With GraphQL Support [WIP]
+# Retrofit Converter - With GraphQL Support &nbsp; [![](https://jitpack.io/v/AniTrend/retrofit-graphql.svg)](https://jitpack.io/#AniTrend/retrofit-graphql)
 
-This is a retrofit converter which uses annotations to inject .graphql query or mutation files into a request body, along with any GraphQL variables.
+This is a retrofit converter which uses annotations to inject .graphql query or mutation files into a request body, along with any GraphQL variables. The included example makes use of [GitHunt GraphQL API](http://api.githunt.com/graphiql) that sometimes responds with null fields, feel free to try it with any other GraphQL API like `GitHub API v4` also this project does not teach you how to use Retrofit, Glide or the ViewModel.
+
+__Step 1.__ Add the JitPack repository to your build file
+
+```javascript
+allprojects {
+	repositories {
+		...
+		maven { url 'https://jitpack.io' }
+	}
+}
+```
+
+__Step 2.__ Add the dependency
+
+```javascript
+dependencies {
+    implementation 'com.github.AniTrend:retrofit-graphql:{latest_version}'
+}
+```
 
 ## Why This Project Exists?
 
@@ -13,6 +32,15 @@ And so on, the list goes on. Unfortunately there are tons of simple examples all
 ## How Everything Works
 
 Seeing how we already have a really powerful type-safe HTTP client for Android and Java [Retrofit](http://square.github.io/retrofit/) why not use it and extend it's functionality?
+
+For a detailed example please clone the project and look at the included sample application. The entire project & example app makes use of the following libraries:
+
+- [Retrofit](http://square.github.io/retrofit/)
+- [Gson](https://github.com/google/gson)
+- [Glide](https://bumptech.github.io/glide/)
+- [Architecture Lifecycle](https://developer.android.com/topic/libraries/architecture/lifecycle)
+- [ViewModel](https://developer.android.com/topic/libraries/architecture/viewmodel)
+- [LiveData](https://developer.android.com/topic/libraries/architecture/livedata)
 
 ### The Basics
 
@@ -156,6 +184,8 @@ public class TrendingFeed {
 }
 ```
 
+__Making The Request__
+
 ```java
 IndexModel indexModel = WebFactory.createService(IndexModel.class, getApplicationContext());
 QueryContainerBuilder queryContainerBuilder = QueryContainerBuilder()
@@ -189,6 +219,10 @@ public void onFailure(@NonNull Call<GraphContainer<TrendingFeed>> call,@NonNull 
     Toast.makeText(getApplicationContext(), "Handle the error",Toast.LENGTH_SHORT).show();
 }
 ```
+
+## The Result
+
+<img src="https://github.com/AniTrend/retrofit-graphql/raw/develop/screenshots/device-2018-05-20-161049.png" width="300"/> <img src="https://github.com/AniTrend/retrofit-graphql/raw/develop/screenshots/device-2018-05-20-161111.png" width="300"/>
 
 ## Proof Of Concept?
 
