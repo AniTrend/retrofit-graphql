@@ -22,7 +22,8 @@ import retrofit2.Retrofit;
 
 /**
  * Created by max on 2017/10/22.
- * Body for GraphQL requests and responses
+ * Body for GraphQL requests and responses, closed for modification
+ * but open for extension.
  */
 
 public class GraphConverter extends Converter.Factory {
@@ -111,7 +112,8 @@ public class GraphConverter extends Converter.Factory {
         public T convert(@NonNull ResponseBody responseBody) {
             T response = null;
             try {
-                response = gson.fromJson(responseBody.string(), type);
+                String responseString = responseBody.string();
+                response = gson.fromJson(responseString, type);
             } catch (IOException e) {
                 e.printStackTrace();
             }

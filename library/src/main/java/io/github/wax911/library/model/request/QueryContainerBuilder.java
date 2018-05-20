@@ -65,6 +65,11 @@ public class QueryContainerBuilder implements Parcelable {
         return queryContainer.containsVariable(key);
     }
 
+    /**
+     * Should only be called by the GraphQLConverter
+     * after the query has been added to the request
+     * @see io.github.wax911.library.converter.GraphConverter
+     */
     public QueryContainer build() {
         return queryContainer;
     }
