@@ -1,33 +1,20 @@
 # Retrofit Converter - With GraphQL Support &nbsp; [![](https://jitpack.io/v/AniTrend/retrofit-graphql.svg)](https://jitpack.io/#AniTrend/retrofit-graphql)
 
-This is a retrofit converter which uses annotations to inject .graphql query or mutation files into a request body, along with any GraphQL variables. The included example makes use of [GitHunt GraphQL API](http://api.githunt.com/graphiql) that sometimes responds with null fields, feel free to try it with any other GraphQL API like `GitHub API v4` also this project does not teach you how to use Retrofit, Glide or the ViewModel.
-
-__Step 1.__ Add the JitPack repository to your build file
-
-```javascript
-allprojects {
-	repositories {
-		...
-		maven { url 'https://jitpack.io' }
-	}
-}
-```
-
-__Step 2.__ Add the dependency
-
-```javascript
-dependencies {
-    implementation 'com.github.AniTrend:retrofit-graphql:{latest_version}'
-}
-```
+This is a retrofit converter which uses annotations to inject .graphql query or mutation files into a request body along with any GraphQL variables. The included example makes use of [GitHunt GraphQL API](http://api.githunt.com/graphiql) that sometimes responds with null fields, feel free to try it with any other GraphQL API like `GitHub API v4` also this project does not teach you how to use Retrofit, Glide or the ViewModel.
 
 ## Why This Project Exists?
 
-Many might wonder why this exists when an android GraphQL library like [Apollo](https://github.com/apollographql/apollo-android) exists. Unfortunately Apollo for Android still lacks some basic but important which red to this question about [General Design Questions Regarding Apollo](https://github.com/apollographql/apollo-android/issues/847), [Polymorphic Type Handling](https://github.com/apollographql/apollo-android/issues/334) and [Non Shared Types](https://github.com/apollographql/apollo-android/issues/898) apollo has some up sides to it, such as code generation from GraphQL files.
+Many might wonder why this exists when an android GraphQL library like [Apollo](https://github.com/apollographql/apollo-android) exists. Unfortunately Apollo for Android still lacks some basic but important features/functionality which led to the following questions about [General Design Questions Regarding Apollo](https://github.com/apollographql/apollo-android/issues/847), [Polymorphic Type Handling](https://github.com/apollographql/apollo-android/issues/334) and [Non Shared Types](https://github.com/apollographql/apollo-android/issues/898). Don't get me wrong Apollo is not inferior any way, it has amazing features such as:
 
-Since model classes are automatically, the developer loses some flexibility on which types to use, e.g. as the Android Prefs best practises suggest developers should use StringDef over Enums [Here's Why](https://stackoverflow.com/questions/29183904/should-i-strictly-avoid-using-enums-on-android).
+- Code Generation (Classes and Data Types)
+- Custom Scalar Types
+- Cached Responses
 
-And so on, the list goes on. Unfortunately there are tons of simple examples all over Medium using apollo graphql but none of them address these issues because no one made a real word example, don't take my word for it! Try it and let me know how it goes
+But since model classes are automatically generated for you, the developer loses some flexibility, such as use of generics, abstraction and inheritance. Also Android Peformance best practice suggests that developers should use StringDef and IntDef over enums and [here's why](https://stackoverflow.com/questions/29183904/should-i-strictly-avoid-using-enums-on-android).
+
+Strangly there are tons of simple examples all over Medium using apollo graphql for Android, but none of them address these issues because most of them just construct a simple single resource request demo application. These look just fine at first glance until you start working with multiple data types and apollo starts generating classes for every fragment and query even if the data models are the same, or share similar properties. Thus this project came to be
+
+____
 
 ## How Everything Works
 
@@ -48,6 +35,24 @@ Firstly you'll need some to save your GraphQL queries and mutations into .graphq
 
 <img src="https://github.com/AniTrend/retrofit-graphql/raw/develop/screenshots/assets_files.png" width=250 />
 
+- __Add the JitPack repository to your build file__
+
+```javascript
+allprojects {
+	repositories {
+		...
+		maven { url 'https://jitpack.io' }
+	}
+}
+```
+
+- __Add the dependency__
+
+```javascript
+dependencies {
+    implementation 'com.github.AniTrend:retrofit-graphql:{latest_version}'
+}
+```
 ___
 
 Next we make our retrofit interfaces and annotate them with the `@GraphQuery` annotation using the name of the .graphql file without the extention, this will allow the runtime resolution of the target file inside your assets to be loaded before the request is sent. e.g.
@@ -85,7 +90,7 @@ _Adding parameters to the request would be done as follows:_
 QueryContainerBuilder queryBuilder = new QueryContainerBuilder()
             .putVariable("type", "TRENDING")
             .putVariable("offset", 1)
-            .putVariable("limit", 15)
+            .putVariable("limit", 15);
 ```
 The queryBuilder is then passed into your retrofit interface method as parameter and that's it! Just like an ordinary retrofit application.
 
@@ -150,17 +155,58 @@ public class GraphContainer<T> {
 
 ## Working Example
 
+__Retrofit Factory__
+
+```java
+public class WebFactory {
+
+    private static Retrofit mRetrofit;
+
+    /**
+     * Generates retrofit service classes
+     *
+     * @param serviceClass The interface class method representing your request to use
+     *                     @see IndexModel methods
+     * @param context A valid application, fragment or activity context
+     */
+    public static <S> S createService(@NonNull Class<S> serviceClass, Context context) {
+        if(mRetrofit == null) {
+            OkHttpClient.Builder httpClient = new OkHttpClient.Builder()
+                    .readTimeout(35, TimeUnit.SECONDS)
+                    .connectTimeout(35, TimeUnit.SECONDS);
+
+			// Optional include http logging:
+			// implementation "com.squareup.okhttp3:logging-interceptor:3.9.1"
+            if(BuildConfig.DEBUG) {
+                HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor()
+                        .setLevel(HttpLoggingInterceptor.Level.HEADERS);
+                httpClient.addInterceptor(httpLoggingInterceptor);
+            }
+
+            // Note, we are not adding the default gson converter
+            // because the GraphConverter will handle both body and parameter conversion
+            mRetrofit = new Retrofit.Builder()
+                    .client(httpClient.build())
+                    .baseUrl("https://api.githunt.com/")
+                    .addConverterFactory(GraphConverter.create(context))
+                    .build();
+        }
+        return mRetrofit.create(serviceClass);
+    }
+}
+```
+
 __Retrofit Model__
 
 ```java
 public interface IndexModel {
 
-    @POST("/")
+    @POST("graphql")
     @GraphQuery("Trending")
     @Headers("Content-Type: application/json")
     Call<GraphContainer<TrendingFeed>> getTrending(@Body QueryContainerBuilder request);
 
-    @POST("/")
+    @POST("graphql")
     @GraphQuery("RepoEntries")
     @Headers("Content-Type: application/json")
     Call<GraphContainer<EntryFeed>> getRepoEntries(@Body QueryContainerBuilder request);
@@ -226,4 +272,4 @@ public void onFailure(@NonNull Call<GraphContainer<TrendingFeed>> call,@NonNull 
 
 ## Proof Of Concept?
 
-This project is adopted from [AniTrend](https://github.com/AniTrend/anitrend-app) which is already published on the PlayStore
+This project is derived from [AniTrend](https://github.com/AniTrend/anitrend-app) which is already published on the PlayStore
