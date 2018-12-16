@@ -60,7 +60,7 @@ public class QueryContainer implements Parcelable {
         return variables;
     }
 
-    boolean containsVariable(String key) {
+    boolean containsVariableKey(String key) {
         return variables != null && variables.containsKey(key);
     }
 }
