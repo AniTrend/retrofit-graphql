@@ -26,9 +26,9 @@ class GraphProcessor private constructor(assetManager: AssetManager?) {
                 Log.d("GraphProcessor", Thread.currentThread().name + ": is initializing query files")
                 createGraphQLMap(defaultDirectory, assetManager)
                 Log.d("GraphProcessor", Thread.currentThread().name + ": has completed initializing all files")
-                Log.d("GraphProcessor", Thread.currentThread().name + ": Total count of graphFiles -> size: " + graphFiles!!.size)
+                Log.d("GraphProcessor", Thread.currentThread().name + ": Total count of graphFiles -> size: " + graphFiles.size)
             } else
-                Log.d("GraphProcessor", Thread.currentThread().name + ": skipped initialization of graphFiles -> size: " + graphFiles!!.size)
+                Log.d("GraphProcessor", Thread.currentThread().name + ": skipped initialization of graphFiles -> size: " + graphFiles.size)
         }
     }
 
@@ -100,17 +100,26 @@ class GraphProcessor private constructor(assetManager: AssetManager?) {
     companion object {
 
         @Volatile
-        private var ourInstance: GraphProcessor? = null
+        private var instance: GraphProcessor? = null
         private val lock = Any()
 
         private const val defaultExtension = ".graphql"
         private const val defaultDirectory = "graphql"
 
-        fun getInstance(assetManager: AssetManager?): GraphProcessor? {
-            synchronized(lock) {
-                if (ourInstance == null)
-                    ourInstance = GraphProcessor(assetManager)
-                return ourInstance
+        fun getInstance(assetManager: AssetManager?): GraphProcessor {
+            val singleton = instance
+            if (singleton != null)
+                return singleton
+
+            return synchronized(lock) {
+                val init = instance
+                if (init != null)
+                    init
+                else {
+                    val created = GraphProcessor(assetManager)
+                    instance = created
+                    created
+                }
             }
         }
     }

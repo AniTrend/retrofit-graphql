@@ -11,7 +11,7 @@ import kotlinx.android.parcel.Parcelize
 class QueryContainerBuilder(private val queryContainer: QueryContainer = QueryContainer()) : Parcelable {
 
     fun setQuery(query: String?): QueryContainerBuilder {
-        this.queryContainer.setQuery(query)
+        this.queryContainer.query = query
         return this
     }
 
@@ -22,21 +22,21 @@ class QueryContainerBuilder(private val queryContainer: QueryContainer = QueryCo
 
     fun getVariable(key: String): Any? {
         return when {
-            containsVariable(key) -> queryContainer.variables[key]
+            contrainsKey(key) -> queryContainer.variables[key]
             else -> null
         }
     }
 
-    fun containsVariable(key: String): Boolean {
-        return queryContainer.containsVariableKey(key)
+    fun contrainsKey(key: String): Boolean {
+        return queryContainer.variables.containsKey(key)
     }
 
     /**
-     * Should only be called by the GraphQLConverter
+     * Should only be called by the GraphQLConverter or any other subclasses of it
      * after the query has been added to the request
      * @see io.github.wax911.library.converter.GraphConverter
      */
-    fun build(): QueryContainer? {
+    fun build(): QueryContainer {
         return queryContainer
     }
 }
