@@ -13,10 +13,7 @@ import java.util.*
 
 class AdapterExample : RecyclerView.Adapter<AdapterExample.EntryAdapter>() {
 
-    private val model by lazy { ArrayList<Entry>() }
-
-    val isDataSetEmpty: Boolean
-        get() = model.isEmpty()
+    val model by lazy { ArrayList<Entry>() }
 
     fun addItems(model: List<Entry>) {
         this.model.addAll(model)
@@ -44,27 +41,23 @@ class AdapterExample : RecyclerView.Adapter<AdapterExample.EntryAdapter>() {
         }
         private val postedBy by lazy {
             itemView.findViewById<TextView>(R.id.postedBy) }
-        private val repoStars by lazy {
-            itemView.findViewById<TextView>(R.id.repoStars)
+
+        private val description by lazy {
+            itemView.findViewById<TextView>(R.id.description)
         }
         private val ownerAvatar by lazy {
             itemView.findViewById<ImageView>(R.id.ownerAvatar)
         }
 
         fun bindModel(data: Entry) {
-            val repository = data.repository
-            if (repository != null) {
-                val user = repository.owner
+            postedBy.text = data.postedBy?.login
+            data.repository?.apply {
                 Glide.with(ownerAvatar)
-                        .load(user!!.avatar_url)
+                        .load(owner?.avatar_url ?: "")
                         .into(ownerAvatar)
-                repoName.text = repository.full_name
-                repoStars.text = String.format(Locale.getDefault(), " %d", repository.stargazers_count)
-            } else {
-                repoName.text = "Unknown"
-                repoStars.text = "--"
+                repoName.text = name
+                description.text = full_name
             }
-            postedBy.text = data.postedBy!!.login
         }
     }
 }

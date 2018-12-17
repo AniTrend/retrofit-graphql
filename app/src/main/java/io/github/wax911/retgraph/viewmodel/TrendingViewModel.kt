@@ -4,7 +4,6 @@ import android.util.Log
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import io.github.wax911.library.model.attribute.GraphError
 import io.github.wax911.library.model.body.GraphContainer
 import io.github.wax911.library.util.GraphErrorUtil
 import io.github.wax911.retgraph.model.container.TrendingFeed
@@ -15,17 +14,18 @@ import retrofit2.Response
 /**
  * View Model basic example
  */
-class BasicViewModel : ViewModel(), Callback<GraphContainer<TrendingFeed>> {
+class TrendingViewModel : ViewModel(), Callback<GraphContainer<TrendingFeed>> {
 
     val mutableLiveData: MutableLiveData<TrendingFeed> by lazy {
         MutableLiveData<TrendingFeed>()
     }
+
     private var graphContainerCall: Call<GraphContainer<TrendingFeed>>? = null
 
-
     fun makeNewRequest(graphContainerCall: Call<GraphContainer<TrendingFeed>>) {
-        this.graphContainerCall = graphContainerCall
-        this.graphContainerCall!!.enqueue(this)
+        this.graphContainerCall = graphContainerCall.apply {
+            enqueue(this@TrendingViewModel)
+        }
     }
 
     /**
@@ -41,13 +41,12 @@ class BasicViewModel : ViewModel(), Callback<GraphContainer<TrendingFeed>> {
     override fun onResponse(call: Call<GraphContainer<TrendingFeed>>, response: Response<GraphContainer<TrendingFeed>>) {
         val container: GraphContainer<TrendingFeed>? = response.body()
         if (response.isSuccessful && container != null) {
-            if (!container.isEmpty)
+            if (!container.isEmpty())
                 mutableLiveData.value = container.data
         } else {
-            val graphErrors = GraphErrorUtil.getError(response)
-            if (graphErrors != null)
-                for (graphError in graphErrors)
-                    Log.e(toString(), graphError.toString())
+            GraphErrorUtil.getError(response)?.apply {
+                forEach { Log.e(this@TrendingViewModel.toString(), it.toString()) }
+            }
         }
     }
 
