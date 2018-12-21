@@ -50,4 +50,6 @@ dependencies {
     testImplementation "junit:junit:$rootProject.junit"
     androidTestImplementation "androidx.test:runner:$rootProject.runner"
     androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.espresso"
+
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-reflect:$rootProject.kotlin"
 }

@@ -5,7 +5,7 @@
     <color name="nav_divider">#e0e0e0</color>
 
     <color name="white">#FFF</color>
-    <color name="windowBackground">#F2F5FB</color>
-    <color name="windowBackgroundDark">#F2F5FB</color>
+    <color name="colorPrimary">#F2F5FB</color>
+    <color name="colorPrimaryDark">#F2F5FB</color>
 
 </resources>
