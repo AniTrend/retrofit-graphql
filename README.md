@@ -33,7 +33,7 @@ For a detailed example please clone the project and look at the included sample 
 
 Firstly you'll need some to save your GraphQL queries and mutations into .graphql files, You can use this tool to generate your Insomnia workspaces into directories and files [insomnia-graphql-generator](https://github.com/AniTrend/insomnia-graphql-generator) and place these files into your assets folder as shown below:
 
-<img src="https://github.com/AniTrend/retrofit-graphql/raw/develop/screenshots/assets_files.png" width=250 />
+<img src="./images/screenshots/assets_files.png" width=250 />
 
 - __Add the JitPack repository to your build file__
 
@@ -57,7 +57,18 @@ ___
 
 Next we make our retrofit interfaces and annotate them with the `@GraphQuery` annotation using the name of the .graphql file without the extention, this will allow the runtime resolution of the target file inside your assets to be loaded before the request is sent. e.g.
 
-<img src="https://github.com/AniTrend/retrofit-graphql/raw/develop/screenshots/request_files.png" width=650 />
+```java
+
+    @POST("graphql")
+    @GraphQuery("Trending")
+    @Headers("Content-Type: application/json")
+    fun getTrending(@Body request: QueryContainerBuilder): Call<GraphContainer<TrendingFeed>>
+
+    @POST("graphql")
+    @GraphQuery("RepoEntries")
+    @Headers("Content-Type: application/json")
+    fun getRepoEntries(@Body request: QueryContainerBuilder): Call<GraphContainer<EntryFeed>>
+```
 
 ### Models
 
@@ -87,45 +98,47 @@ query Trending($type: FeedType!, $offset: Int, $limit: Int) {
 _Adding parameters to the request would be done as follows:_
 
 ```java
-QueryContainerBuilder queryBuilder = new QueryContainerBuilder()
+val queryBuilder = QueryContainerBuilder()
             .putVariable("type", "TRENDING")
             .putVariable("offset", 1)
             .putVariable("limit", 15);
 ```
-The queryBuilder is then passed into your retrofit interface method as parameter and that's it! Just like an ordinary retrofit application.
+The QueryContainerBuilder is then passed into your retrofit interface method as parameter and that's it! Just like an ordinary retrofit application.
 
 
 ###### GraphError
 
-Common GraphQL Error
+Common GraphQL error that makes use of extension functions
 
 ```java
-public class GraphError {
-
-    private String message;
-    private int status;
-    private List<Map<String, Integer>> locations;
-
-    public String getMessage() {
-        return message;
+/**
+ * Converts the response error response into an object.
+ *
+ * @return The error object, or null if an exception was encountered
+ * @see Error
+ */
+fun Response<*>?.getError(): List<GraphError>? {
+    try {
+        if (this != null) {
+            val responseBody = errorBody()
+            val message = responseBody?.string()
+            if (responseBody != null && !message.isNullOrBlank()) {
+                val graphErrors= message.getGraphQLError()
+                if (graphErrors != null)
+                    return graphErrors
+            }
+        }
+    } catch (ex: Exception) {
+        ex.printStackTrace()
     }
+    return null
+}
 
-    public int getStatus() {
-        return status;
-    }
-
-    public List<Map<String, Integer>> getLocations() {
-        return locations;
-    }
-
-    @Override
-    public String toString() {
-        return "GraphError{" +
-                "message='" + message + '\'' +
-                ", status=" + status +
-                ", locations=" + locations +
-                '}';
-    }
+private fun String.getGraphQLError(): List<GraphError>? {
+    Log.e("GraphErrorUtil", this)
+    val tokenType = object : TypeToken<GraphContainer<*>>() {}.type
+    val graphContainer = Gson().fromJson<GraphContainer<*>>(this, tokenType)
+    return graphContainer.errors
 }
 ```
 
@@ -134,141 +147,19 @@ public class GraphError {
 Similar to the top level GraphQL response, but the data type is generic to allow easy reuse.
 
 ```java
-public class GraphContainer<T> {
-
-    private T data;
-    private List<GraphError> errors;
-
-    public T getData() {
-        return data;
-    }
-
-    public List<GraphError> getErrors() {
-        return errors;
-    }
-
-    public boolean isEmpty() {
-        return data == null;
-    }
-}
+data class GraphContainer<T>(
+        val data: T?,
+        val errors: List<GraphError>?
+) { fun isEmpty(): Boolean = data == null }
 ```
 
 ## Working Example
 
-__Retrofit Factory__
-
-```java
-public class WebFactory {
-
-    private static Retrofit mRetrofit;
-
-    /**
-     * Generates retrofit service classes
-     *
-     * @param serviceClass The interface class method representing your request to use
-     *                     @see IndexModel methods
-     * @param context A valid application, fragment or activity context
-     */
-    public static <S> S createService(@NonNull Class<S> serviceClass, Context context) {
-        if(mRetrofit == null) {
-            OkHttpClient.Builder httpClient = new OkHttpClient.Builder()
-                    .readTimeout(35, TimeUnit.SECONDS)
-                    .connectTimeout(35, TimeUnit.SECONDS);
-
-			// Optional include http logging:
-			// implementation "com.squareup.okhttp3:logging-interceptor:3.9.1"
-            if(BuildConfig.DEBUG) {
-                HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor()
-                        .setLevel(HttpLoggingInterceptor.Level.HEADERS);
-                httpClient.addInterceptor(httpLoggingInterceptor);
-            }
-
-            // Note, we are not adding the default gson converter
-            // because the GraphConverter will handle both body and parameter conversion
-            mRetrofit = new Retrofit.Builder()
-                    .client(httpClient.build())
-                    .baseUrl("https://api.githunt.com/")
-                    .addConverterFactory(GraphConverter.create(context))
-                    .build();
-        }
-        return mRetrofit.create(serviceClass);
-    }
-}
-```
-
-__Retrofit Model__
-
-```java
-public interface IndexModel {
-
-    @POST("graphql")
-    @GraphQuery("Trending")
-    @Headers("Content-Type: application/json")
-    Call<GraphContainer<TrendingFeed>> getTrending(@Body QueryContainerBuilder request);
-
-    @POST("graphql")
-    @GraphQuery("RepoEntries")
-    @Headers("Content-Type: application/json")
-    Call<GraphContainer<EntryFeed>> getRepoEntries(@Body QueryContainerBuilder request);
-}
-```
-
-__Data Model Container Class__
-
-```java
-public class TrendingFeed {
-    // https://api.githunt.com/graphiql feed types, represented as StringDef instead of enums
-    public final static String HOT = "HOT", NEW = "NEW", TOP = "TOP";
-    @StringDef({HOT,NEW, TOP})
-    @interface FeedType {}
-
-    private List<Entry> feed;
-
-    public List<Entry> getFeed() {
-        return feed;
-    }
-}
-```
-
-__Making The Request__
-
-```java
-IndexModel indexModel = WebFactory.createService(IndexModel.class, getApplicationContext());
-QueryContainerBuilder queryContainerBuilder = QueryContainerBuilder()
-        .putVariable("type", TrendingFeed.NEW)
-        .putVariable("limit", 20)
-        .putVariable("offset", 1);
-indexModel.getTrending(queryContainerBuilder).enqueue(MainActy.this);
-```
-
-__Handling The Response__
-
-```java
-@Override
-public void onResponse(@NonNull Call<GraphContainer<TrendingFeed>> call,@NonNull Response<GraphContainer<TrendingFeed>> response) {
-    GraphContainer<TrendingFeed> container;
-    if(response.isSuccessful() && (container = response.body()) != null) {
-        if(!container.isEmpty()) {
-            List<Entry> entryList = container.getData().getFeed();
-            // TODO: 2018/05/05  do as you please with the network response
-        }
-    } else {
-        // TODO: 2018/05/05 What you will do with any errors is up to you :)
-        // GraphErrorUtil is included in the library for you ;)
-        List<GraphError> errorList = GraphErrorUtil.getError(response);
-    }
-}
-
-@Override
-public void onFailure(@NonNull Call<GraphContainer<TrendingFeed>> call,@NonNull Throwable throwable) {
-    throwable.printStackTrace();
-    Toast.makeText(getApplicationContext(), "Handle the error",Toast.LENGTH_SHORT).show();
-}
-```
+_Check the example project named app for a more extensive overview of how everything works_
 
 ## The Result
 
-<img src="https://github.com/AniTrend/retrofit-graphql/raw/develop/screenshots/device-2018-05-20-161049.png" width="300"/> <img src="https://github.com/AniTrend/retrofit-graphql/raw/develop/screenshots/device-2018-05-20-161111.png" width="300"/>
+<img src="./images/screenshots/device-2018-12-17-172758.png" width="300"/> &nbsp; <img src="./images/screenshots/device-2018-12-17-172740.png" width="300"/> &nbsp; <img src="./images/screenshots/device-2018-12-17-172811.png" width="300"/>
 
 ## Proof Of Concept?
 

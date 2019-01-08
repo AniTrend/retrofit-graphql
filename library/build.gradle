@@ -1,14 +1,15 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion versions.compileSdk
-    buildToolsVersion versions.buildTools
+    compileSdkVersion rootProject.compileSdk
     defaultConfig {
-        minSdkVersion versions.minSdk
-        targetSdkVersion versions.targetSdk
-        versionName versions.versionName
-        versionCode versions.versionCode
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        minSdkVersion rootProject.minSdk
+        targetSdkVersion rootProject.targetSdk
+        versionCode rootProject.versionCode
+        versionName rootProject.versionName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -17,19 +18,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+}
 
+androidExtensions {
+    experimental = true
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation "com.android.support:appcompat-v7:${versions.supportLibrary}"
+    implementation "com.google.android.material:material:$rootProject.material"
+
+    /** Kotlin Libraries */
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlin"
 
     /** Retrofit Libraries */
-    implementation "com.squareup.retrofit2:retrofit:${versions.retrofit}"
-    implementation "com.squareup.retrofit2:converter-gson:${versions.retrofit}"
+    implementation "com.squareup.retrofit2:retrofit:$rootProject.retrofit"
+    implementation "com.squareup.retrofit2:converter-gson:$rootProject.retrofit"
 
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    testImplementation "junit:junit:$rootProject.junit"
+    androidTestImplementation "androidx.test:runner:$rootProject.runner"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.espresso"
 }
