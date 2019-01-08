@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import io.github.wax911.library.model.body.GraphContainer
-import io.github.wax911.library.util.GraphErrorUtil
+import io.github.wax911.library.util.getError
 import io.github.wax911.retgraph.model.container.TrendingFeed
 import retrofit2.Call
 import retrofit2.Callback
@@ -44,7 +44,7 @@ class TrendingViewModel : ViewModel(), Callback<GraphContainer<TrendingFeed>> {
             if (!container.isEmpty())
                 mutableLiveData.value = container.data
         } else {
-            GraphErrorUtil.getError(response)?.apply {
+                response.getError()?.apply {
                 forEach { Log.e(this@TrendingViewModel.toString(), it.toString()) }
             }
         }
