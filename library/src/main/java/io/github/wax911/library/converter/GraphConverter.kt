@@ -78,6 +78,11 @@ open class GraphConverter protected constructor(context: Context?) : Converter.F
 
         const val MimeType = "application/graphql"
 
+        /**
+         * Default creator that uses a predefined gson configuration
+         *
+         * @param context any valid application context
+         */
         fun create(context: Context?): GraphConverter {
             return GraphConverter(context).apply {
                 gson = GsonBuilder()
@@ -88,6 +93,13 @@ open class GraphConverter protected constructor(context: Context?) : Converter.F
             }
         }
 
+        /**
+         * Allows you to provide your own Gson configuration which will be used when serialize or
+         * deserialize response and request bodies.
+         *
+         * @param context any valid application context
+         * @param gson custom gson implementation
+         */
         fun create(context: Context?, gson: Gson): GraphConverter {
             return GraphConverter(context).apply {
                 this.gson = gson

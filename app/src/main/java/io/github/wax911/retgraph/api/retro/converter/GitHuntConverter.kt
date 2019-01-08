@@ -1,6 +1,7 @@
 package io.github.wax911.retgraph.api.retro.converter
 
 import android.content.Context
+import com.google.gson.GsonBuilder
 import io.github.wax911.library.converter.GraphConverter
 import io.github.wax911.library.converter.request.GraphRequestConverter
 import io.github.wax911.library.converter.response.GraphResponseConverter
@@ -13,11 +14,21 @@ import retrofit2.Converter
 import retrofit2.Retrofit
 import java.lang.reflect.Type
 
+/**
+ * Optionally overriding the GraphConverter to customize it's implementation, otherwise one
+ * could just use the default impl which does everything just fine
+ */
 class GitHuntConverter private constructor(context: Context?): GraphConverter(context) {
 
     companion object {
         fun create(context: Context?): GitHuntConverter =
-                GitHuntConverter(context)
+                GitHuntConverter(context).apply {
+                    gson = GsonBuilder()
+                            .enableComplexMapKeySerialization()
+                            .serializeNulls()
+                            .setLenient()
+                            .create()
+                }
     }
 
     /**
