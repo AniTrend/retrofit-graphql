@@ -1,6 +1,7 @@
 package io.github.wax911.library.converter
 
 import android.content.Context
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import io.github.wax911.library.annotation.processor.GraphProcessor
 import io.github.wax911.library.converter.request.GraphRequestConverter
@@ -30,13 +31,7 @@ open class GraphConverter protected constructor(context: Context?) : Converter.F
         GraphProcessor.getInstance(context?.assets)
     }
 
-    protected val gson by lazy {
-        GsonBuilder()
-                .enableComplexMapKeySerialization()
-                .serializeNulls()
-                .setLenient()
-                .create()
-    }
+    protected lateinit var gson: Gson
 
     /**
      * Response body converter delegates logic processing to a child class that handles
@@ -84,7 +79,19 @@ open class GraphConverter protected constructor(context: Context?) : Converter.F
         const val MimeType = "application/graphql"
 
         fun create(context: Context?): GraphConverter {
-            return GraphConverter(context)
+            return GraphConverter(context).apply {
+                gson = GsonBuilder()
+                        .enableComplexMapKeySerialization()
+                        .serializeNulls()
+                        .setLenient()
+                        .create()
+            }
+        }
+
+        fun create(context: Context?, gson: Gson): GraphConverter {
+            return GraphConverter(context).apply {
+                this.gson = gson
+            }
         }
     }
 }
