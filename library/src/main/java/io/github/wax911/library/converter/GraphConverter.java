@@ -28,17 +28,30 @@ import retrofit2.Retrofit;
 
 public class GraphConverter extends Converter.Factory {
 
+    protected final Gson gson;
     protected GraphProcessor graphProcessor;
-
-    protected final Gson gson = new GsonBuilder()
-            .enableComplexMapKeySerialization()
-            .serializeNulls()
-            .setLenient()
-            .create();
 
 
     public static GraphConverter create(Context context) {
         return new GraphConverter(context);
+    }
+
+    public static GraphConverter create(Context context, Gson gson) {
+        return new GraphConverter(context, gson);
+    }
+
+    /**
+     * Protected constructor because we want to make use of the
+     * Factory Pattern to create our converter. This one taking a
+     * gson that is sent from create
+     * <br/>
+     *
+     * @param context Any valid application context
+     * @param gson The gson given to create method
+     */
+    protected GraphConverter(Context context, Gson gson) {
+        this.gson = gson;
+        this.graphProcessor = GraphProcessor.getInstance(context);
     }
 
     /**
@@ -49,6 +62,11 @@ public class GraphConverter extends Converter.Factory {
      * @param context Any valid application context
      */
     protected GraphConverter(Context context) {
+        this.gson = new GsonBuilder()
+                .enableComplexMapKeySerialization()
+                .serializeNulls()
+                .setLenient()
+                .create();
         this.graphProcessor = GraphProcessor.getInstance(context);
     }
 
