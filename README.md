@@ -98,45 +98,47 @@ query Trending($type: FeedType!, $offset: Int, $limit: Int) {
 _Adding parameters to the request would be done as follows:_
 
 ```java
-QueryContainerBuilder queryBuilder = new QueryContainerBuilder()
+val queryBuilder = QueryContainerBuilder()
             .putVariable("type", "TRENDING")
             .putVariable("offset", 1)
             .putVariable("limit", 15);
 ```
-The queryBuilder is then passed into your retrofit interface method as parameter and that's it! Just like an ordinary retrofit application.
+The QueryContainerBuilder is then passed into your retrofit interface method as parameter and that's it! Just like an ordinary retrofit application.
 
 
 ###### GraphError
 
-Common GraphQL Error
+Common GraphQL error that makes use of extension functions
 
 ```java
-public class GraphError {
-
-    private String message;
-    private int status;
-    private List<Map<String, Integer>> locations;
-
-    public String getMessage() {
-        return message;
+/**
+ * Converts the response error response into an object.
+ *
+ * @return The error object, or null if an exception was encountered
+ * @see Error
+ */
+fun Response<*>?.getError(): List<GraphError>? {
+    try {
+        if (this != null) {
+            val responseBody = errorBody()
+            val message = responseBody?.string()
+            if (responseBody != null && !message.isNullOrBlank()) {
+                val graphErrors= message.getGraphQLError()
+                if (graphErrors != null)
+                    return graphErrors
+            }
+        }
+    } catch (ex: Exception) {
+        ex.printStackTrace()
     }
+    return null
+}
 
-    public int getStatus() {
-        return status;
-    }
-
-    public List<Map<String, Integer>> getLocations() {
-        return locations;
-    }
-
-    @Override
-    public String toString() {
-        return "GraphError{" +
-                "message='" + message + '\'' +
-                ", status=" + status +
-                ", locations=" + locations +
-                '}';
-    }
+private fun String.getGraphQLError(): List<GraphError>? {
+    Log.e("GraphErrorUtil", this)
+    val tokenType = object : TypeToken<GraphContainer<*>>() {}.type
+    val graphContainer = Gson().fromJson<GraphContainer<*>>(this, tokenType)
+    return graphContainer.errors
 }
 ```
 
@@ -145,23 +147,10 @@ public class GraphError {
 Similar to the top level GraphQL response, but the data type is generic to allow easy reuse.
 
 ```java
-public class GraphContainer<T> {
-
-    private T data;
-    private List<GraphError> errors;
-
-    public T getData() {
-        return data;
-    }
-
-    public List<GraphError> getErrors() {
-        return errors;
-    }
-
-    public boolean isEmpty() {
-        return data == null;
-    }
-}
+data class GraphContainer<T>(
+        val data: T?,
+        val errors: List<GraphError>?
+) { fun isEmpty(): Boolean = data == null }
 ```
 
 ## Working Example
