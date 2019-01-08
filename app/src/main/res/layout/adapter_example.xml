@@ -1,82 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<androidx.appcompat.widget.LinearLayoutCompat
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="#a5fffef9"
+    android:layout_margin="@dimen/spacing_normal">
 
-    <LinearLayout
-        android:padding="16dp"
-        android:layout_margin="16dp"
-        android:background="#f1f1f1"
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/ownerAvatar"
+        android:layout_gravity="center"
+        android:scaleType="centerCrop"
+        android:layout_height="72dp"
+        android:layout_width="72dp"/>
+
+    <Space
+        android:layout_width="@dimen/spacing_normal"
+        android:layout_height="wrap_content" />
+
+    <androidx.appcompat.widget.LinearLayoutCompat
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:padding="@dimen/spacing_micro">
 
-        <LinearLayout
-            android:orientation="horizontal"
+        <TextView
+            android:id="@+id/repoName"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <ImageView
-                android:id="@+id/ownerAvatar"
-                android:scaleType="centerCrop"
-                android:layout_width="35dp"
-                android:layout_height="match_parent" />
-
-            <Space
-                android:layout_width="5dp"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                android:id="@+id/repoName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-                tools:text="React Native" />
-        </LinearLayout>
-
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="@color/material_700"
+            tools:text="facebook/react-native" />
 
         <Space
             android:layout_width="wrap_content"
-            android:layout_height="5dp" />
+            android:layout_height="@dimen/spacing_micro" />
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/description"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+            tools:text="A framework for building native apps with React, created"/>
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/spacing_micro" />
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                android:text="Posted By:"/>
+                android:text="@string/submitted_by"/>
 
             <Space
-                android:layout_width="5dp"
+                android:layout_width="@dimen/spacing_micro"
                 android:layout_height="wrap_content" />
 
             <TextView
                 android:id="@+id/postedBy"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textStyle="bold"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                tools:text="Facebook"/>
+                tools:text="Slava"/>
 
-        </LinearLayout>
+        </androidx.appcompat.widget.LinearLayoutCompat>
 
-        <Space
-            android:layout_width="wrap_content"
-            android:layout_height="5dp" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
 
-        <TextView
-            android:id="@+id/repoStars"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-            android:drawableStart="@drawable/ic_star_yellow_600_18dp"
-            tools:text=" 4200"/>
-
-    </LinearLayout>
-
-</FrameLayout>
+</androidx.appcompat.widget.LinearLayoutCompat>
