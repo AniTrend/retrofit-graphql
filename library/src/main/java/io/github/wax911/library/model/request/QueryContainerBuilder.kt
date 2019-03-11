@@ -15,19 +15,29 @@ class QueryContainerBuilder(private val queryContainer: QueryContainer = QueryCo
         return this
     }
 
+    fun setOperationName(operationName: String?): QueryContainerBuilder{
+        this.queryContainer.operationName = operationName
+        return this
+    }
+
     fun putVariable(key: String, value: Any?): QueryContainerBuilder {
         queryContainer.putVariable(key, value)
         return this
     }
 
+    fun putExtension(key: String, value: Any?): QueryContainerBuilder {
+        queryContainer.putExtension(key, value)
+        return this
+    }
+
     fun getVariable(key: String): Any? {
         return when {
-            contrainsKey(key) -> queryContainer.variables[key]
+            containsKey(key) -> queryContainer.variables[key]
             else -> null
         }
     }
 
-    fun contrainsKey(key: String): Boolean {
+    fun containsKey(key: String): Boolean {
         return queryContainer.variables.containsKey(key)
     }
 
