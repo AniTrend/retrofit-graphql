@@ -30,6 +30,11 @@ class QueryContainerBuilder(private val queryContainer: QueryContainer = QueryCo
         return this
     }
 
+    fun putPersistedQueryHash(sha256Hash: String, version: Int = 1): QueryContainerBuilder {
+        putExtension(persistedQueryExtensionName, PersistedQuery(sha256Hash = sha256Hash, version = version))
+        return this
+    }
+
     fun getVariable(key: String): Any? {
         return when {
             containsKey(key) -> queryContainer.variables[key]
@@ -48,5 +53,9 @@ class QueryContainerBuilder(private val queryContainer: QueryContainer = QueryCo
      */
     fun build(): QueryContainer {
         return queryContainer
+    }
+
+    companion object {
+        const val persistedQueryExtensionName = "persistedQuery"
     }
 }
