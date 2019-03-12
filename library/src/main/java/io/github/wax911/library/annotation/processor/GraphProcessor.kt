@@ -7,8 +7,6 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.math.BigInteger
-import java.security.MessageDigest
 import java.util.*
 
 /**
@@ -17,24 +15,25 @@ import java.util.*
  */
 class GraphProcessor private constructor(assetManager: AssetManager?) {
 
-    private val graphFiles: MutableMap<String, String> by lazy {
+    private val _graphFiles: MutableMap<String, String> by lazy {
         HashMap<String, String>()
     }
 
-    private val apqHashes: MutableMap<String, String> by lazy {
-        HashMap<String, String>()
-    }
+    val graphFiles: Map<String, String>
+        get() {
+            return Collections.unmodifiableMap(_graphFiles)
+        }
 
     init {
         synchronized(lock) {
             Log.d("GraphProcessor", Thread.currentThread().name + ": has obtained a synchronized lock on the object")
-            if (graphFiles.isEmpty()) {
+            if (_graphFiles.isEmpty()) {
                 Log.d("GraphProcessor", Thread.currentThread().name + ": is initializing query files")
                 createGraphQLMap(defaultDirectory, assetManager)
                 Log.d("GraphProcessor", Thread.currentThread().name + ": has completed initializing all files")
-                Log.d("GraphProcessor", Thread.currentThread().name + ": Total count of graphFiles -> size: " + graphFiles.size)
+                Log.d("GraphProcessor", Thread.currentThread().name + ": Total count of graphFiles -> size: " + _graphFiles.size)
             } else
-                Log.d("GraphProcessor", Thread.currentThread().name + ": skipped initialization of graphFiles -> size: " + graphFiles.size)
+                Log.d("GraphProcessor", Thread.currentThread().name + ": skipped initialization of graphFiles -> size: " + _graphFiles.size)
         }
     }
 
@@ -51,31 +50,12 @@ class GraphProcessor private constructor(assetManager: AssetManager?) {
         if (graphQuery != null) {
             val fileName = String.format("%s%s", graphQuery.value, defaultExtension)
             Log.d("GraphProcessor", fileName)
-            if (graphFiles.containsKey(fileName))
-                return graphFiles[fileName]
+            if (_graphFiles.containsKey(fileName))
+                return _graphFiles[fileName]
             Log.e(this.toString(), String.format("The request query %s could not be found!", graphQuery.value))
-            Log.e(this.toString(), String.format("Current size of graphFiles -> size: %d", graphFiles.size))
+            Log.e(this.toString(), String.format("Current size of graphFiles -> size: %d", _graphFiles.size))
         }
         return null
-    }
-
-    fun getOrCreateAPQHash(queryName: String) : String? {
-        val hash = apqHashes[queryName]
-        if (hash == null) {
-            if (graphFiles.containsKey(queryName)) {
-                val hashOfQuery = hashOfQuery(graphFiles[queryName]!!)
-                apqHashes[queryName] = hashOfQuery
-                return hashOfQuery
-            }
-        }
-        return hash
-    }
-
-    private fun hashOfQuery(query: String): String {
-        val md = MessageDigest.getInstance("SHA-256")
-        md.update(query.toByteArray())
-        val digest = md.digest()
-        return String.format("%064x", BigInteger(1, digest))
     }
 
     @Synchronized
@@ -89,7 +69,7 @@ class GraphProcessor private constructor(assetManager: AssetManager?) {
                         if (!item.endsWith(defaultExtension))
                             createGraphQLMap(absolute, this)
                         else
-                            graphFiles[item] = getFileContents(open(absolute))
+                            _graphFiles[item] = getFileContents(open(absolute))
                     }
                 }
             }

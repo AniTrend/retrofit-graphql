@@ -10,7 +10,7 @@ import java.util.*
  * used in retrofit requestBodyConverter
  */
 @Parcelize
-class QueryContainer internal constructor(
+data class QueryContainer internal constructor(
         var operationName: String? = null,
         var query: String? = null,
         val variables: @RawValue

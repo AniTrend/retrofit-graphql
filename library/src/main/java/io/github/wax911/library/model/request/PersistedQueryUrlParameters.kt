@@ -1,6 +1,6 @@
-package io.github.wax911.library.apq
+package io.github.wax911.library.model.request
 
-data class APQParameters(
+data class PersistedQueryUrlParameters(
         val extensions: String,
         val operationName: String,
         val variables: String
