@@ -199,7 +199,8 @@ Since one query potentially require two web requests, there will also be two met
 Additionally, the protocol relies on the client sending a SHA256 hash calculated from the query. Only the contents of the query, not the whole web request body. You can use the `PersistedQueryHashCalculator` for this.
 
 ```java
-       val queryName = "Trending"
+    private fun persistedQueryRequest() {
+        val queryName = "Trending"
         val persistedQueryHashCalculator = PersistedQueryHashCalculator(context?.applicationContext)
         val queryContainerBuilder = QueryContainerBuilder()
                 .setOperationName(queryName)
@@ -219,12 +220,13 @@ Additionally, the protocol relies on the client sending a SHA256 hash calculated
                 persistedQueryRequest,
                 fallbackRequest,
                 result = { trendingFeed: TrendingFeed? ->
-                    // use TrendingFeed
+                    // do something with TrendingFeed
                 },
                 error = { error: Throwable? ->
                     // handle error
                 }
         )
+    }
 ```
 
 Assuming that you use `retrofit2.Call` as your way of performing asynchronous web requests using Retrofit, an implementation of the negotiation part could look as such: 
@@ -264,10 +266,10 @@ Assuming that you use `retrofit2.Call` as your way of performing asynchronous we
         if (graphContainer!!.errors != null) {
             for ((message) in graphContainer.errors!!) {
                 if (PersistedQueryErrors.APQ_QUERY_NOT_FOUND_ERROR.equals(message!!, ignoreCase = true)) {
-                    Log.w(tag, "Persisted query not found")
+                    // Persisted query not found
                     return true
                 } else if (PersistedQueryErrors.APQ_NOT_SUPPORTED_ERROR.equals(message, ignoreCase = true)) {
-                    Log.w(tag, "Persisted query not supported")
+                    // Persisted query not supported
                     return true
                 }
             }
