@@ -72,11 +72,11 @@ Next we make our retrofit interfaces and annotate them with the `@GraphQuery` an
 
 ### Models
 
-The model creation is up to the developer, this is where retrofit-graphql differs from apollo, this way you can design your models in anyway you desire. By default the library supplies you with a `QueryContainerBuilder` which is a holder for your GraphQL variables and request. 
+The model creation is up to the developer, this is where retrofit-graphql differs from apollo, this way you can design your models in anyway you desire. 
+There are tools available to aid in the task of creating models from JSON. For Kotlin there is [JSON To Kotlin Class](https://plugins.jetbrains.com/plugin/9960-json-to-kotlin-class-jsontokotlinclass-), a plugin for the IDEA product family. 
+There are also numerous tools available online e.g [jsonschema2pojo](http://www.jsonschema2pojo.org/). One can always start from there and then modify the automatically generated output.
 
-There are tools available to aid in the task of creating models from JSON. For Kotlin there is this plugin for the IDEA product family [JSON To Kotlin Class](https://plugins.jetbrains.com/plugin/9960-json-to-kotlin-class-jsontokotlinclass-). There are also numerous tools available online e.g [jsonschema2pojo](http://www.jsonschema2pojo.org/).
-One can always start from there and then modify the automatically generated output.
-
+By default the library supplies you with a `QueryContainerBuilder` which is a holder for your GraphQL variables and request.
 Also __two__ basic top level models, which you don't have to use if you want to design your own:
 
 ###### QueryContainerBuilder
