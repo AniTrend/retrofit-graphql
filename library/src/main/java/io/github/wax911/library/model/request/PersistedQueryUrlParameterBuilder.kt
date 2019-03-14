@@ -5,8 +5,7 @@ import com.google.gson.Gson
 import kotlinx.android.parcel.Parcelize
 
 /**
- * Created by max on 2018/03/16.
- * Query & Variable builder for graph requests
+ * Query & Variable builder for URL parameter based GET requests
  */
 class PersistedQueryUrlParameterBuilder(private val queryContainer: QueryContainer = QueryContainer(), private val gson: Gson) {
 
