@@ -15,20 +15,25 @@ import java.util.*
  */
 class GraphProcessor private constructor(assetManager: AssetManager?) {
 
-    private val graphFiles: MutableMap<String, String> by lazy {
+    private val _graphFiles: MutableMap<String, String> by lazy {
         HashMap<String, String>()
     }
+
+    val graphFiles: Map<String, String>
+        get() {
+            return Collections.unmodifiableMap(_graphFiles)
+        }
 
     init {
         synchronized(lock) {
             Log.d("GraphProcessor", Thread.currentThread().name + ": has obtained a synchronized lock on the object")
-            if (graphFiles.isEmpty()) {
+            if (_graphFiles.isEmpty()) {
                 Log.d("GraphProcessor", Thread.currentThread().name + ": is initializing query files")
                 createGraphQLMap(defaultDirectory, assetManager)
                 Log.d("GraphProcessor", Thread.currentThread().name + ": has completed initializing all files")
-                Log.d("GraphProcessor", Thread.currentThread().name + ": Total count of graphFiles -> size: " + graphFiles.size)
+                Log.d("GraphProcessor", Thread.currentThread().name + ": Total count of graphFiles -> size: " + _graphFiles.size)
             } else
-                Log.d("GraphProcessor", Thread.currentThread().name + ": skipped initialization of graphFiles -> size: " + graphFiles.size)
+                Log.d("GraphProcessor", Thread.currentThread().name + ": skipped initialization of graphFiles -> size: " + _graphFiles.size)
         }
     }
 
@@ -45,10 +50,10 @@ class GraphProcessor private constructor(assetManager: AssetManager?) {
         if (graphQuery != null) {
             val fileName = String.format("%s%s", graphQuery.value, defaultExtension)
             Log.d("GraphProcessor", fileName)
-            if (graphFiles.containsKey(fileName))
-                return graphFiles[fileName]
+            if (_graphFiles.containsKey(fileName))
+                return _graphFiles[fileName]
             Log.e(this.toString(), String.format("The request query %s could not be found!", graphQuery.value))
-            Log.e(this.toString(), String.format("Current size of graphFiles -> size: %d", graphFiles.size))
+            Log.e(this.toString(), String.format("Current size of graphFiles -> size: %d", _graphFiles.size))
         }
         return null
     }
@@ -64,7 +69,7 @@ class GraphProcessor private constructor(assetManager: AssetManager?) {
                         if (!item.endsWith(defaultExtension))
                             createGraphQLMap(absolute, this)
                         else
-                            graphFiles[item] = getFileContents(open(absolute))
+                            _graphFiles[item] = getFileContents(open(absolute))
                     }
                 }
             }

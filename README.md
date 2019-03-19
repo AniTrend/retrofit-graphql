@@ -10,9 +10,9 @@ Many might wonder why this exists when an android GraphQL library like [Apollo](
 - Custom Scalar Types
 - Cached Responses
 
-But since model classes are automatically generated for you, the developer loses some flexibility, such as use of generics, abstraction and inheritance. Also Android Peformance best practice suggests that developers should use StringDef and IntDef over enums and [here's why](https://stackoverflow.com/questions/29183904/should-i-strictly-avoid-using-enums-on-android).
+But since model classes are automatically generated for you, the developer loses some flexibility, such as use of generics, abstraction and inheritance. Also Android Performance best practice suggests that developers should use StringDef and IntDef over enums and [here's why](https://stackoverflow.com/questions/29183904/should-i-strictly-avoid-using-enums-on-android).
 
-Strangly there are tons of simple examples all over Medium using apollo graphql for Android, but none of them address these issues because most of them just construct a simple single resource request demo application. These look just fine at first glance until you start working with multiple data types and apollo starts generating classes for every fragment and query even if the data models are the same, or share similar properties. Thus this project came to be
+Strangely there are tons of simple examples all over Medium using apollo graphql for Android, but none of them address these issues because most of them just construct a simple single resource request demo application. These look just fine at first glance until you start working with multiple data types and apollo starts generating classes for every fragment and query even if the data models are the same, or share similar properties. Thus this project came to be
 
 ____
 
@@ -72,7 +72,12 @@ Next we make our retrofit interfaces and annotate them with the `@GraphQuery` an
 
 ### Models
 
-The model creation is upto the developer, this is where retrofit-graphql differs from apollo, this way you can design your models in anyway you desire. By default the library supplies you with a `QueryContainerBuilder` which is a holder for your GraphQL variables and request. Also __two__ basic top level models, which you don't have to use if you want to design your own:
+The model creation is up to the developer, this is where retrofit-graphql differs from apollo, this way you can design your models in anyway you desire. 
+There are tools available to aid in the task of creating models from JSON. For Kotlin there is [JSON To Kotlin Class](https://plugins.jetbrains.com/plugin/9960-json-to-kotlin-class-jsontokotlinclass-), a plugin for the IDEA product family. 
+There are also numerous tools available online e.g [jsonschema2pojo](http://www.jsonschema2pojo.org/). One can always start from there and then modify the automatically generated output.
+
+By default the library supplies you with a `QueryContainerBuilder` which is a holder for your GraphQL variables and request.
+Also __two__ basic top level models, which you don't have to use if you want to design your own:
 
 ###### QueryContainerBuilder
 
@@ -164,3 +169,119 @@ _Check the example project named app for a more extensive overview of how everyt
 ## Proof Of Concept?
 
 This project is derived from [AniTrend](https://github.com/AniTrend/anitrend-app) which is already published on the PlayStore
+
+
+## Automatic persisted queries
+
+Persisted queries allows clients to use HTTP GET instead of HTTP POST, making it easier to cache in a CDN (which might not allow caching of HTTP POST). The automated part is that the protocol allows clients to register new query id:s on the fly, so they do not have to be known by the server beforehand. 
+
+Apollo outlines the protocol in a blog post: [Improve GraphQL Performance with Automatic Persisted Queries](https://blog.apollographql.com/improve-graphql-performance-with-automatic-persisted-queries-c31d27b8e6ea). And the exact protocol can be found here: [Persisted Query support with Apollo Link](https://github.com/apollographql/apollo-link-persisted-queries)
+
+Due to the declarative nature of Retrofit services and that the details of the protocol can differ depending on the backend, It would not make sense if this library did the persisted query negotiation under the hood. Therefore it requires some setup on your part.
+
+### Implementation
+
+Since one query potentially require two web requests, there will also be two methods in the Retrofit service declaration
+
+```java
+
+    @GET("graphql")
+    @Headers("Content-Type: application/json")
+    fun getTrendingPersistedQuery(@Query("extensions") String extensions, @Query("operationName") String operationName, @Query("variables") String variables): Call<GraphContainer<TrendingFeed>>
+
+    @POST("graphql")
+    @GraphQuery("Trending")
+    @Headers("Content-Type: application/json")
+    fun getTrending(@Body QueryContainerBuilder queryContainerBuilder): Call<GraphContainer<TrendingFeed>>
+    
+```
+
+Additionally, the protocol relies on the client sending a SHA256 hash calculated from the query. Only the contents of the query, not the whole web request body. You can use the `PersistedQueryHashCalculator` for this.
+
+```java
+    private fun persistedQueryRequest() {
+        val queryName = "Trending"
+        val persistedQueryHashCalculator = PersistedQueryHashCalculator(context?.applicationContext)
+        val queryContainerBuilder = QueryContainerBuilder()
+                .setOperationName(queryName)
+                .putVariable("type", feedType)
+                .putPersistedQueryHash(persistedQueryHashCalculator.getOrCreateAPQHash(queryName).orEmpty())
+
+        val container = queryContainerBuilder.build()
+        val queryParameters: PersistedQueryUrlParameters = PersistedQueryUrlParameterBuilder(container, Gson()).build()
+
+        val indexModel = WebFactory.getInstance(context)
+                .createService(IndexModel::class.java)
+
+        val persistedQueryRequest = indexModel.getTrendingUsingPersistedQuery(queryParameters.extensions, queryParameters.operationName, queryParameters.variables)
+        val fallbackRequest = indexModel.getTrending(queryContainerBuilder)
+
+        doPersistedQueryNegotiation(
+                persistedQueryRequest,
+                fallbackRequest,
+                result = { trendingFeed: TrendingFeed? ->
+                    // do something with TrendingFeed
+                },
+                error = { error: Throwable? ->
+                    // handle error
+                }
+        )
+    }
+```
+
+Assuming that you use `retrofit2.Call` as your way of performing asynchronous web requests using Retrofit, an implementation of the negotiation part could look as such: 
+
+```java
+    private fun <T> doPersistedQueryNegotiation(request: Call<GraphContainer<T>>,
+                                                fallbackRequest: Call<GraphContainer<T>>,
+                                                result: (T?) -> Unit,
+                                                error: (Throwable?) -> Unit) {
+
+        request.enqueue(object : retrofit2.Callback<GraphContainer<T>> {
+            override fun onResponse(call: Call<GraphContainer<T>>, response: Response<GraphContainer<T>>) {
+                if (shouldUseFallbackRequest(response.body())) {
+                    // using fallback request
+                    fallbackRequest.enqueue(object : retrofit2.Callback<GraphContainer<T>> {
+                        override fun onResponse(call: Call<GraphContainer<T>>, response: Response<GraphContainer<T>>) {
+                            // persisted Query successfully registered
+                            handleResponse(response, result, error)
+                        }
+                        override fun onFailure(call: Call<GraphContainer<T>>, t: Throwable) {
+                            error.invoke(t)
+                        }
+                    })
+                } else {
+                    // persisted Query responded successfully
+                    handleResponse(response, result, error)
+                }
+            }
+            override fun onFailure(call: Call<GraphContainer<T>>, t: Throwable) {
+                // Error during initial persisted query request
+                error.invoke(t)
+            }
+        })
+    }
+    
+    private fun <T> shouldUseFallbackRequest(graphContainer: GraphContainer<T>?): Boolean {
+        if (graphContainer!!.errors != null) {
+            for ((message) in graphContainer.errors!!) {
+                if (PersistedQueryErrors.APQ_QUERY_NOT_FOUND_ERROR.equals(message!!, ignoreCase = true)) {
+                    // Persisted query not found
+                    return true
+                } else if (PersistedQueryErrors.APQ_NOT_SUPPORTED_ERROR.equals(message, ignoreCase = true)) {
+                    // Persisted query not supported
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    private fun <T> handleResponse(response: Response<GraphContainer<T>>, result: (T?) -> Unit, error: (Throwable?) -> Unit) {
+        if (response.isSuccessful && response.body()?.errors.isNullOrEmpty()) {
+            result.invoke(response.body()?.data)
+        } else {
+            error.invoke(HttpException(response))
+        }
+    }
+```
