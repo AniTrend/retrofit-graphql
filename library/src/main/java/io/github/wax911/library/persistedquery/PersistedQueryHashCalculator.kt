@@ -8,7 +8,8 @@ import java.security.MessageDigest
 import java.util.*
 
 /**
- * Utility class for calculating SHA256 hashes based off of the .graphql files held in memory by {@link io.github.wax911.library.annotation.processor.GraphProcessor}
+ * Utility class for calculating SHA256 hashes based off of the .graphql files held in memory by
+ * [io.github.wax911.library.annotation.processor.GraphProcessor]
  */
 class PersistedQueryHashCalculator constructor(context: Context?) {
 
