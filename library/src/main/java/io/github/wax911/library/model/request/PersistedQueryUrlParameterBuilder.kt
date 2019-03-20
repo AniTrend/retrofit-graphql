@@ -1,8 +1,6 @@
 package io.github.wax911.library.model.request
 
-import android.os.Parcelable
 import com.google.gson.Gson
-import kotlinx.android.parcel.Parcelize
 
 /**
  * Query & Variable builder for URL parameter based GET requests

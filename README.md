@@ -1,4 +1,4 @@
-# Retrofit Converter - With GraphQL Support &nbsp; [![](https://jitpack.io/v/AniTrend/retrofit-graphql.svg)](https://jitpack.io/#AniTrend/retrofit-graphql)
+# Retrofit Converter - With GraphQL Support &nbsp; [![](https://jitpack.io/v/AniTrend/retrofit-graphql.svg)](https://jitpack.io/#AniTrend/retrofit-graphql) &nbsp; [![Codacy Badge](https://api.codacy.com/project/badge/Grade/6fe1544b73084e25801c4343d1bb6d70)](https://www.codacy.com/app/AniTrend/retrofit-graphql?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=AniTrend/retrofit-graphql&amp;utm_campaign=Badge_Grade) &nbsp; [![Build Status](https://travis-ci.org/AniTrend/retrofit-graphql.svg?branch=master)](https://travis-ci.org/AniTrend/retrofit-graphql)
 
 This is a retrofit converter which uses annotations to inject .graphql query or mutation files into a request body along with any GraphQL variables. The included example makes use of [GitHunt GraphQL API](http://api.githunt.com/graphiql) that sometimes responds with null fields, feel free to try it with any other GraphQL API like `GitHub API v4` also this project does not teach you how to use Retrofit, Glide or the ViewModel.
 
@@ -72,8 +72,8 @@ Next we make our retrofit interfaces and annotate them with the `@GraphQuery` an
 
 ### Models
 
-The model creation is up to the developer, this is where retrofit-graphql differs from apollo, this way you can design your models in anyway you desire. 
-There are tools available to aid in the task of creating models from JSON. For Kotlin there is [JSON To Kotlin Class](https://plugins.jetbrains.com/plugin/9960-json-to-kotlin-class-jsontokotlinclass-), a plugin for the IDEA product family. 
+The model creation is up to the developer, this is where retrofit-graphql differs from apollo, this way you can design your models in anyway you desire.
+There are tools available to aid in the task of creating models from JSON. For Kotlin there is [JSON To Kotlin Class](https://plugins.jetbrains.com/plugin/9960-json-to-kotlin-class-jsontokotlinclass-), a plugin for the IDEA product family.
 There are also numerous tools available online e.g [jsonschema2pojo](http://www.jsonschema2pojo.org/). One can always start from there and then modify the automatically generated output.
 
 By default the library supplies you with a `QueryContainerBuilder` which is a holder for your GraphQL variables and request.
@@ -173,7 +173,7 @@ This project is derived from [AniTrend](https://github.com/AniTrend/anitrend-app
 
 ## Automatic persisted queries
 
-Persisted queries allows clients to use HTTP GET instead of HTTP POST, making it easier to cache in a CDN (which might not allow caching of HTTP POST). The automated part is that the protocol allows clients to register new query id:s on the fly, so they do not have to be known by the server beforehand. 
+Persisted queries allows clients to use HTTP GET instead of HTTP POST, making it easier to cache in a CDN (which might not allow caching of HTTP POST). The automated part is that the protocol allows clients to register new query id:s on the fly, so they do not have to be known by the server beforehand.
 
 Apollo outlines the protocol in a blog post: [Improve GraphQL Performance with Automatic Persisted Queries](https://blog.apollographql.com/improve-graphql-performance-with-automatic-persisted-queries-c31d27b8e6ea). And the exact protocol can be found here: [Persisted Query support with Apollo Link](https://github.com/apollographql/apollo-link-persisted-queries)
 
@@ -193,7 +193,7 @@ Since one query potentially require two web requests, there will also be two met
     @GraphQuery("Trending")
     @Headers("Content-Type: application/json")
     fun getTrending(@Body QueryContainerBuilder queryContainerBuilder): Call<GraphContainer<TrendingFeed>>
-    
+
 ```
 
 Additionally, the protocol relies on the client sending a SHA256 hash calculated from the query. Only the contents of the query, not the whole web request body. You can use the `PersistedQueryHashCalculator` for this.
@@ -229,7 +229,7 @@ Additionally, the protocol relies on the client sending a SHA256 hash calculated
     }
 ```
 
-Assuming that you use `retrofit2.Call` as your way of performing asynchronous web requests using Retrofit, an implementation of the negotiation part could look as such: 
+Assuming that you use `retrofit2.Call` as your way of performing asynchronous web requests using Retrofit, an implementation of the negotiation part could look as such:
 
 ```java
     private fun <T> doPersistedQueryNegotiation(request: Call<GraphContainer<T>>,
@@ -261,7 +261,7 @@ Assuming that you use `retrofit2.Call` as your way of performing asynchronous we
             }
         })
     }
-    
+
     private fun <T> shouldUseFallbackRequest(graphContainer: GraphContainer<T>?): Boolean {
         if (graphContainer!!.errors != null) {
             for ((message) in graphContainer.errors!!) {
