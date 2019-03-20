@@ -43,4 +43,4 @@ Before opening a pull request, please ensure:
 <!--- Be kind to code reviewers, please try to keep pull requests as small and focused as possible :) -->
 
 **IMPORTANT**: By submitting a patch, you agree to allow the project
-owners to license your work under the terms of the [GNU GPL](https://github.com/AniTrend/retrofit-graphql/blob/master/LICENSE.md).
+owners to license your work under the terms of the [Apache License](https://github.com/AniTrend/retrofit-graphql/blob/master/LICENSE.md).
