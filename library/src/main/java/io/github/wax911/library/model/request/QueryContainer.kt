@@ -18,6 +18,10 @@ data class QueryContainer internal constructor(
         val extensions: @RawValue
         MutableMap<String, Any?> = WeakHashMap()) : Parcelable {
 
+    internal fun putVariables(values: Map<String, Any?>) {
+        variables.putAll(values)
+    }
+
     internal fun putVariable(key: String, value: Any?) {
         variables[key] = value
     }
