@@ -41,7 +41,7 @@ class TrendingViewModel : ViewModel(), Callback<GraphContainer<TrendingFeed>> {
     override fun onResponse(call: Call<GraphContainer<TrendingFeed>>, response: Response<GraphContainer<TrendingFeed>>) {
         val container: GraphContainer<TrendingFeed>? = response.body()
         if (response.isSuccessful && container != null) {
-            if (!container.isEmpty())
+            if (container.data?.feed?.isEmpty() != true)
                 mutableLiveData.value = container.data
         } else {
                 response.getError()?.apply {
