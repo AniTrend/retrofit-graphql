@@ -25,6 +25,11 @@ class QueryContainerBuilder(private val queryContainer: QueryContainer = QueryCo
         return this
     }
 
+    fun putVariables(values: Map<String, Any?>): QueryContainerBuilder {
+        queryContainer.putVariables(values)
+        return this
+    }
+
     fun putExtension(key: String, value: Any?): QueryContainerBuilder {
         queryContainer.putExtension(key, value)
         return this
