@@ -2,8 +2,8 @@ package io.github.wax911.library.annotation.processor.fragment
 
 /**
  * This util class provides helpful methods for finding fragment information in a GraphQL query. It has a method for
- * finding all references to fragments within a query. And another method for finding all defined fragments, which may
- * exist after the query.
+ * finding all references to fragments within a graphql string. And another method for finding all defined fragments,
+ * which may exist after a query.
  */
 object FragmentRegexUtil {
     // Allowed GraphQL names characters are documented here: https://graphql.github.io/graphql-spec/draft/#sec-Names
@@ -18,29 +18,29 @@ object FragmentRegexUtil {
     private const val GROUP_FRAGMENT_DEFINITION = 1
 
     /**
-     * Finds all distinct references to fragments in a query. A set of all unique fragment names (which are the
-     * references) is returned.
+     * Finds all distinct references to fragments in some graphql string. A set of all unique fragment names
+     * (which are the references) is returned.
      */
-    fun findFragmentReferences(query: String): Set<String> {
-        return extractFragmentNames(query, REGEX_FRAGMENT_REFERENCE, GROUP_FRAGMENT_REFERENCE)
+    fun findFragmentReferences(graphqlContent: String): Set<String> {
+        return extractFragmentNames(graphqlContent, REGEX_FRAGMENT_REFERENCE, GROUP_FRAGMENT_REFERENCE)
     }
 
     /**
      * Finds all defined fragments, which are usually found after a query. A set of all unique fragment names is
      * returned.
      */
-    fun findFragmentDefinitions(query: String): Set<String> {
-        return extractFragmentNames(query, REGEX_FRAGMENT_DEFINITION, GROUP_FRAGMENT_DEFINITION)
+    fun findFragmentDefinitions(graphqlContent: String): Set<String> {
+        return extractFragmentNames(graphqlContent, REGEX_FRAGMENT_DEFINITION, GROUP_FRAGMENT_DEFINITION)
     }
 
     /**
-     * Finds all strings defined by "regexStr" in the provided "query". The regex might return multiple match groups,
-     * so the "groupIndex" indicating the position of the expecting string should be specified.
+     * Finds all strings defined by "regexStr" in the provided "graphqlContent". The regex will return multiple match
+     * groups, so the "groupIndex" indicating the position of the expecting string should be specified.
      */
-    private fun extractFragmentNames(query: String, regexStr: String, groupIndex: Int): Set<String> {
+    private fun extractFragmentNames(graphqlContent: String, regexStr: String, groupIndex: Int): Set<String> {
         val regexMatches = regexStr
             .toRegex(setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL))
-            .findAll(query)
+            .findAll(graphqlContent)
 
         return regexMatches.filter {
             it.groupValues.size >= (groupIndex + 1)

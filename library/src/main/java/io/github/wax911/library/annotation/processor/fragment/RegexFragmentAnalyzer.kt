@@ -5,9 +5,9 @@ package io.github.wax911.library.annotation.processor.fragment
  * they are defined with the query.
  */
 class RegexFragmentAnalyzer : FragmentAnalyzer {
-    override fun analyzeFragments(query: String): Set<FragmentAnalysis> {
-        val fragmentReferences = FragmentRegexUtil.findFragmentReferences(query)
-        val fragmentDefinitions = FragmentRegexUtil.findFragmentDefinitions(query)
+    override fun analyzeFragments(graphqlContent: String): Set<FragmentAnalysis> {
+        val fragmentReferences = FragmentRegexUtil.findFragmentReferences(graphqlContent)
+        val fragmentDefinitions = FragmentRegexUtil.findFragmentDefinitions(graphqlContent)
 
         return fragmentReferences.map {
             FragmentAnalysis(fragmentReference = it, isDefined = fragmentDefinitions.contains(it))

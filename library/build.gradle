@@ -25,6 +25,10 @@ android {
         main.java.srcDirs += 'src/main/java'
         test.java.srcDirs += 'src/test/kotlin'
     }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 androidExtensions {
@@ -42,6 +46,7 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:$retrofit"
 
     testImplementation "junit:junit:$junit"
+    testImplementation "io.mockk:mockk:$mockk"
     androidTestImplementation "androidx.test:runner:$runner"
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso"
 }
