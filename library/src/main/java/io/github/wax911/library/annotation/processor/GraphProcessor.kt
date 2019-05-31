@@ -3,6 +3,8 @@ package io.github.wax911.library.annotation.processor
 import android.content.res.AssetManager
 import android.util.Log
 import io.github.wax911.library.annotation.GraphQuery
+import io.github.wax911.library.annotation.processor.fragment.FragmentPatcher
+import io.github.wax911.library.annotation.processor.fragment.GraphRegexUtil
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
@@ -13,7 +15,10 @@ import java.util.*
  * Created by max on 2018/03/12.
  * GraphQL annotation processor
  */
-class GraphProcessor private constructor(assetManager: AssetManager?) {
+class GraphProcessor private constructor(
+    assetManager: AssetManager?,
+    private val fragmentPatcher: FragmentPatcher = FragmentPatcher(defaultExtension)
+) {
 
     private val _graphFiles: MutableMap<String, String> by lazy {
         HashMap<String, String>()
@@ -73,9 +78,26 @@ class GraphProcessor private constructor(assetManager: AssetManager?) {
                     }
                 }
             }
+
+            patchQueries()
         } catch (e: IOException) {
             e.printStackTrace()
         }
+    }
+
+    /**
+     * Patch any query with fragment references, that don't already have the fragment defined with the query.
+     */
+    @Synchronized
+    private fun patchQueries() {
+        _graphFiles.entries
+            .filter { GraphRegexUtil.containsAQuery(it.value) }
+            .forEach {
+                val patch = fragmentPatcher.includeMissingFragments(it.key, it.value, _graphFiles)
+                if (patch.isNotEmpty()) {
+                    it.setValue("${it.value}$patch")
+                }
+            }
     }
 
     @Synchronized

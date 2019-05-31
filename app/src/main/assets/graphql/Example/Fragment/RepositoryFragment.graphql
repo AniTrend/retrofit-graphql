@@ -1,0 +1,8 @@
+fragment RepositoryFragment on Repository {
+  name
+  full_name
+  owner {
+    ...UserFragment
+  }
+  stargazers_count
+}

@@ -42,17 +42,22 @@ class FragmentPatcher(
                 includeMissingFragments(includeFile, includeGraphContent, availableGraphFiles, aggregation)
 
                 // Now we can append this fragment's content.
-                aggregation.append("\n\n$includeGraphContent")
+                val isNew = !aggregation.contains(includeGraphContent.toRegex(RegexOption.LITERAL))
+                if (isNew) {
+                    aggregation.append("\n\n$includeGraphContent")
+                }
             } else {
                 // This fragment is nowhere to be found.
                 Log.e(TAG, "$graphFile references $missingFragment, but it could not be located.")
             }
         }
 
+        Log.d(TAG, "Patch produced for: $graphFile\n$aggregation")
+
         return aggregation.toString()
     }
 
     companion object {
-        private val TAG = FragmentPatcher::class.simpleName
+        private const val TAG = "FragmentPatcher"
     }
 }
