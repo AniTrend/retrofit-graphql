@@ -66,10 +66,10 @@ class GraphProcessor private constructor(assetManager: AssetManager?) {
                 paths?.also {
                     for (item in it) {
                         val absolute = "$path/$item"
-                        if (!item.endsWith(defaultExtension))
-                            createGraphQLMap(absolute, this)
-                        else
+                        if (item.endsWith(defaultExtension))
                             _graphFiles[item] = getFileContents(open(absolute))
+                        else
+                            createGraphQLMap(absolute, this)
                     }
                 }
             }
