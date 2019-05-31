@@ -1,9 +1,11 @@
 package io.github.wax911.library.annotation.processor.fragment
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class FragmentRegexUtilTest {
+class GraphRegexUtilTest {
     private val fragmentNameA = "someObjectAFragment"
     private val fragmentNameB = "someObjectBFragment"
     private val fragmentNameC = "someObjectCFragment"
@@ -158,7 +160,7 @@ class FragmentRegexUtilTest {
         }
     """.trimIndent()
 
-    private val subj = FragmentRegexUtil
+    private val subj = GraphRegexUtil
 
     @Test
     fun `Given all valid formatting in Query, When find fragment references, Then find all`() {
@@ -194,5 +196,15 @@ class FragmentRegexUtilTest {
     fun `Given mixed good and bad formatting in Query, When find fragment definitions, Then find only the good`() {
         val expected = setOf(fragmentNameA, fragmentNameB)
         assertEquals(expected, subj.findFragmentDefinitions(mixedFormatQuery))
+    }
+
+    @Test
+    fun `Given a Query, When contains a query, Then return true`() {
+        assertTrue(subj.containsAQuery(validFormatQuery))
+    }
+
+    @Test
+    fun `Given not a Query, When contains a query, Then return false`() {
+        assertFalse(subj.containsAQuery(fragmentNameA))
     }
 }

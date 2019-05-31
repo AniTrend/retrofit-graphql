@@ -189,14 +189,13 @@ class FragmentPatcherTest {
         val queryAnalysis = analysis(mapOf(fragmentA to true, fragmentB to false))
         val fragmentBAnalysis = analysis(mapOf(fragmentC to false))
 
-        val (fragmentAKey, fragmentBKey, fragmentCKey) = file(fragmentA, fragmentB, fragmentC)
+        val (fragmentBKey, fragmentCKey) = file(fragmentB, fragmentC)
 
-        val (queryContent, fragmentAContent, fragmentBContent, fragmentCContent) =
+        val (queryContent, fragmentBContent, fragmentCContent) =
             fakeContent(graphFile, fragmentA, fragmentB, fragmentC)
 
         val graphFiles = mapOf(
             graphFile to queryContent,
-            fragmentAKey to fragmentAContent,
             fragmentBKey to fragmentBContent,
             fragmentCKey to fragmentCContent
         )
@@ -209,6 +208,70 @@ class FragmentPatcherTest {
 
         assertTrue(result.contains(fragmentBContent))
         assertTrue(result.contains(fragmentCContent))
+    }
+
+    /**
+     * Tests this scenario:
+     *
+     * query SomeQuery {
+     *   someObjectA {
+     *     ...fragmentA
+     *   }
+     * }
+     *
+     * fragment fragmentA on SomeObjectA {
+     *   id
+     *   someObjectC {
+     *     ...fragmentC
+     *   }
+     *   someObjectB {
+     *     ...fragmentB
+     *   }
+     * }
+     *
+     * # ----------------------------
+     * # Fragment/fragmentB.graphql
+     * fragment fragmentB on SomeObjectB {
+     *   id
+     *   someObjectC {
+     *     ...fragmentC
+     *   }
+     * }
+     *
+     * # ----------------------------
+     * # Fragment/fragmentC.graphql
+     * fragment fragmentC on SomeObjectC {
+     *   id
+     * }
+     *
+     * # (Both fragmentA and fragmentB reference fragmentC. fragmentB and fragmentC are externally defined, in the
+     * #  Fragment folder. When the patch is created, fragmentB and fragmentC definition should only be added once to
+     * #  the final patch).
+     */
+    @Test
+    fun `Given a fragment referenced multiple times, When include missing fragments, Then do not duplicate in patch`() {
+        val queryAnalysis = analysis(mapOf(fragmentA to true, fragmentB to false, fragmentC to false))
+        val fragmentBAnalysis = analysis(mapOf(fragmentC to false))
+
+        val (fragmentBKey, fragmentCKey) = file(fragmentB, fragmentC)
+
+        val (queryContent, fragmentBContent, fragmentCContent) =
+            fakeContent(graphFile, fragmentA, fragmentB, fragmentC)
+
+        val graphFiles = mapOf(
+            graphFile to queryContent,
+            fragmentBKey to fragmentBContent,
+            fragmentCKey to fragmentCContent
+        )
+
+        every { mockFragmentAnalyzer.analyzeFragments(any()) }.returns(emptySet())
+        every { mockFragmentAnalyzer.analyzeFragments(queryContent) }.returns(queryAnalysis)
+        every { mockFragmentAnalyzer.analyzeFragments(fragmentBContent) }.returns(fragmentBAnalysis)
+
+        val result = subj.includeMissingFragments(graphFile, queryContent, graphFiles)
+
+        assertEquals(1, fragmentBContent.toRegex(RegexOption.LITERAL).findAll(result).count())
+        assertEquals(1, fragmentCContent.toRegex(RegexOption.LITERAL).findAll(result).count())
     }
 
     private fun file(vararg name: String) = name.map { "$it$defaultExtension" }.toList()
