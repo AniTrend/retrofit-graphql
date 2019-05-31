@@ -31,9 +31,49 @@ For a detailed example please clone the project and look at the included sample 
 
 ### The Basics
 
-Firstly you'll need some to save your GraphQL queries and mutations into .graphql files, You can use this tool to generate your Insomnia workspaces into directories and files [insomnia-graphql-generator](https://github.com/AniTrend/insomnia-graphql-generator) and place these files into your assets folder as shown below:
+Firstly you'll need some to save your GraphQL queries, fragments, and mutations into .graphql files. You can use this tool to generate your Insomnia workspaces into directories and files [insomnia-graphql-generator](https://github.com/AniTrend/insomnia-graphql-generator) and place these files into your assets folder as shown below:
 
 <img src="./images/screenshots/assets_files.png" width=250 />
+
+With respect to fragments, you have two options as to where you can place them. You can place them inside your query file, after the query definition. Or, you can put your fragments in their own file under the `assets/graphql/Example/Fragment/` folder. You can also use a mix of the two if you wish. Only define one fragment per file, and make sure the name of the fragment matches the filename. For example:
+
+A query that lives in: `assets/graphql/Example/Query/Trending.graphql`. It references two fragments (`RepositoryFragment` and `UserFragment`) that were not defined with the query in the same file. They fragment definitions live elsewhere.
+```
+query Trending($type: FeedType!, $offset: Int, $limit: Int) {
+  feed(type: $type, offset: $offset, limit: $limit) {
+    id
+    hotScore
+    repository {
+      ...RepositoryFragment
+    }
+    postedBy {
+      ...UserFragment
+    }
+  }
+}
+```
+
+The `RepositoryFragment` lives in `assets/graphql/Example/Fragment/RepositoryFragment.graphql`. It happens to reference a `UserFragment` as well, which is defined in its own file. It is fine for fragments to reference other fragments:
+```
+fragment RepositoryFragment on Repository {
+  name
+  full_name
+  owner {
+    ...UserFragment
+  }
+  stargazers_count
+}
+```
+
+The `UserFragment` lives in `assets/graphql/Example/Fragment/UserFragment.graphql`:
+```
+fragment UserFragment on User {
+  login
+  avatar_url
+  html_url
+}
+```
+
 
 - __Add the JitPack repository to your build file__
 
