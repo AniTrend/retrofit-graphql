@@ -1,0 +1,3 @@
+fragment VoteFragment on Vote {
+	vote_value
+}
