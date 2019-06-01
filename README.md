@@ -53,7 +53,7 @@ query Trending($type: FeedType!, $offset: Int, $limit: Int) {
 }
 ```
 
-The `RepositoryFragment` lives in `assets/graphql/Example/Fragment/RepositoryFragment.graphql`. It happens to reference a `UserFragment` as well, which is defined in its own file. It is fine for fragments to reference other fragments:
+The `RepositoryFragment` lives in `assets/graphql/Example/Fragment/RepositoryFragment.graphql`. It happens to reference `UserFragment` which is also defined in its own file. Note, it is fine for fragments to reference other fragments.
 ```
 fragment RepositoryFragment on Repository {
   name
