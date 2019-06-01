@@ -35,7 +35,7 @@ First, you'll need .graphql files for saving your GraphQL queries, fragments, an
 
 <img src="./images/screenshots/assets_files.png" width=250 />
 
-With respect to fragments, you have two options as to where you can place them. You can place them inside your query file after the query definition. Or, you can put your fragments in their own file under the `assets/graphql/Example/Fragment/` folder. You can also use a mix of the two if you wish. Only define one fragment per file, and make sure the name of the fragment matches the filename. For example:
+With respect to fragments, you have two options. Either place them inside your query file after the query definition or put them in their own file under the `assets/graphql/Example/Fragment/` folder. You may also use a mixture of the two if you wish. Note, only define one fragment per file and make sure the name of the fragment matches the filename. For example:
 
 A query that lives in: `assets/graphql/Example/Query/Trending.graphql`. It references two fragments (`RepositoryFragment` and `UserFragment`) that were not defined with the query in the same file. They fragment definitions live elsewhere.
 ```
