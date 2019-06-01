@@ -3,25 +3,11 @@ query Trending($type: FeedType!, $offset: Int, $limit: Int) {
     id
     hotScore
     repository {
-      ...repository
+      ...RepositoryFragment
     }
     postedBy {
-      ...user
+      ...UserFragment
     }
   }
 }
 
-fragment repository on Repository {
-  name
-  full_name
-  owner {
-    ...user
-  }
-  stargazers_count
-}
-
-fragment user on User {
-  login
-  avatar_url
-  html_url
-}
