@@ -31,7 +31,7 @@ For a detailed example please clone the project and look at the included sample 
 
 ### The Basics
 
-Firstly you'll need somewhere to save your GraphQL queries, fragments, and mutations into .graphql files. You can use this tool to generate your Insomnia workspaces into directories and files [insomnia-graphql-generator](https://github.com/AniTrend/insomnia-graphql-generator) and place these files into your assets folder as shown below:
+First, you'll need .graphql files for saving your GraphQL queries, fragments, and mutations. You can use this tool to generate your Insomnia workspaces into directories and files [insomnia-graphql-generator](https://github.com/AniTrend/insomnia-graphql-generator), placing them into your assets folder as shown below:
 
 <img src="./images/screenshots/assets_files.png" width=250 />
 
