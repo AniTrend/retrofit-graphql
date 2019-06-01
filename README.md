@@ -31,9 +31,49 @@ For a detailed example please clone the project and look at the included sample 
 
 ### The Basics
 
-Firstly you'll need some to save your GraphQL queries and mutations into .graphql files, You can use this tool to generate your Insomnia workspaces into directories and files [insomnia-graphql-generator](https://github.com/AniTrend/insomnia-graphql-generator) and place these files into your assets folder as shown below:
+First, you'll need .graphql files for saving your GraphQL queries, fragments, and mutations. You can use this tool to generate your Insomnia workspaces into directories and files [insomnia-graphql-generator](https://github.com/AniTrend/insomnia-graphql-generator), placing them into your assets folder as shown below:
 
 <img src="./images/screenshots/assets_files.png" width=250 />
+
+With respect to fragments, you have two options. Either place them inside your query file after the query definition, or put them in their own file under the `assets/graphql/Example/Fragment/` folder. You may also use a mixture of the two if you wish. Note, only define one fragment per file and make sure the name of the fragment matches the filename. Here's an example:
+
+In the file `assets/graphql/Example/Query/Trending.graphql`, two fragments (`RepositoryFragment` and `UserFragment`) are referenced but not defined in the same file.
+```graphql
+query Trending($type: FeedType!, $offset: Int, $limit: Int) {
+  feed(type: $type, offset: $offset, limit: $limit) {
+    id
+    hotScore
+    repository {
+      ...RepositoryFragment
+    }
+    postedBy {
+      ...UserFragment
+    }
+  }
+}
+```
+
+The `RepositoryFragment` lives in `assets/graphql/Example/Fragment/RepositoryFragment.graphql`. It happens to reference `UserFragment` which is also defined in its own file. Note, it is fine for fragments to reference other fragments.
+```graphql
+fragment RepositoryFragment on Repository {
+  name
+  full_name
+  owner {
+    ...UserFragment
+  }
+  stargazers_count
+}
+```
+
+The `UserFragment` lives in `assets/graphql/Example/Fragment/UserFragment.graphql`:
+```graphql
+fragment UserFragment on User {
+  login
+  avatar_url
+  html_url
+}
+```
+
 
 - __Add the JitPack repository to your build file__
 
@@ -91,10 +131,10 @@ query Trending($type: FeedType!, $offset: Int, $limit: Int) {
     id
     hotScore
     repository {
-      ...repository
+      ...RepositoryFragment
     }
     postedBy {
-      ...user
+      ...UserFragment
     }
   }
 }
@@ -107,7 +147,18 @@ val queryBuilder = QueryContainerBuilder()
             .putVariable("type", "TRENDING")
             .putVariable("offset", 1)
             .putVariable("limit", 15);
+
+// or you could add a map directly
+val queryBuilder = QueryContainerBuilder()
+            .putVariables(
+                mapOf(
+                    "type" to feedType,
+                    "limit" to 20,
+                    "offset" to 1
+                )
+            )
 ```
+
 The QueryContainerBuilder is then passed into your retrofit interface method as parameter and that's it! Just like an ordinary retrofit application.
 
 

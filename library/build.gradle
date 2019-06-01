@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion rootProject.compileSdk
+    compileSdkVersion compileSdk
     defaultConfig {
-        minSdkVersion rootProject.minSdk
-        targetSdkVersion rootProject.targetSdk
-        versionCode rootProject.versionCode
-        versionName rootProject.versionName
+        minSdkVersion minSdk
+        targetSdkVersion targetSdk
+        versionCode versionCode
+        versionName versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -19,6 +19,15 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/java'
+        test.java.srcDirs += 'src/test/kotlin'
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
     }
 }
 
@@ -30,13 +39,14 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     /** Kotlin Libraries */
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlin"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
 
     /** Retrofit Libraries */
-    implementation "com.squareup.retrofit2:retrofit:$rootProject.retrofit"
-    implementation "com.squareup.retrofit2:converter-gson:$rootProject.retrofit"
+    implementation "com.squareup.retrofit2:retrofit:$retrofit"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit"
 
-    testImplementation "junit:junit:$rootProject.junit"
-    androidTestImplementation "androidx.test:runner:$rootProject.runner"
-    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.espresso"
+    testImplementation "junit:junit:$junit"
+    testImplementation "io.mockk:mockk:$mockk"
+    androidTestImplementation "androidx.test:runner:$runner"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$espresso"
 }
