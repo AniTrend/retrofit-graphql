@@ -3,9 +3,10 @@ package io.github.wax911.library.annotation.processor.fragment
 import android.util.Log
 
 /**
- * This class will return a String containing fragment definitions. This String can be appended to a query in order to
- * have all referenced fragments fully defined, before sending it to the server. This allows a query (for example) to
- * reference fragments, but have the definition of those fragments live outside of the query file.
+ * This class will return a String containing fragment definitions. This String can then be appended to a GraphQL
+ * operation in order to have all referenced fragments fully defined, before sending it to the server. This allows a
+ * GraphQL operation to reference fragments, but have the definition of those fragments live outside of the file that
+ * the operation lives in.
  *
  * This class also properly handles recursion. This means fragments can have references to other fragments, and it will
  * do its best to resolve everything correctly.

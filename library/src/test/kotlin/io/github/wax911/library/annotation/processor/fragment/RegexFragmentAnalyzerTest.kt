@@ -2,8 +2,15 @@ package io.github.wax911.library.annotation.processor.fragment
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class RegexFragmentAnalyzerTest {
+/**
+ * The test methods in this class will run three times using the JUnit parameterized test mechanism. Whether we are
+ * dealing with an operation of type: "query", "mutation", or "subscription", the tests should pass.
+ */
+@RunWith(Parameterized::class)
+class RegexFragmentAnalyzerTest(private val operation: Operation) {
     private val fragmentNameTemplate = "someObject%sFragment"
     private val typeTemplate = "Object%s"
     private val fragmentA = createFragmentName("A")
@@ -24,8 +31,8 @@ class RegexFragmentAnalyzerTest {
     """.trimIndent()
 
     private val queryTemplate = """
-        query SomeQuery {
-          someQuery {
+        %s Some%s {
+          some%s {
             objectA {
               ...$fragmentA
             }
@@ -44,7 +51,7 @@ class RegexFragmentAnalyzerTest {
     private val subj = RegexFragmentAnalyzer()
 
     @Test
-    fun `Given a query with all fragments defined, When analyze fragments, Then analysis matches expectation`() {
+    fun `Given an operation with all fragments defined, When analyze fragments, Then analysis matches expectation`() {
         val expected = setOf(
             FragmentAnalysis(fragmentA, true),
             FragmentAnalysis(fragmentB, true),
@@ -63,7 +70,7 @@ class RegexFragmentAnalyzerTest {
     }
 
     @Test
-    fun `Given a query with 1 of 3 fragments defined, When analyze fragments, Then analysis matches expectation`() {
+    fun `Given an operation with 1 of 3 fragments defined, When analyze fragments, Then analysis matches expectation`() {
         val expected = setOf(
             FragmentAnalysis(fragmentA, true),
             FragmentAnalysis(fragmentB, false),
@@ -78,7 +85,7 @@ class RegexFragmentAnalyzerTest {
     }
 
     @Test
-    fun `Given a query with no fragments defined, When analyze fragments, Then analysis matches expectation`() {
+    fun `Given an operation with no fragments defined, When analyze fragments, Then analysis matches expectation`() {
         val expected = setOf(
             FragmentAnalysis(fragmentA, false),
             FragmentAnalysis(fragmentB, false),
@@ -89,7 +96,7 @@ class RegexFragmentAnalyzerTest {
     }
 
     @Test
-    fun `Given a query with fragments within fragments, When analyze fragments, Then analysis matches expectation`() {
+    fun `Given an operation with fragments within fragments, When analyze fragments, Then analysis matches expectation`() {
         val expected = setOf(
             FragmentAnalysis(fragmentA, true),
             FragmentAnalysis(fragmentB, false),
@@ -106,8 +113,7 @@ class RegexFragmentAnalyzerTest {
     }
 
     private fun createQuery(definedFragments: String = ""): String {
-        println(queryTemplate.format(definedFragments))
-        return queryTemplate.format(definedFragments)
+        return queryTemplate.format(operation.typeStr, operation.nameStr, operation.nameStr, definedFragments)
     }
 
     private fun createFragment(name: String, type: String, innerFragmentRef: String = ""): String {
@@ -117,4 +123,10 @@ class RegexFragmentAnalyzerTest {
     private fun createFragmentName(letter: String) = fragmentNameTemplate.format(letter)
 
     private fun createType(letter: String) = typeTemplate.format(letter)
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun operation() = Operation.enumeration()
+    }
 }
