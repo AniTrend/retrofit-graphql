@@ -91,7 +91,7 @@ class GraphProcessor private constructor(
     @Synchronized
     private fun patchQueries() {
         _graphFiles.entries
-            .filter { GraphRegexUtil.containsAQuery(it.value) }
+            .filter { GraphRegexUtil.containsAnOperation(it.value) }
             .forEach {
                 val patch = fragmentPatcher.includeMissingFragments(it.key, it.value, _graphFiles)
                 if (patch.isNotEmpty()) {
