@@ -12,7 +12,7 @@ class FragmentPatcherTest {
     private val mockFragmentAnalyzer = mockk<FragmentAnalyzer>()
 
     private val graphFile = "SomeQuery.graphql"
-    private val graphContent = "%s: actual content doesn't matter for tests in this class"
+    private val graphContent = "%s: actual content of this string doesn't matter for tests in this class"
     private val fragmentA = "fragmentA"
     private val fragmentB = "fragmentB"
     private val fragmentC = "fragmentC"

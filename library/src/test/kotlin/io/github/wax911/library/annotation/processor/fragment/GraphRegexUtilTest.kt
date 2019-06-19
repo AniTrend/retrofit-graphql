@@ -4,17 +4,24 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class GraphRegexUtilTest {
+/**
+ * The test methods in this class will run three times using the JUnit parameterized test mechanism. Whether we are
+ * dealing with an operation of type: "query", "mutation", or "subscription", the tests should pass.
+ */
+@RunWith(Parameterized::class)
+class GraphRegexUtilTest(private val operation: Operation) {
     private val fragmentNameA = "someObjectAFragment"
     private val fragmentNameB = "someObjectBFragment"
     private val fragmentNameC = "someObjectCFragment"
     private val fragmentNameD = "_someObjectDFragment_123"
 
     // All valid formatting.
-    private val validFormatQuery = """
-        query SomeQuery {
-          someQuery {
+    private val validFormatQueryType = """
+        %s Some%s {
+          some%s {
             id
             name
             someObjectA {
@@ -65,9 +72,9 @@ class GraphRegexUtilTest {
     """.trimIndent()
 
     // All bad/incorrect formatting.
-    private val invalidFormatQuery = """
-        query SomeQuery {
-          someQuery {
+    private val invalidFormatQueryType = """
+        %s Some%s {
+          some%s {
             id
             name
             someObjectA {
@@ -111,9 +118,9 @@ class GraphRegexUtilTest {
     """.trimIndent()
 
     // Some good formatting / some bad.
-    private val mixedFormatQuery = """
-        query SomeQuery {
-          someQuery {
+    private val mixedFormatQueryType = """
+        %s Some%s {
+          some%s {
             id
             name
             someObjectA {
@@ -163,48 +170,59 @@ class GraphRegexUtilTest {
     private val subj = GraphRegexUtil
 
     @Test
-    fun `Given all valid formatting in Query, When find fragment references, Then find all`() {
+    fun `Given all valid formatting in operation, When find fragment references, Then find all`() {
         val expected = setOf(fragmentNameA, fragmentNameB, fragmentNameC, fragmentNameD)
-        assertEquals(expected, subj.findFragmentReferences(validFormatQuery))
+        assertEquals(expected, subj.findFragmentReferences(getQuery(validFormatQueryType)))
     }
 
     @Test
-    fun `Given all invalid formatting in Query, When find fragment references, Then find nothing`() {
+    fun `Given all invalid formatting in operation, When find fragment references, Then find nothing`() {
         val expected = setOf<String>()
-        assertEquals(expected, subj.findFragmentReferences(invalidFormatQuery))
+        assertEquals(expected, subj.findFragmentReferences(getQuery(invalidFormatQueryType)))
     }
 
     @Test
-    fun `Given mixed good and bad formatting in Query, When find fragment references, Then find only the good`() {
+    fun `Given mixed good and bad formatting in operation, When find fragment references, Then find only the good`() {
         val expected = setOf(fragmentNameA, fragmentNameB)
-        assertEquals(expected, subj.findFragmentReferences(mixedFormatQuery))
+        assertEquals(expected, subj.findFragmentReferences(getQuery(mixedFormatQueryType)))
     }
 
     @Test
-    fun `Given all valid formatting in query, When find fragment definitions, Then find all`() {
+    fun `Given all valid formatting in operation, When find fragment definitions, Then find all`() {
         val expected = setOf(fragmentNameA, fragmentNameB, fragmentNameC, fragmentNameD)
-        assertEquals(expected, subj.findFragmentDefinitions(validFormatQuery))
+        assertEquals(expected, subj.findFragmentDefinitions(getQuery(validFormatQueryType)))
     }
 
     @Test
-    fun `Given all invalid formatting in Query, When find fragment definitions, Then find nothing`() {
+    fun `Given all invalid formatting in operation, When find fragment definitions, Then find nothing`() {
         val expected = setOf<String>()
-        assertEquals(expected, subj.findFragmentDefinitions(invalidFormatQuery))
+        assertEquals(expected, subj.findFragmentDefinitions(getQuery(invalidFormatQueryType)))
     }
 
     @Test
-    fun `Given mixed good and bad formatting in Query, When find fragment definitions, Then find only the good`() {
+    fun `Given mixed good and bad formatting in operation, When find fragment definitions, Then find only the good`() {
         val expected = setOf(fragmentNameA, fragmentNameB)
-        assertEquals(expected, subj.findFragmentDefinitions(mixedFormatQuery))
+        assertEquals(expected, subj.findFragmentDefinitions(getQuery(mixedFormatQueryType)))
     }
 
     @Test
-    fun `Given a Query, When contains a query, Then return true`() {
-        assertTrue(subj.containsAQuery(validFormatQuery))
+    fun `Given a valid operation, When contains a query type, Then return true`() {
+        println(getQuery(validFormatQueryType))
+        assertTrue(subj.containsAnOperation(getQuery(validFormatQueryType)))
     }
 
     @Test
-    fun `Given not a Query, When contains a query, Then return false`() {
-        assertFalse(subj.containsAQuery(fragmentNameA))
+    fun `Given not a valid operation, When contains a query type, Then return false`() {
+        assertFalse(subj.containsAnOperation(fragmentNameA))
+    }
+
+    private fun getQuery(queryToFormat: String): String {
+        return queryToFormat.format(operation.typeStr, operation.nameStr, operation.nameStr)
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun operation() = Operation.enumeration()
     }
 }

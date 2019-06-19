@@ -9,10 +9,10 @@ object GraphRegexUtil {
     // Allowed GraphQL names characters are documented here: https://graphql.github.io/graphql-spec/draft/#sec-Names
     // We want to find all occurrences of "...SomeFragment". And the only piece we care about extracting is the
     // name of the fragment ("SomeFragment")
-    private const val REGEX_FRAGMENT_NAME = "[_A-Za-z][_0-9A-Za-z]*"
-    private const val REGEX_FRAGMENT_REFERENCE = "\\.\\.\\.(\\s+)?($REGEX_FRAGMENT_NAME)"
-    private const val REGEX_FRAGMENT_DEFINITION = "fragment\\s{1,}([_A-Za-z][_0-9A-Za-z]*)\\s{1,}on"
-    private const val REGEX_QUERY_DEFINITION = "query\\s{1,}([_A-Za-z][_0-9A-Za-z]*)"
+    private const val REGEX_VALID_NAME = "[_A-Za-z][_0-9A-Za-z]*"
+    private const val REGEX_FRAGMENT_REFERENCE = "\\.\\.\\.(\\s+)?($REGEX_VALID_NAME)"
+    private const val REGEX_FRAGMENT_DEFINITION = "fragment\\s{1,}($REGEX_VALID_NAME)\\s{1,}on"
+    private const val REGEX_OPERATION_DEFINITION = "(query|mutation|subscription)\\s+($REGEX_VALID_NAME)"
     // The fragment name will be found in group 2 of the reference regex match result.
     private const val GROUP_FRAGMENT_REFERENCE = 2
     // The fragment name will be found in group 1 of the definition regex match result.
@@ -37,10 +37,11 @@ object GraphRegexUtil {
     }
 
     /**
-     * Returns whether or not a query can be found in some GraphQL String.
+     * Returns whether or not a valid GraphQL operation (query, mutation, or subscription) can be found in some GraphQL
+     * String.
      */
-    fun containsAQuery(graphqlContent: String): Boolean {
-        return REGEX_QUERY_DEFINITION.toRegex(regexOptions).containsMatchIn(graphqlContent)
+    fun containsAnOperation(graphqlContent: String): Boolean {
+        return (REGEX_OPERATION_DEFINITION.toRegex(regexOptions).containsMatchIn(graphqlContent))
     }
 
     /**
