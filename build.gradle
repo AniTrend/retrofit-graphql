@@ -21,7 +21,7 @@ buildscript {
         coroutinesAndroid = '1.2.1'
 
         glide = '4.9.0'
-        retrofit = '2.4.0'
+        retrofit = '2.6.0'
         httpLogger = '3.11.0'
 
         junit = '4.12'
