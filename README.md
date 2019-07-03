@@ -90,11 +90,11 @@ allprojects {
 
 ```javascript
 dependencies {
-    implementation 'com.github.AniTrend:retrofit-graphql:{latest_version}'
+    implementation 'com.github.anitrend:retrofit-graphql:{latest_version}'
 }
 ```
 
-- __Opetional R8 / ProGuard Rules__
+- __Optional R8 / ProGuard Rules__
 
 If you are using R8 the shrinking and obfuscation rules are included automatically.
 
@@ -155,17 +155,19 @@ val queryBuilder = QueryContainerBuilder()
             .putVariable("type", "TRENDING")
             .putVariable("offset", 1)
             .putVariable("limit", 15);
-
-// or you could add a map directly
-val queryBuilder = QueryContainerBuilder()
-            .putVariables(
-                mapOf(
-                    "type" to feedType,
-                    "limit" to 20,
-                    "offset" to 1
-                )
-            )
 ```
+
+> You can also add a map to the query container using `putVariables()`
+> ```java
+> val queryBuilder = QueryContainerBuilder()
+>             .putVariables(
+>                 mapOf(
+>                     "type" to feedType,
+>                     "limit" to 20,
+>                     "offset" to 1
+>                 )
+>             )
+> ```
 
 The QueryContainerBuilder is then passed into your retrofit interface method as parameter and that's it! Just like an ordinary retrofit application.
 
