@@ -18,7 +18,7 @@ buildscript {
         koin = '2.0.1'
 
         coroutinesCore = '1.2.1'
-        coroutinesAndroid = '1.2.1'
+        coroutinesAndroid = '1.2.2'
 
         glide = '4.9.0'
         retrofit = '2.6.0'
