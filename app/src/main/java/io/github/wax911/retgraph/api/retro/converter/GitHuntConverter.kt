@@ -18,10 +18,10 @@ import java.lang.reflect.Type
  * Optionally overriding the GraphConverter to customize it's implementation, otherwise one
  * could just use the default impl which does everything just fine
  */
-class GitHuntConverter private constructor(context: Context?): GraphConverter(context) {
+class GitHuntConverter private constructor(context: Context): GraphConverter(context) {
 
     companion object {
-        fun create(context: Context?): GitHuntConverter =
+        fun create(context: Context): GitHuntConverter =
                 GitHuntConverter(context).apply {
                     gson = GsonBuilder()
                             .enableComplexMapKeySerialization()

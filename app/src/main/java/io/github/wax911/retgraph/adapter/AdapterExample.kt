@@ -13,7 +13,7 @@ import java.util.*
 
 class AdapterExample : RecyclerView.Adapter<AdapterExample.EntryAdapter>() {
 
-    val model by lazy { ArrayList<Entry>() }
+    val model = ArrayList<Entry>()
 
     fun addItems(model: List<Entry>) {
         this.model.addAll(model)

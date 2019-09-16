@@ -10,24 +10,19 @@ import android.widget.TextView
 import android.widget.ViewFlipper
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import io.github.wax911.library.model.request.QueryContainerBuilder
 import io.github.wax911.retgraph.R
 import io.github.wax911.retgraph.adapter.AdapterExample
-import io.github.wax911.retgraph.api.WebFactory
-import io.github.wax911.retgraph.api.retro.request.IndexModel
 import io.github.wax911.retgraph.model.container.TrendingFeed
 import io.github.wax911.retgraph.viewmodel.TrendingViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class FragmentContainer : Fragment(), Observer<TrendingFeed> {
+class FragmentContainer : Fragment() {
 
-    private val viewModel: TrendingViewModel by lazy {
-        ViewModelProviders.of(this@FragmentContainer)
-                .get(TrendingViewModel::class.java)
-    }
+    private val viewModel by viewModel<TrendingViewModel>()
 
     private val adapterExample by lazy {
         AdapterExample()
@@ -40,6 +35,10 @@ class FragmentContainer : Fragment(), Observer<TrendingFeed> {
 
     @TrendingFeed.FeedType
     private var feedType: String? = null
+
+    private val observer = Observer<TrendingFeed?> {
+        onViewModelResult(it)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,10 +91,7 @@ class FragmentContainer : Fragment(), Observer<TrendingFeed> {
      * Activity's lifecycle.
      */
     override fun onResume() {
-        viewModel.apply {
-            if (!mutableLiveData.hasActiveObservers())
-                mutableLiveData.observe(this@FragmentContainer, this@FragmentContainer)
-        }
+        viewModel.model.observe(this, observer)
         startNetworkRequest()
         super.onResume()
     }
@@ -106,24 +102,19 @@ class FragmentContainer : Fragment(), Observer<TrendingFeed> {
      * Activity's lifecycle.
      */
     override fun onPause() {
-        viewModel.apply {
-            if (mutableLiveData.hasActiveObservers())
-                mutableLiveData.removeObserver(this@FragmentContainer)
-        }
+        viewModel.model.removeObserver(observer)
         super.onPause()
     }
 
     private fun startNetworkRequest() {
-        if (viewModel.mutableLiveData.value == null) {
+        if (viewModel.model.value == null) {
             val queryContainerBuilder = QueryContainerBuilder()
                     .putVariable("type", feedType)
                     .putVariable("limit", 20)
                     .putVariable("offset", 1)
-            val indexModel = WebFactory.getInstance(context)
-                    .createService(IndexModel::class.java)
-            viewModel.makeNewRequest(indexModel.getTrending(queryContainerBuilder))
+            viewModel(queryContainerBuilder)
         } else
-            onChanged(viewModel.mutableLiveData.value)
+            onViewModelResult(viewModel.model.value)
     }
 
     private fun showError() {
@@ -140,11 +131,10 @@ class FragmentContainer : Fragment(), Observer<TrendingFeed> {
 
     /**
      * Called when the data is changed.
-     * @see TrendingViewModel.onResponse
-     * @param trendingFeed The new data from the view model
+     * @see TrendingViewModel.model
      */
-    override fun onChanged(trendingFeed: TrendingFeed?) {
-        if (trendingFeed?.feed != null) {
+    private fun onViewModelResult(result: TrendingFeed?) {
+        if (result?.feed != null) {
             viewFlipper?.apply {
                 if (displayedChild < 1)
                     showNext()
@@ -153,7 +143,7 @@ class FragmentContainer : Fragment(), Observer<TrendingFeed> {
                 if (refreshLayout?.isRefreshing == true)
                     model.clear()
                 if (model.size < 1)
-                    addItems(trendingFeed.feed)
+                    addItems(result.feed)
             }
         }
         else

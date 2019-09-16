@@ -5,7 +5,7 @@ import io.github.wax911.retgraph.model.parent.Entry
 
 data class TrendingFeed(val feed: List<Entry>?) {
 
-    @StringDef(TrendingFeed.HOT, TrendingFeed.NEW, TrendingFeed.TOP)
+    @StringDef(HOT, NEW, TOP)
     internal annotation class FeedType
 
     companion object {
