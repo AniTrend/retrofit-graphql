@@ -28,6 +28,8 @@ For a detailed example please clone the project and look at the included sample 
 - [Architecture Lifecycle](https://developer.android.com/topic/libraries/architecture/lifecycle)
 - [ViewModel](https://developer.android.com/topic/libraries/architecture/viewmodel)
 - [LiveData](https://developer.android.com/topic/libraries/architecture/livedata)
+- [Koin](https://insert-koin.io/)
+- [Coroutines](https://developer.android.com/kotlin/coroutines)
 
 ## The Basics
 
@@ -110,12 +112,12 @@ Next we make our retrofit interfaces and annotate them with the `@GraphQuery` an
     @POST("graphql")
     @GraphQuery("Trending")
     @Headers("Content-Type: application/json")
-    fun getTrending(@Body request: QueryContainerBuilder): Call<GraphContainer<TrendingFeed>>
+    suspend fun getTrending(@Body request: QueryContainerBuilder): Response<GraphContainer<TrendingFeed>>
 
     @POST("graphql")
     @GraphQuery("RepoEntries")
     @Headers("Content-Type: application/json")
-    fun getRepoEntries(@Body request: QueryContainerBuilder): Call<GraphContainer<EntryFeed>>
+    suspend fun getRepoEntries(@Body request: QueryContainerBuilder): Response<GraphContainer<EntryFeed>>
 ```
 
 ### Models
