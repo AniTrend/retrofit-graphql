@@ -10,4 +10,5 @@ data class Entry(
         val score: Double,
         val postedBy: User?,
         val hotScore: Double,
-        val repository: Repository?)
+        val repository: Repository?
+)

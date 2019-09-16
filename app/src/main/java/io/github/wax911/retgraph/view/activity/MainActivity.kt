@@ -2,29 +2,28 @@ package io.github.wax911.retgraph.view.activity
 
 import android.os.Bundle
 import android.view.MenuItem
-import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 import io.github.wax911.retgraph.R
-import io.github.wax911.retgraph.ThemedActivity
+import io.github.wax911.retgraph.common.ThemedActivity
 import io.github.wax911.retgraph.model.container.TrendingFeed
 import io.github.wax911.retgraph.view.fragment.FragmentContainer
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : ThemedActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    private val bottomDrawerBehavior: BottomSheetBehavior<FrameLayout> by lazy {
+    private val bottomDrawerBehavior by lazy(LazyThreadSafetyMode.NONE) {
         BottomSheetBehavior.from(bottomDrawer)
     }
 
-    private val navigationView: NavigationView by lazy {
+    private val navigationView by lazy(LazyThreadSafetyMode.NONE) {
         findViewById<NavigationView>(R.id.navigationView)
     }
 
-    private val fab: FloatingActionButton by lazy {
+    private val fab by lazy(LazyThreadSafetyMode.NONE) {
         findViewById<FloatingActionButton>(R.id.fab)
     }
 

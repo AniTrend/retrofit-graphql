@@ -28,6 +28,8 @@ For a detailed example please clone the project and look at the included sample 
 - [Architecture Lifecycle](https://developer.android.com/topic/libraries/architecture/lifecycle)
 - [ViewModel](https://developer.android.com/topic/libraries/architecture/viewmodel)
 - [LiveData](https://developer.android.com/topic/libraries/architecture/livedata)
+- [Koin](https://insert-koin.io/)
+- [Coroutines](https://developer.android.com/kotlin/coroutines)
 
 ## The Basics
 
@@ -90,11 +92,11 @@ allprojects {
 
 ```javascript
 dependencies {
-    implementation 'com.github.AniTrend:retrofit-graphql:{latest_version}'
+    implementation 'com.github.anitrend:retrofit-graphql:{latest_version}'
 }
 ```
 
-- __Opetional R8 / ProGuard Rules__
+- __Optional R8 / ProGuard Rules__
 
 If you are using R8 the shrinking and obfuscation rules are included automatically.
 
@@ -110,12 +112,12 @@ Next we make our retrofit interfaces and annotate them with the `@GraphQuery` an
     @POST("graphql")
     @GraphQuery("Trending")
     @Headers("Content-Type: application/json")
-    fun getTrending(@Body request: QueryContainerBuilder): Call<GraphContainer<TrendingFeed>>
+    suspend fun getTrending(@Body request: QueryContainerBuilder): Response<GraphContainer<TrendingFeed>>
 
     @POST("graphql")
     @GraphQuery("RepoEntries")
     @Headers("Content-Type: application/json")
-    fun getRepoEntries(@Body request: QueryContainerBuilder): Call<GraphContainer<EntryFeed>>
+    suspend fun getRepoEntries(@Body request: QueryContainerBuilder): Response<GraphContainer<EntryFeed>>
 ```
 
 ### Models
@@ -155,17 +157,19 @@ val queryBuilder = QueryContainerBuilder()
             .putVariable("type", "TRENDING")
             .putVariable("offset", 1)
             .putVariable("limit", 15);
-
-// or you could add a map directly
-val queryBuilder = QueryContainerBuilder()
-            .putVariables(
-                mapOf(
-                    "type" to feedType,
-                    "limit" to 20,
-                    "offset" to 1
-                )
-            )
 ```
+
+> You can also add a map to the query container using `putVariables()`
+> ```java
+> val queryBuilder = QueryContainerBuilder()
+>             .putVariables(
+>                 mapOf(
+>                     "type" to feedType,
+>                     "limit" to 20,
+>                     "offset" to 1
+>                 )
+>             )
+> ```
 
 The QueryContainerBuilder is then passed into your retrofit interface method as parameter and that's it! Just like an ordinary retrofit application.
 
