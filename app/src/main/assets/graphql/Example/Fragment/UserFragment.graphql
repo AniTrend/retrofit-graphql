@@ -1,0 +1,5 @@
+fragment UserFragment on User {
+  login
+  avatar_url
+  html_url
+}
