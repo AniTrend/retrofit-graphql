@@ -39,18 +39,17 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesCore"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesAndroid"
 
-    /** Koin AndroidX Scope feature */
+    /** Koin AndroidX Dependency Injection */
+    implementation "org.koin:koin-core:$koin"
+    implementation "org.koin:koin-core-ext:$koin"
     implementation "org.koin:koin-androidx-scope:$koin"
-
-    /** Koin AndroidX ViewModel feature */
     implementation "org.koin:koin-androidx-viewmodel:$koin"
 
     /** Architecture Components */
     implementation "androidx.core:core-ktx:$ktx"
-    implementation "android.arch.paging:runtime:$paging"
-    implementation "androidx.lifecycle:lifecycle-extensions:$anroidx"
-    implementation "androidx.room:room-runtime:$anroidx"
-    kapt "androidx.room:room-compiler:$anroidx"
+    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycleX"
+    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycleX"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleX"
 
     /** Retrofit Libraries */
     implementation "com.squareup.retrofit2:retrofit:$retrofit"
