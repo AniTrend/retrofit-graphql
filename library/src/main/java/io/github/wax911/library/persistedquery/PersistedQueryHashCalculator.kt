@@ -1,8 +1,8 @@
 package io.github.wax911.library.persistedquery
 
 import android.content.Context
-import android.util.Log
 import io.github.wax911.library.annotation.processor.GraphProcessor
+import io.github.wax911.library.util.Logger
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.*
@@ -32,15 +32,15 @@ class PersistedQueryHashCalculator constructor(context: Context?) {
     }
 
     private fun createAndStoreHash(queryName: String, fileKey: String): String? {
-        Log.d(this.toString(), "Creating hash for $queryName")
+        Logger.d(this.toString(), "Creating hash for $queryName")
         return if (graphProcessor.graphFiles.containsKey(fileKey)) {
             val hashOfQuery = hashOfQuery(graphProcessor.graphFiles.getValue(fileKey))
-            Log.d(this.toString(), "Created ")
+            Logger.d(this.toString(), "Created ")
             apqHashes[fileKey] = hashOfQuery
             hashOfQuery
         } else {
-            Log.e(this.toString(), "The request query $fileKey could not be found!")
-            Log.e(this.toString(), "Current size of graphFiles -> size: ${graphProcessor.graphFiles.size}")
+            Logger.e(this.toString(), "The request query $fileKey could not be found!")
+            Logger.e(this.toString(), "Current size of graphFiles -> size: ${graphProcessor.graphFiles.size}")
             null
         }
     }
