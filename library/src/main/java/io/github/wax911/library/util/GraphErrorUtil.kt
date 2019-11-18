@@ -31,7 +31,7 @@ fun Response<*>?.getError(): List<GraphError>? {
 }
 
 private fun String.getGraphQLError(): List<GraphError>? {
-    Log.e("GraphErrorUtil", this)
+    Logger.e("GraphErrorUtil", this)
     val tokenType = object : TypeToken<GraphContainer<*>>() {}.type
     val graphContainer = Gson().fromJson<GraphContainer<*>>(this, tokenType)
     return graphContainer.errors
