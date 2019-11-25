@@ -16,7 +16,7 @@ buildscript {
         kotlinVersion = '1.3.60'
         koin = '2.0.1'
 
-        coroutinesAndroid = '1.3.2'
+        coroutinesAndroid = '1.3.2-1.3.60'
         coroutinesCore = '1.3.2'
 
         glide = '4.10.0'
