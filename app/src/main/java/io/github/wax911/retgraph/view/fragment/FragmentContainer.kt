@@ -5,19 +5,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.ViewFlipper
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import io.github.wax911.library.model.request.QueryContainerBuilder
 import io.github.wax911.retgraph.R
 import io.github.wax911.retgraph.adapter.AdapterExample
 import io.github.wax911.retgraph.model.container.TrendingFeed
 import io.github.wax911.retgraph.viewmodel.TrendingViewModel
+import kotlinx.android.synthetic.main.fragment_trending.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class FragmentContainer : Fragment() {
@@ -27,11 +23,6 @@ class FragmentContainer : Fragment() {
     private val adapterExample by lazy {
         AdapterExample()
     }
-
-    private var progressBar: ProgressBar? = null
-    private var refreshLayout: SwipeRefreshLayout? = null
-    private var viewFlipper: ViewFlipper? = null
-    private var errorTextView: TextView? = null
 
     @TrendingFeed.FeedType
     private var feedType: String? = null
@@ -52,31 +43,28 @@ class FragmentContainer : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        view.findViewById<RecyclerView>(R.id.recycler_view).apply {
+        recyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = adapterExample
             setHasFixedSize(true)
         }
-        viewFlipper = view.findViewById<ViewFlipper>(R.id.view_flipper).apply {
-            errorTextView = findViewById<TextView>(R.id.errorMessage).also {
-                it.visibility = View.GONE
-            }
-            progressBar = findViewById<ProgressBar>(R.id.progressBar).also {
-                it.visibility = View.VISIBLE
-            }
-        }
-        refreshLayout = view.findViewById<SwipeRefreshLayout>(R.id.refreshLayout).apply {
+
+        errorMessage.visibility = View.GONE
+        progressBar.visibility = View.VISIBLE
+
+
+        refreshLayout.apply {
             setOnRefreshListener {
                 when {
                     viewFlipper != null && viewFlipper!!.displayedChild > 0 -> {
-                        errorTextView?.visibility = View.GONE
+                        errorMessage.visibility = View.GONE
                         if (viewFlipper?.displayedChild == 1)
                             viewFlipper?.showPrevious()
                         startNetworkRequest()
                     }
                     else -> {
-                        progressBar?.visibility = View.VISIBLE
-                        errorTextView?.visibility = View.GONE
+                        progressBar.visibility = View.VISIBLE
+                        errorMessage.visibility = View.GONE
                         startNetworkRequest()
                     }
                 }
@@ -119,7 +107,7 @@ class FragmentContainer : Fragment() {
 
     private fun showError() {
         viewFlipper?.apply {
-            errorTextView?.also {
+            errorMessage.also {
                 it.visibility = View.VISIBLE
                 it.setText(R.string.connection_error)
             }

@@ -13,7 +13,7 @@
         android:layout_height="match_parent">
 
         <ViewFlipper
-            android:id="@+id/view_flipper"
+            android:id="@+id/viewFlipper"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:inAnimation="@android:anim/fade_in"
@@ -44,7 +44,7 @@
             </FrameLayout>
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_view"
+                android:id="@+id/recyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
