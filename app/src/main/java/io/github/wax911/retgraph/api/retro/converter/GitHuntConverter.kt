@@ -35,8 +35,6 @@ class GitHuntConverter private constructor(context: Context): GraphConverter(con
      * Response body converter delegates logic processing to a child class that handles
      * wrapping and deserialization of the json response data.
      * @see GraphResponseConverter
-     * <br></br>
-     *
      *
      * @param annotations All the annotation applied to the requesting Call method
      * @see retrofit2.Call
@@ -44,7 +42,10 @@ class GitHuntConverter private constructor(context: Context): GraphConverter(con
      * @param retrofit The retrofit object representing the response
      * @param type The generic type declared on the Call method
      */
-    override fun responseBodyConverter(type: Type?, annotations: Array<Annotation>, retrofit: Retrofit): Converter<ResponseBody, *>? {
+    override fun responseBodyConverter(
+            type: Type?, annotations: Array<Annotation>,
+            retrofit: Retrofit
+    ): Converter<ResponseBody, *>? {
         return when (type) {
             is ResponseBody -> super.responseBodyConverter(type, annotations, retrofit)
             else -> ResponseConverter<Any>(type, gson)
@@ -55,8 +56,6 @@ class GitHuntConverter private constructor(context: Context): GraphConverter(con
      * Response body converter delegates logic processing to a child class that handles
      * wrapping and deserialization of the json response data.
      * @see GraphRequestConverter
-     * <br></br>
-     *
      *
      * @param parameterAnnotations All the annotation applied to request parameters
      * @param methodAnnotations All the annotation applied to the requesting method
@@ -67,7 +66,8 @@ class GitHuntConverter private constructor(context: Context): GraphConverter(con
             type: Type?,
             parameterAnnotations: Array<Annotation>,
             methodAnnotations: Array<Annotation>,
-            retrofit: Retrofit?): Converter<QueryContainerBuilder, RequestBody>? {
+            retrofit: Retrofit?
+    ): Converter<QueryContainerBuilder, RequestBody>? {
         return RequestConverter(methodAnnotations, graphProcessor, gson)
     }
 }

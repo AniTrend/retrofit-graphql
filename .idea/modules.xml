@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/library/library.iml" filepath="$PROJECT_DIR$/library/library.iml" />
-      <module fileurl="file://$PROJECT_DIR$/retrofit-graphql.iml" filepath="$PROJECT_DIR$/retrofit-graphql.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="retrofit-graphql/app" />
+      <module fileurl="file://$PROJECT_DIR$/library/library.iml" filepath="$PROJECT_DIR$/library/library.iml" group="retrofit-graphql/library" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-graphql.iml" filepath="$PROJECT_DIR$/retrofit-graphql.iml" group="retrofit-graphql" />
     </modules>
   </component>
 </project>

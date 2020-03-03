@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
-    id("kotlin-kapt")
     id("kotlin-android")
+    id("kotlin-kapt")
     id("kotlin-android-extensions")
 }
 
@@ -47,6 +47,7 @@ dependencies {
 
     /** Architecture Components */
     implementation "androidx.core:core-ktx:$ktx"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:$swpipeRefresh"
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycleX"
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycleX"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleX"

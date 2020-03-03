@@ -21,10 +21,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:elevation="16dp"
+        android:hapticFeedbackEnabled="true"
+        android:backgroundTint="@color/colorPrimary"
         app:hideOnScroll="true"
-        app:navigationIcon="@drawable/ic_menu_white_24dp"
-        tools:ignore="BottomAppBar,UnusedAttribute"/>
+        app:navigationIcon="@drawable/ic_menu_white_24dp" />
 
     <FrameLayout
         android:id="@+id/bottomDrawer"
@@ -40,6 +40,9 @@
             android:id="@+id/navigationView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:itemIconTint="@color/material_700"
+            app:itemBackground="@drawable/nav_item_background"
+            app:itemTextColor="#000"
             android:background="@drawable/background_bottom_sheet"
             app:menu="@menu/nav_menu"/>
 

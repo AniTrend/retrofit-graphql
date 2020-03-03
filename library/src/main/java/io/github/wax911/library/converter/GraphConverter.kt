@@ -78,8 +78,6 @@ open class GraphConverter protected constructor(context: Context?) : Converter.F
     /**
      * Sets the minimum level for log messages. Attempted messages with a too low
      * log level are skipped and not printed to the system log.
-     * <br></br>
-     *
      *
      * @param logLevel The minimum log level used to print log messages
      */

@@ -1,5 +1,6 @@
 package io.github.wax911.retgraph.koin
 
+import io.github.wax911.library.util.LogLevel
 import io.github.wax911.retgraph.BuildConfig
 import io.github.wax911.retgraph.api.WebFactory
 import io.github.wax911.retgraph.api.retro.converter.GitHuntConverter
@@ -29,6 +30,9 @@ private val networkModule = module {
         val converter = GitHuntConverter.create(
                 context = androidContext()
         )
+
+        // set desired log level
+        converter.setLogLevel(LogLevel.ERROR)
 
         Retrofit.Builder()
                 .client(httpClient.build())

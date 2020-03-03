@@ -9,13 +9,15 @@ import io.github.wax911.library.model.request.QueryContainerBuilder
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
-class RequestConverter(methodAnnotations: Array<Annotation>,
-                       graphProcessor: GraphProcessor,
-                       gson: Gson) : GraphRequestConverter(methodAnnotations, graphProcessor, gson) {
+class RequestConverter(
+        methodAnnotations: Array<Annotation>,
+        graphProcessor: GraphProcessor,
+        gson: Gson
+) : GraphRequestConverter(methodAnnotations, graphProcessor, gson) {
+
     /**
      * Converter for the request body, gets the GraphQL query from the method annotation
      * and constructs a GraphQL request body to send over the network.
-     * <br></br>
      *
      * @param containerBuilder The constructed builder method of your query with variables
      * @return Request body
@@ -32,6 +34,11 @@ class RequestConverter(methodAnnotations: Array<Annotation>,
 
         val queryJson = gson.toJson(queryContainer)
         Log.d("RequestConverter", queryJson)
-        return RequestBody.create(MediaType.parse(GraphConverter.MimeType), queryJson)
+        return RequestBody.create(
+                MediaType.parse(
+                        GraphConverter.MimeType
+                ),
+                queryJson
+        )
     }
 }
