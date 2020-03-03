@@ -1,10 +1,10 @@
 package io.github.wax911.library.annotation.processor
 
 import android.content.res.AssetManager
-import android.util.Log
 import io.github.wax911.library.annotation.GraphQuery
 import io.github.wax911.library.annotation.processor.fragment.FragmentPatcher
 import io.github.wax911.library.annotation.processor.fragment.GraphRegexUtil
+import io.github.wax911.library.util.Logger
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
@@ -31,14 +31,14 @@ class GraphProcessor private constructor(
 
     init {
         synchronized(lock) {
-            Log.d("GraphProcessor", Thread.currentThread().name + ": has obtained a synchronized lock on the object")
+            Logger.d("GraphProcessor", Thread.currentThread().name + ": has obtained a synchronized lock on the object")
             if (_graphFiles.isEmpty()) {
-                Log.d("GraphProcessor", Thread.currentThread().name + ": is initializing query files")
+                Logger.d("GraphProcessor", Thread.currentThread().name + ": is initializing query files")
                 createGraphQLMap(defaultDirectory, assetManager)
-                Log.d("GraphProcessor", Thread.currentThread().name + ": has completed initializing all files")
-                Log.d("GraphProcessor", Thread.currentThread().name + ": Total count of graphFiles -> size: " + _graphFiles.size)
+                Logger.d("GraphProcessor", Thread.currentThread().name + ": has completed initializing all files")
+                Logger.d("GraphProcessor", Thread.currentThread().name + ": Total count of graphFiles -> size: " + _graphFiles.size)
             } else
-                Log.d("GraphProcessor", Thread.currentThread().name + ": skipped initialization of graphFiles -> size: " + _graphFiles.size)
+                Logger.d("GraphProcessor", Thread.currentThread().name + ": skipped initialization of graphFiles -> size: " + _graphFiles.size)
         }
     }
 
@@ -54,11 +54,11 @@ class GraphProcessor private constructor(
 
         if (graphQuery != null) {
             val fileName = String.format("%s%s", graphQuery.value, defaultExtension)
-            Log.d("GraphProcessor", fileName)
+            Logger.d("GraphProcessor", fileName)
             if (_graphFiles.containsKey(fileName))
                 return _graphFiles[fileName]
-            Log.e(this.toString(), String.format("The request query %s could not be found!", graphQuery.value))
-            Log.e(this.toString(), String.format("Current size of graphFiles -> size: %d", _graphFiles.size))
+            Logger.e(this.toString(), String.format("The request query %s could not be found!", graphQuery.value))
+            Logger.e(this.toString(), String.format("Current size of graphFiles -> size: %d", _graphFiles.size))
         }
         return null
     }

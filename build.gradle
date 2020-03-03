@@ -10,20 +10,20 @@ buildscript {
         versionName = '0.10.2'
 
         constraint = '1.1.3'
-        material = '1.0.0'
-        lifecycleX = '2.1.0'
-        ktx = '1.2.0-alpha04'
-        kotlinVersion = '1.3.50'
-        koin = '2.0.1'
+        material = '1.1.0'
+        lifecycleX = '2.2.0'
+        ktx = '1.3.0-alpha01'
+        kotlinVersion = '1.3.61'
+        koin = '2.1.1'
 
-        coroutinesAndroid = '1.3.1'
-        coroutinesCore = '1.3.1'
+        coroutinesAndroid = '1.3.3'
+        coroutinesCore = '1.3.3'
 
-        glide = '4.9.0'
-        retrofit = '2.6.1'
+        glide = '4.11.0'
+        retrofit = '2.6.2'
         httpLogger = '3.12.1'
 
-        junit = '4.12'
+        junit = '4.13'
         mockk = '1.9.3'
         runner = '1.2.0'
         espresso = '3.2.0'
@@ -33,7 +33,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.0'
+        classpath 'com.android.tools.build:gradle:3.6.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
 
         // NOTE: Do not place your application dependencies here; they belong
