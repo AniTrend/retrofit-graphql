@@ -14,7 +14,7 @@ buildscript {
         material = '1.1.0'
         lifecycleX = '2.2.0'
         ktx = '1.3.0-alpha02'
-        kotlinVersion = '1.3.61'
+        kotlinVersion = '1.3.70'
         koin = '2.1.4'
         coroutinesAndroid = '1.3.5'
         coroutinesCore = '1.3.5'
