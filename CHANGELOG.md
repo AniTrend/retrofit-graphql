@@ -4,6 +4,16 @@ Change Log
 ==========
 
 
+Version 0.10.3 *(2020-04-16)*
+----------------------------
+
+
+ * New: Add `Logger` for library [#53](https://github.com/AniTrend/retrofit-graphql/pull/53)
+ * New: Add standard extensions `Map<String, Object>` to GraphError [#90](https://github.com/AniTrend/retrofit-graphql/pull/90)
+ * Update: `gradle` from 3.6.1 to 3.6.2 [#88](https://github.com/AniTrend/retrofit-graphql/pull/88)
+ * Update: `kotlin` from 1.3.70 to 1.3.71 [0c9864e](https://github.com/AniTrend/retrofit-graphql/commit/0c9864e7a0941cd400cd88f2fa24125b51308e02)
+
+
 Version 0.10.2 *(2019-09-16)*
 ----------------------------
 
