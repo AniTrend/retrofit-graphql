@@ -1,6 +1,6 @@
 package io.github.wax911.library.annotation.processor.fragment
 
-import android.util.Log
+import io.github.wax911.library.util.Logger
 
 /**
  * This class will return a String containing fragment definitions. This String can then be appended to a GraphQL
@@ -32,7 +32,7 @@ class FragmentPatcher(
         // There is at least one missing fragment definition. It may be defined in its own file though. We will do
         // our best to find and include it.
         val count = missingFragments.count()
-        Log.d(TAG, "$count missing fragments in $graphFile. Attempting to find them elsewhere.")
+        Logger.d(TAG, "$count missing fragments in $graphFile. Attempting to find them elsewhere.")
 
         missingFragments.forEach { missingFragment ->
             val includeFile = "${missingFragment.fragmentReference}$defaultExtension"
@@ -49,11 +49,11 @@ class FragmentPatcher(
                 }
             } else {
                 // This fragment is nowhere to be found.
-                Log.e(TAG, "$graphFile references $missingFragment, but it could not be located.")
+                Logger.e(TAG, "$graphFile references $missingFragment, but it could not be located.")
             }
         }
 
-        Log.d(TAG, "Patch produced for: $graphFile\n$aggregation")
+        Logger.d(TAG, "Patch produced for: $graphFile\n$aggregation")
 
         return aggregation.toString()
     }

@@ -5,7 +5,10 @@ import com.google.gson.Gson
 /**
  * Query & Variable builder for URL parameter based GET requests
  */
-class PersistedQueryUrlParameterBuilder(private val queryContainer: QueryContainer = QueryContainer(), private val gson: Gson) {
+class PersistedQueryUrlParameterBuilder(
+        private val queryContainer: QueryContainer = QueryContainer(),
+        private val gson: Gson
+) {
 
     fun build(): PersistedQueryUrlParameters {
         return PersistedQueryUrlParameters(

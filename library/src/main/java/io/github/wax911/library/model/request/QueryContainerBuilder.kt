@@ -8,7 +8,9 @@ import kotlinx.android.parcel.Parcelize
  * Query & Variable builder for graph requests
  */
 @Parcelize
-class QueryContainerBuilder(private val queryContainer: QueryContainer = QueryContainer()) : Parcelable {
+class QueryContainerBuilder(
+        private val queryContainer: QueryContainer = QueryContainer()
+) : Parcelable {
 
     fun setQuery(query: String?): QueryContainerBuilder {
         this.queryContainer.query = query
