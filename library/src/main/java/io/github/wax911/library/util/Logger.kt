@@ -46,7 +46,7 @@ internal object Logger {
      * @param tr An exception to log
      */
     fun d(tag: String, msg: String, tr: Throwable? = null) {
-        if(level < LogLevel.DEBUG) return
+        if(level > LogLevel.DEBUG) return
         else Log.d(tag, msg, tr)
     }
 
@@ -58,7 +58,7 @@ internal object Logger {
      * @param tr An exception to log
      */
     fun e(tag: String, msg: String, tr: Throwable? = null) {
-        if(level < LogLevel.ERROR) return
+        if(level > LogLevel.ERROR) return
         else Log.e(tag, msg, tr)
     }
 
@@ -70,7 +70,7 @@ internal object Logger {
      * @param tr An exception to log
      */
     fun i(tag: String, msg: String, tr: Throwable? = null) {
-        if(level < LogLevel.INFO) return
+        if(level > LogLevel.INFO) return
         else Log.i(tag, msg, tr)
     }
 
@@ -82,7 +82,7 @@ internal object Logger {
      * @param tr An exception to log
      */
     fun v(tag: String, msg: String, tr: Throwable? = null) {
-        if(level < LogLevel.VERBOSE) return
+        if(level > LogLevel.VERBOSE) return
         else Log.v(tag, msg, tr)
     }
 
@@ -94,7 +94,7 @@ internal object Logger {
      * @param tr An exception to log
      */
     fun w(tag: String, msg: String, tr: Throwable? = null) {
-        if(level < LogLevel.WARN) return
+        if(level > LogLevel.WARN) return
         else Log.w(tag, msg, tr)
     }
 
@@ -106,7 +106,7 @@ internal object Logger {
      * @param tr An exception to log.  May be null.
      */
     fun wtf(tag: String, msg: String, tr: Throwable? = null) {
-        if(level < LogLevel.ASSERT) return
+        if(level > LogLevel.ASSERT) return
         else Log.wtf(tag, msg, tr)
     }
 }
