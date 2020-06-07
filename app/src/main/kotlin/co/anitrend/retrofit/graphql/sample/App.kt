@@ -1,7 +1,6 @@
-package io.github.wax911.retgraph
+package co.anitrend.retrofit.graphql.sample
 
 import android.app.Application
-import io.github.wax911.retgraph.koin.appModules
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -15,7 +14,7 @@ class App : Application() {
         startKoin {
             androidLogger()
             androidContext(applicationContext)
-            modules(appModules)
+            //modules()
         }
     }
 

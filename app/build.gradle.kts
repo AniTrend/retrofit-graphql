@@ -23,9 +23,6 @@ dependencies {
 
     implementation(Libraries.Coil.coil)
 
-    implementation(Libraries.Glide.glide)
-    kapt(Libraries.Glide.compiler)
-
     implementation(Libraries.timber)
     implementation(Libraries.debugDb)
     implementation(Libraries.treessence)
