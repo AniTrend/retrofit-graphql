@@ -1,0 +1,10 @@
+mutation AddReactionToIssue($reactionInput: AddReactionInput!) {
+    addReaction(input: $reactionInput) {
+        reaction {
+            content
+        }
+        subject {
+            id
+        }
+    }
+}

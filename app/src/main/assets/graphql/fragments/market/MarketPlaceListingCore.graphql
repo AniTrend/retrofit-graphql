@@ -1,0 +1,13 @@
+fragment MarketPlaceListingCore on MarketplaceListing {
+    id
+    logoBackgroundColor
+    logoUrl
+    name
+    secondaryCategory {
+        description
+        name
+    }
+    slug
+    url
+    shortDescription
+}
