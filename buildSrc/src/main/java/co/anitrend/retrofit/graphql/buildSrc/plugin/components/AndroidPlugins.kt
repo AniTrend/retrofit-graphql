@@ -17,8 +17,7 @@ private fun Project.applyModulePlugin() {
 internal fun Project.configurePlugins() {
     applyModulePlugin()
     plugins.apply("kotlin-android")
-    if (isSampleModule()) {
+    plugins.apply("kotlin-android-extensions")
+    if (isSampleModule())
         plugins.apply("kotlin-kapt")
-        plugins.apply("kotlin-android-extensions")
-    }
 }
