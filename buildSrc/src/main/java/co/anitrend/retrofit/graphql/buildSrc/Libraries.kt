@@ -164,6 +164,25 @@ object Libraries {
         }
     }
 
+    object AniTrend {
+
+        object Arch {
+            private const val version = "1.3.0-beta14"
+            const val ui = "com.github.anitrend.support-arch:support-ui:${version}"
+            const val ext = "com.github.anitrend.support-arch:support-ext:${version}"
+            const val core = "com.github.anitrend.support-arch:support-core:${version}"
+            const val data = "com.github.anitrend.support-arch:support-data:${version}"
+            const val theme = "com.github.anitrend.support-arch:support-theme:${version}"
+            const val domain = "com.github.anitrend.support-arch:support-domain:${version}"
+            const val recycler = "com.github.anitrend.support-arch:support-recycler:${version}"
+        }
+
+        object Emojify {
+            private const val version = "1.5.4-alpha01"
+            const val emojify = "com.github.anitrend:android-emojify:$version"
+        }
+    }
+
     object Chuncker {
         private const val version = "3.2.0"
 
