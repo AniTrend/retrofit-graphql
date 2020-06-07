@@ -1,9 +1,12 @@
-# Created by https://www.gitignore.io/api/android,androidstudio
+
+# Created by https://www.gitignore.io/api/java,kotlin,android,androidstudio
+# Edit at https://www.gitignore.io/?templates=java,kotlin,android,androidstudio
 
 ### Android ###
 # Built application files
 *.apk
 *.ap_
+*.aab
 
 # Files for the ART/Dalvik VM
 *.dex
@@ -15,6 +18,7 @@
 bin/
 gen/
 out/
+release/
 
 # Gradle files
 .gradle/
@@ -35,24 +39,96 @@ proguard/
 # Android Studio captures folder
 captures/
 
-# Intellij
+# IntelliJ
 *.iml
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/gradle.xml
+.idea/assetWizardSettings.xml
 .idea/dictionaries
 .idea/libraries
+# Android Studio 3 in .gitignore file.
+.idea/caches
+.idea/modules.xml
+# Comment next line if keeping position of elements in Navigation Editor is relevant for you
+.idea/navEditor.xml
+
+# Keystore files
+# Uncomment the following lines if you do not want to check your keystore files in.
+#*.jks
+#*.keystore
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
+
+# Google Services (e.g. APIs or Firebase)
+# google-services.json
 
 # Freeline
 freeline.py
 freeline/
 freeline_project_description.json
 
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/readme.md
+
+# Version control
+vcs.xml
+
+# lint
+lint/intermediates/
+lint/generated/
+lint/outputs/
+lint/tmp/
+# lint/reports/
+
 ### Android Patch ###
 gen-external-apklibs
+output.json
+
+# Replacement of .externalNativeBuild directories introduced
+# with Android Studio 3.5.
+.cxx/
+
+### Java ###
+# Compiled class file
+
+# Log file
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+### Kotlin ###
+# Compiled class file
+
+# Log file
+
+# BlueJ files
+
+# Mobile Tools for Java (J2ME)
+
+# Package Files #
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 
 ### AndroidStudio ###
 # Covers files to be ignored for android development using Android Studio.
@@ -107,7 +183,6 @@ obj/
 .idea/copyright/profiles_settings.xml
 .idea/encodings.xml
 .idea/misc.xml
-.idea/modules.xml
 .idea/scopes/scope_settings.xml
 .idea/vcs.xml
 .idea/jsLibraryMappings.xml
@@ -133,14 +208,10 @@ Thumbs.db
 .settings/
 
 # Mobile Tools for Java (J2ME)
-.mtj.tmp/
 
 # Package Files #
-*.war
-*.ear
 
 # virtual machine crash logs (Reference: http://www.java.com/en/download/help/error_hotspot.xml)
-hs_err_pid*
 
 ## Plugin-specific files:
 
@@ -163,5 +234,4 @@ fabric.properties
 
 !/gradle/wrapper/gradle-wrapper.jar
 
-
-# End of https://www.gitignore.io/api/android,androidstudio
+# End of https://www.gitignore.io/api/java,kotlin,android,androidstudio
