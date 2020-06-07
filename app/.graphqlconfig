@@ -4,11 +4,12 @@
   "extensions": {
     "endpoints": {
       "Default GraphQL Endpoint": {
-        "url": "https://api.githunt.com",
+        "url": "https://api.github.com/graphql",
         "headers": {
-          "user-agent": "JS GraphQL"
+          "user-agent": "JS GraphQL",
+          "authorization": "bearer token"
         },
-        "introspect": false
+        "introspect": true
       }
     }
   }
