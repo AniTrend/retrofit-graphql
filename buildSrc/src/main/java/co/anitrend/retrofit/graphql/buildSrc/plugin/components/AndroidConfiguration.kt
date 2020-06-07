@@ -24,12 +24,6 @@ private fun DefaultConfig.applyAdditionalConfiguration(project: Project) {
     else
         consumerProguardFiles.add(File("consumer-rules.pro"))
 
-    if (project.isLibraryModule()) {
-        project.libraryExtension().buildFeatures {
-            viewBinding = true
-        }
-    }
-
     println("Applying vector drawables configuration for module -> ${project.path}")
     vectorDrawables.useSupportLibrary = true
 }
@@ -37,7 +31,10 @@ private fun DefaultConfig.applyAdditionalConfiguration(project: Project) {
 internal fun Project.configureAndroid(): Unit = baseExtension().run {
     compileSdkVersion(Versions.compileSdk)
     defaultConfig {
-        minSdkVersion(Versions.minSdk)
+        if (isSampleModule())
+            minSdkVersion(21)
+        else
+            minSdkVersion(Versions.minSdk)
         targetSdkVersion(Versions.targetSdk)
         versionCode = Versions.versionCode
         versionName = Versions.versionName
@@ -94,13 +91,12 @@ internal fun Project.configureAndroid(): Unit = baseExtension().run {
             kotlinOptions {
                 allWarningsAsErrors = false
                 // Filter out modules that won't be using coroutines
-                if (isSampleModule())
-                    freeCompilerArgs = listOf(
-                        "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                        "-Xopt-in=kotlinx.coroutines.FlowPreview",
-                        "-Xopt-in=kotlinx.coroutines.FlowPreview",
-                        "-Xopt-in=kotlin.Experimental"
-                    )
+                freeCompilerArgs = if (isSampleModule()) listOf(
+                    "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                    "-Xopt-in=kotlinx.coroutines.FlowPreview",
+                    "-Xopt-in=kotlinx.coroutines.FlowPreview",
+                    "-Xopt-in=kotlin.Experimental"
+                ) else listOf("-Xopt-in=kotlin.Experimental")
             }
         }
     }

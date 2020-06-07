@@ -191,7 +191,7 @@ private fun Project.configureDokka() {
 internal fun Project.configureOptions() {
     if (isLibraryModule())
         configureDokka()
-    else {
+    else
         baseAppExtension().run {
             defaultConfig {
                 applyCompilerOptions(this@configureOptions)
@@ -200,7 +200,7 @@ internal fun Project.configureOptions() {
                 applyConfiguration(this@configureOptions)
             }
         }
-        println("Enabling experimental extension options for feature module -> ${project.path}")
-        androidExtensionsExtension().isExperimental = true
-    }
+
+    println("Enabling experimental extension options for feature module -> ${project.path}")
+    androidExtensionsExtension().isExperimental = true
 }
