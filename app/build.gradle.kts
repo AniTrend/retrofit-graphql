@@ -3,6 +3,7 @@ import java.net.URI
 
 plugins {
     id("co.anitrend.retrofit.graphql")
+    id("koin")
 }
 
 repositories {
