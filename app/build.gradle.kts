@@ -18,7 +18,11 @@ dependencies {
     implementation(Libraries.Google.Material.material)
 
     implementation(Libraries.AndroidX.Core.coreKtx)
+    implementation(Libraries.AndroidX.StartUp.startUpRuntime)
     implementation(Libraries.AndroidX.Collection.collectionKtx)
+    implementation(Libraries.AndroidX.Fragment.fragmentKtx)
+    implementation(Libraries.AndroidX.Activity.activityKtx)
+    implementation(Libraries.AndroidX.Emoji.appCompat)
     implementation(Libraries.AndroidX.ContraintLayout.constraintLayout)
     implementation(Libraries.AndroidX.SwipeRefresh.swipeRefreshLayout)
     implementation(Libraries.AndroidX.Recycler.recyclerView)
