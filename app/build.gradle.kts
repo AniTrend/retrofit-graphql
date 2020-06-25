@@ -3,6 +3,7 @@ import java.net.URI
 
 plugins {
     id("co.anitrend.retrofit.graphql")
+    id("kotlinx-serialization")
     id("koin")
 }
 
@@ -15,7 +16,10 @@ repositories {
 dependencies {
     implementation(project(":library"))
 
+    implementation(Libraries.JetBrains.KotlinX.Serialization.runtime)
+
     implementation(Libraries.Google.Material.material)
+    implementation(Libraries.threeTenBp)
 
     implementation(Libraries.AndroidX.Core.coreKtx)
     implementation(Libraries.AndroidX.StartUp.startUpRuntime)
@@ -25,7 +29,9 @@ dependencies {
     implementation(Libraries.AndroidX.Emoji.appCompat)
     implementation(Libraries.AndroidX.ContraintLayout.constraintLayout)
     implementation(Libraries.AndroidX.SwipeRefresh.swipeRefreshLayout)
+    implementation(Libraries.AndroidX.Preference.preferenceKtx)
     implementation(Libraries.AndroidX.Recycler.recyclerView)
+    implementation(Libraries.AndroidX.Work.runtimeKtx)
 
     implementation(Libraries.AndroidX.Paging.common)
     implementation(Libraries.AndroidX.Paging.runtime)
@@ -45,6 +51,7 @@ dependencies {
     implementation(Libraries.AniTrend.Emojify.emojify)
 
     implementation(Libraries.Coil.coil)
+    implementation(Libraries.Coil.gif)
 
     implementation(Libraries.timber)
     implementation(Libraries.debugDb)
