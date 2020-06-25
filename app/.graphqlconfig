@@ -1,13 +1,20 @@
 {
-  "name": "GitHunt GraphQL Schema",
+  "name": "retrofit-graphql schemas",
   "schemaPath": "schema.graphql",
   "extensions": {
     "endpoints": {
-      "Default GraphQL Endpoint": {
+      "GitHub Endpoint": {
         "url": "https://api.github.com/graphql",
         "headers": {
           "user-agent": "JS GraphQL",
           "authorization": "bearer token"
+        },
+        "introspect": true
+      },
+      "Bucket Endpoint": {
+        "url": "http://pi.hole:4000/graphql",
+        "headers": {
+          "user-agent": "JS GraphQL"
         },
         "introspect": true
       }
