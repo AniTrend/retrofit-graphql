@@ -40,6 +40,7 @@ First, you'll need .graphql files for saving your GraphQL queries, fragments, an
 With respect to fragments, you have two options. Either place them inside your query file after the query definition, or put them in their own file under the `assets/graphql/Example/Fragment/` folder. You may also use a mixture of the two if you wish. Note, only define one fragment per file and make sure the name of the fragment matches the filename. Here's an example:
 
 In the file `assets/graphql/Example/Query/Trending.graphql`, two fragments (`RepositoryFragment` and `UserFragment`) are referenced but not defined in the same file.
+
 ```graphql
 query Trending($type: FeedType!, $offset: Int, $limit: Int) {
   feed(type: $type, offset: $offset, limit: $limit) {
@@ -56,6 +57,7 @@ query Trending($type: FeedType!, $offset: Int, $limit: Int) {
 ```
 
 The `RepositoryFragment` lives in `assets/graphql/Example/Fragment/RepositoryFragment.graphql`. It happens to reference `UserFragment` which is also defined in its own file. Note, it is fine for fragments to reference other fragments.
+
 ```graphql
 fragment RepositoryFragment on Repository {
   name
@@ -68,6 +70,7 @@ fragment RepositoryFragment on Repository {
 ```
 
 The `UserFragment` lives in `assets/graphql/Example/Fragment/UserFragment.graphql`:
+
 ```graphql
 fragment UserFragment on User {
   login
@@ -76,15 +79,14 @@ fragment UserFragment on User {
 }
 ```
 
-
 - __Add the JitPack repository to your build file__
 
 ```javascript
 allprojects {
-	repositories {
-		...
-		maven { url 'https://jitpack.io' }
-	}
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
 }
 ```
 
@@ -103,12 +105,12 @@ If you are using R8 the shrinking and obfuscation rules are included automatical
 ProGuard users must manually copy the options from [this file](https://github.com/AniTrend/retrofit-graphql/blob/master/library/proguard-rules.pro). 
 
 > You might also need [retrofit rules](https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/retrofit2.pro) and it's dependencies (OkHttp and Okio)
+
 ___
 
 Next we make our retrofit interfaces and annotate them with the `@GraphQuery` annotation using the name of the .graphql file without the extention, this will allow the runtime resolution of the target file inside your assets to be loaded before the request is sent. e.g.
 
 ```java
-
     @POST("graphql")
     @GraphQuery("Trending")
     @Headers("Content-Type: application/json")
@@ -160,6 +162,7 @@ val queryBuilder = QueryContainerBuilder()
 ```
 
 > You can also add a map to the query container using `putVariables()`
+> 
 > ```java
 > val queryBuilder = QueryContainerBuilder()
 >             .putVariables(
@@ -172,7 +175,6 @@ val queryBuilder = QueryContainerBuilder()
 > ```
 
 The QueryContainerBuilder is then passed into your retrofit interface method as parameter and that's it! Just like an ordinary retrofit application.
-
 
 #### GraphError
 
@@ -234,7 +236,6 @@ Due to the declarative nature of Retrofit services and that the details of the p
 Since one query potentially require two web requests, there will also be two methods in the Retrofit service declaration
 
 ```java
-
     @GET("graphql")
     @Headers("Content-Type: application/json")
     fun getTrendingPersistedQuery(@Query("extensions") String extensions, @Query("operationName") String operationName, @Query("variables") String variables): Call<GraphContainer<TrendingFeed>>
@@ -243,7 +244,6 @@ Since one query potentially require two web requests, there will also be two met
     @GraphQuery("Trending")
     @Headers("Content-Type: application/json")
     fun getTrending(@Body QueryContainerBuilder queryContainerBuilder): Call<GraphContainer<TrendingFeed>>
-
 ```
 
 Additionally, the protocol relies on the client sending a SHA256 hash calculated from the query. Only the contents of the query, not the whole web request body. You can use the `PersistedQueryHashCalculator` for this.
