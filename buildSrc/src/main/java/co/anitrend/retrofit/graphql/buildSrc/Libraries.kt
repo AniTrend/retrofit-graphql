@@ -3,6 +3,7 @@ package co.anitrend.retrofit.graphql.buildSrc
 import co.anitrend.retrofit.graphql.buildSrc.common.Versions
 
 object Libraries {
+    const val threeTenBp = "com.jakewharton.threetenabp:threetenabp:${Versions.threeTenBp}"
     const val timber = "com.jakewharton.timber:timber:${Versions.timber}"
 
     const val treessence = "fr.bipi.treessence:treessence:${Versions.treesSence}"
@@ -102,7 +103,7 @@ object Libraries {
         }
 
         object Paging {
-            private const val version = "3.0.0-alpha01"
+            private const val version = "2.1.2"
             const val common = "androidx.paging:paging-common-ktx:$version"
             const val runtime = "androidx.paging:paging-runtime:$version"
             const val runtimeKtx = "androidx.paging:paging-runtime-ktx:$version"
@@ -121,7 +122,7 @@ object Libraries {
         }
 
         object Room {
-            private const val version = "2.3.0-alpha01"
+            private const val version = "2.2.5"
             const val compiler = "androidx.room:room-compiler:$version"
             const val runtime = "androidx.room:room-runtime:$version"
             const val test = "androidx.room:room-testing:$version"
@@ -205,6 +206,11 @@ object Libraries {
         const val video = "io.coil-kt:coil-video:$version"
     }
 
+    object DropBox {
+        private const val version = "4.0.0-alpha06"
+        const val store = "com.dropbox.mobile.store:store4:$version"
+    }
+
     object Google {
 
         object Firebase {
@@ -264,14 +270,11 @@ object Libraries {
 
             object Gradle {
                 const val plugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:$version"
+                const val serialization = "org.jetbrains.kotlin:kotlin-serialization:$version"
             }
 
             object Android {
                 const val extensions = "org.jetbrains.kotlin:kotlin-android-extensions:$version"
-            }
-
-            object Serialization {
-                const val serialization = "org.jetbrains.kotlin:kotlin-serialization:$version"
             }
         }
 
@@ -304,6 +307,26 @@ object Libraries {
 
         object Gradle {
             const val plugin = "org.koin:koin-gradle-plugin:$version"
+        }
+    }
+
+    object Markwon {
+        private const val version = "4.4.0"
+        const val core = "io.noties.markwon:core:$version"
+        const val html = "io.noties.markwon:html:$version"
+        const val image = "io.noties.markwon:image:$version"
+        const val glide = "io.noties.markwon:image-glide:$version"
+        const val coil = "io.noties.markwon:image-coil:$version"
+        const val parser = "io.noties.markwon:inline-parser:$version"
+        const val linkify = "io.noties.markwon:linkify:$version"
+        const val simpleExt = "io.noties.markwon:simple-ext:$version"
+        const val syntaxHighlight = "io.noties.markwon:syntax-highlight:$version"
+
+        object Extension {
+            const val taskList = "io.noties.markwon:ext-tasklist:$version"
+            const val strikeThrough = "io.noties.markwon:ext-strikethrough:$version"
+            const val tables = "io.noties.markwon:ext-tables:$version"
+            const val latex = "io.noties.markwon:ext-latex:$version"
         }
     }
 
