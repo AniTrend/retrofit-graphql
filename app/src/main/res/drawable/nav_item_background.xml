@@ -4,4 +4,5 @@
     <item android:drawable="@drawable/nav_item_background_selected" android:state_checked="true" />
 
     <item android:drawable="@android:color/transparent"/>
+
 </selector>
