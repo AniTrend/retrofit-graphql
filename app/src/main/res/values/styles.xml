@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme" parent="SupportTheme.AppTheme">
+        <item name="android:windowBackground">@color/colorPrimaryVariant</item>
+        <item name="android:windowAnimationStyle">@style/SupportTheme.WindowAnimationStyle</item>
+        <!-- Layout preview complains without this :S -->
+        <item name="coordinatorLayoutStyle">@style/Widget.Support.CoordinatorLayout</item>
+    </style>
+
+    <style name="AppTheme.TransparentWindow">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+    </style>
+
+</resources>
