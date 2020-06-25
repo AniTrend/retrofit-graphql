@@ -12,6 +12,7 @@ import timber.log.Timber
 internal class KoinLogger(
     logLevel: Level
 ) : Logger(logLevel) {
+
     override fun log(level: Level, msg: MESSAGE) {
         when (level) {
             Level.DEBUG -> Timber.tag(KOIN_TAG).d(msg)
