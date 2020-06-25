@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setting_authenticated_user_id" translatable="false">_authenticatedUser</string>
+    <string name="setting_is_new_installation" translatable="false">_isNewInstallation</string>
+    <string name="setting_version_code" translatable="false">_versionCode</string>
+</resources>

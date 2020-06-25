@@ -1,9 +1,10 @@
 <resources>
     <string name="app_name">retrofit-graphql</string>
-    <string name="connection_error">Unable to connect.\nCheck your connection and try again.</string>
-    <string name="top_repositories">Top Repositories</string>
-    <string name="hot_repositories">Hot Repositories</string>
-    <string name="new_repositories">New Repositories</string>
-    <string name="search">Search</string>
-    <string name="submitted_by">Submitted By:</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_search">Search</string>
+    <string name="nav_app_store">App Store</string>
+    <string name="nav_uploads">Uploads</string>
+    <string name="nav_header_navigation">Navigation</string>
+    <string name="text_select_upload_file">Pick &amp; upload file</string>
+    <string name="label_message_uploading">Processing &amp; uploading..</string>
 </resources>
