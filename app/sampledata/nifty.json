@@ -1,0 +1,18 @@
+{
+  "id": "MDE4Ok1hcmtldHBsYWNlTGlzdGluZzczODI=",
+  "primaryCategory": {
+    "description": "Organize, manage, and track your project with tools that build on top of issues and pull requests.",
+    "name": "Project management"
+  },
+  "secondaryCategory": {
+    "description": "Get insights into how your teams are developing software using GitHub.",
+    "name": "Reporting"
+  },
+  "slug": "nifty-pm",
+  "shortDescription": "Delivering the future of project management",
+  "isPaid": false,
+  "isVerified": false,
+  "logoBackgroundColor": "ffffff",
+  "logoUrl": "https://avatars3.githubusercontent.com/ml/7382?s=400&v=4",
+  "name": "Nifty PM"
+}
