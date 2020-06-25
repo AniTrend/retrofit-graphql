@@ -3,8 +3,10 @@ package co.anitrend.retrofit.graphql.data.api.converter
 import android.content.Context
 import co.anitrend.retrofit.graphql.data.api.converter.request.SampleRequestConverter
 import co.anitrend.retrofit.graphql.data.arch.JSON
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import io.github.wax911.library.converter.GraphConverter
+import io.github.wax911.library.logger.contract.ILogger
 import io.github.wax911.library.util.LogLevel
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -15,7 +17,7 @@ import java.lang.reflect.Type
 
 internal class SampleConverterFactory(
     context: Context
-) : GraphConverter(context) {
+) : GraphConverter(context = context, gson = GSON) {
 
     /**
      * Response body converter delegates logic processing to a child class that handles
@@ -50,7 +52,6 @@ internal class SampleConverterFactory(
      * @param retrofit The retrofit object representing the response
      * @param type The generic type declared on the Call method
      *
-     * @see retrofit2.Call
      * @see GraphResponseConverter
      */
     override fun responseBodyConverter(
@@ -58,22 +59,12 @@ internal class SampleConverterFactory(
         annotations: Array<out Annotation>,
         retrofit: Retrofit
     ): Converter<ResponseBody, *>? {
-        for (annotation in annotations) {
-            when (annotation) {
-                is JSON -> {
-                    return GsonConverterFactory.create(GSON)
-                        .responseBodyConverter(type, annotations, retrofit)
-                }
-            }
-        }
-
-        // Default for GraphQl marked queries
+        // not going to override the response body converter in this sample
         return super.responseBodyConverter(type, annotations, retrofit)
     }
 
     companion object {
         private val GSON = GsonBuilder()
-            .generateNonExecutableJson()
             .setLenient()
             .create()
 
@@ -85,10 +76,7 @@ internal class SampleConverterFactory(
          */
         fun create(context: Context) =
             SampleConverterFactory(context).apply {
-                gson = GsonBuilder()
-                    .setLenient()
-                    .create()
-                setLogLevel(LogLevel.ERROR)
+                setMinimumLogLevel(ILogger.Level.ERROR)
             }
     }
 }

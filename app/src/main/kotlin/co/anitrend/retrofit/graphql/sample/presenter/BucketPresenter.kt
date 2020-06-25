@@ -19,6 +19,14 @@ class BucketPresenter(
     settings: Settings
 ) : SupportPresenter<Settings>(context, settings) {
 
+    /**
+     * Resolves the selected image uri into a [UploadMutation] that contains the absolute
+     * path of the selected file
+     *
+     * @return [UploadMutation] or null
+     *
+     * @see [co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper]
+     */
     fun resolve(uri: Uri, contentResolver: ContentResolver): UploadMutation? {
         val stream = contentResolver.openInputStream(uri)
         val outputFile = stream?.optimizeImage(context)

@@ -1,6 +1,7 @@
 package co.anitrend.retrofit.graphql.data.bucket.datasource.remote
 
 import co.anitrend.retrofit.graphql.data.api.common.EndpointType
+import co.anitrend.retrofit.graphql.data.arch.GraphMultiPartUpload
 import co.anitrend.retrofit.graphql.data.bucket.model.StorageBucket
 import co.anitrend.retrofit.graphql.data.bucket.model.upload.UploadResult
 import io.github.wax911.library.annotation.GraphQuery
@@ -18,6 +19,11 @@ internal interface BucketRemoteSource {
         @Body builder: QueryContainerBuilder
     ): Response<GraphContainer<StorageBucket>>
 
+    /**
+     * [GraphMultiPartUpload] is just a simple annotation to
+     * indicate the characteristics of this method.
+     */
+    @GraphMultiPartUpload
     @POST(EndpointType.BASE_ENDPOINT_PATH)
     @GraphQuery("UploadToStorageBucket")
     suspend fun uploadToStorageBucket(
