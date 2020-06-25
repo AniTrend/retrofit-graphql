@@ -1,9 +1,11 @@
-query SearchForRepositories($after: String, $before: String, $first: Int, $last: Int, $query: String!, $type: SearchType!) {
+query GeneralSearch($after: String, $before: String, $first: Int, $last: Int, $query: String!, $type: SearchType!) {
     search(after: $after,before: $before,first: $first,last: $last,query: $query,type: $type) {
         edges {
             cursor
             node {
                 ... RepositoryCore
+                ... UserCore
+                ... MarketPlaceListingCore
             }
             textMatches {
                 fragment

@@ -1,13 +1,16 @@
 fragment MarketPlaceListingCore on MarketplaceListing {
     id
-    logoBackgroundColor
-    logoUrl
-    name
+    primaryCategory {
+        name
+    }
     secondaryCategory {
-        description
         name
     }
     slug
-    url
     shortDescription
+    isPaid
+    isVerified
+    logoBackgroundColor
+    logoUrl
+    name
 }
