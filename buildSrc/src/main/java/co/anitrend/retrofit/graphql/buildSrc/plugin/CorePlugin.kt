@@ -33,11 +33,10 @@ open class CorePlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         project.configurePlugins()
+        project.availableExtensions()
+        project.availableComponents()
         project.configureAndroid()
         project.configureOptions()
         project.configureDependencies()
-
-        //project.availableExtensions()
-        //project.availableComponents()
     }
 }

@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_trending"
-            android:icon="@drawable/ic_trending_up_black_24dp"
-            android:title="@string/top_repositories"
-            app:showAsAction="ifRoom"/>
 
-        <item
-            android:id="@+id/nav_hot"
-            android:icon="@drawable/ic_whatshot_black_24dp"
-            android:title="@string/hot_repositories"
-            app:showAsAction="ifRoom"/>
+    <item android:title="@string/nav_header_navigation">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_app_store"
+                    android:icon="@drawable/ic_apps_24"
+                    android:title="@string/nav_app_store"
+                    app:showAsAction="ifRoom"/>
 
-        <item
-            android:id="@+id/nav_new"
-            android:icon="@drawable/ic_fiber_new_black_24dp"
-            android:title="@string/new_repositories"
-            app:showAsAction="ifRoom"/>
-    </group>
+                <item
+                    android:id="@+id/nav_uploads"
+                    android:icon="@drawable/ic_cloud_upload_24"
+                    android:title="@string/nav_uploads"
+                    app:showAsAction="ifRoom"/>
+            </group>
+        </menu>
+    </item>
 </menu>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<co.anitrend.arch.ui.view.widget.SupportStateLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navStateLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="@dimen/activity_vertical_margin">
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/nav_header_vertical_spacing" />
+
+        <co.anitrend.arch.ui.view.image.SupportImageView
+            android:id="@+id/navAvatar"
+            android:layout_width="@dimen/avatar_size_lg"
+            android:layout_height="@dimen/avatar_size_lg"
+            tools:src="@mipmap/ic_launcher_round" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/nav_header_vertical_spacing" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/navUserName"
+            android:textStyle="bold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="@string/app_name"
+            android:textColor="?titleColor"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/navUserStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="?subtitleColor"
+            android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+            tools:text="@string/app_name" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/nav_header_vertical_spacing" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/navUserBio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="?subtitleColor"
+            android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+            tools:text="@string/app_name" />
+
+    </LinearLayout>
+</co.anitrend.arch.ui.view.widget.SupportStateLayout>
