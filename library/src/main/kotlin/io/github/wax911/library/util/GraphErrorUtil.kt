@@ -1,6 +1,5 @@
 package io.github.wax911.library.util
 
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import io.github.wax911.library.model.attribute.GraphError
@@ -31,7 +30,6 @@ fun Response<*>?.getError(): List<GraphError>? {
 }
 
 private fun String.getGraphQLError(): List<GraphError>? {
-    Logger.e("GraphErrorUtil", this)
     val tokenType = object : TypeToken<GraphContainer<*>>() {}.type
     val graphContainer = Gson().fromJson<GraphContainer<*>>(this, tokenType)
     return graphContainer.errors
