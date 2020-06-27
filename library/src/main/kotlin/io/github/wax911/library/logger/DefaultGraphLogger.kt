@@ -1,8 +1,8 @@
 package io.github.wax911.library.logger
 
 import android.util.Log
-import io.github.wax911.library.logger.core.AbstractLogger
 import io.github.wax911.library.logger.contract.ILogger.Level
+import io.github.wax911.library.logger.core.AbstractLogger
 
 /**
  * Default logger for the library that writes to [Log]

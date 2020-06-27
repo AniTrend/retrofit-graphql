@@ -4,7 +4,6 @@ import com.google.gson.Gson
 import io.github.wax911.library.annotation.processor.GraphProcessor
 import io.github.wax911.library.converter.GraphConverter
 import io.github.wax911.library.model.request.QueryContainerBuilder
-import io.github.wax911.library.util.Logger
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import retrofit2.Converter

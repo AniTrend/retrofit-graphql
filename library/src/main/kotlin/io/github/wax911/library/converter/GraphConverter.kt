@@ -8,7 +8,6 @@ import io.github.wax911.library.converter.request.GraphRequestConverter
 import io.github.wax911.library.converter.response.GraphResponseConverter
 import io.github.wax911.library.model.request.QueryContainerBuilder
 import io.github.wax911.library.util.LogLevel
-import io.github.wax911.library.util.Logger
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Converter
