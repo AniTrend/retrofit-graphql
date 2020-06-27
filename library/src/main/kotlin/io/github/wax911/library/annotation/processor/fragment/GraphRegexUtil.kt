@@ -4,6 +4,8 @@ package io.github.wax911.library.annotation.processor.fragment
  * This util class provides helpful methods for finding fragment and query information in a GraphQL String. It has a
  * method for finding all references to fragments. Another method for finding all defined fragments, which may exist
  * after a query. And a method to test whether the current GraphQL String contains a query.
+ *
+ * @author eschlenz
  */
 object GraphRegexUtil {
     // Allowed GraphQL names characters are documented here: https://graphql.github.io/graphql-spec/draft/#sec-Names
