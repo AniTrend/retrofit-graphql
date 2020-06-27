@@ -64,6 +64,11 @@ internal fun Project.configureAndroid(): Unit = baseExtension().run {
                 "src/${androidSourceSet.name}/kotlin"
             )
         }
+        if (!project.isSampleModule()) {
+            getByName("test") {
+                resources.srcDirs(file("src/test/resources"))
+            }
+        }
     }
 
     testOptions {
