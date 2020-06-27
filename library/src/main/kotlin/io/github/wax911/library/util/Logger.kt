@@ -10,6 +10,13 @@ import android.util.Log
  * into an application except during development. Debug logs are compiled
  * in but stripped at runtime. Error, warning and info logs are always kept.
  */
+@Deprecated(
+    "Use ILogger.Level instead",
+    ReplaceWith(
+        "ILogger.Level",
+        "io.github.wax911.library.logger.contract.ILogger.Level"
+    )
+)
 class LogLevel private constructor(private val value: Int) {
     companion object {
         /** Priority constant for the println method; use Logger.wtf */
@@ -34,6 +41,13 @@ class LogLevel private constructor(private val value: Int) {
     operator fun compareTo(other: LogLevel) = this.value.compareTo(other.value)
 }
 
+@Deprecated(
+    "Use LibraryLogger instead",
+    ReplaceWith(
+        "logger",
+        "io.github.wax911.library.logger.core.LibraryLogger"
+    )
+)
 internal object Logger {
 
     var level: LogLevel = LogLevel.VERBOSE
