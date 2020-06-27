@@ -9,6 +9,11 @@ import co.anitrend.retrofit.graphql.sample.BuildConfig
 import com.chuckerteam.chucker.api.ChuckerCollector
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.chuckerteam.chucker.api.RetentionManager
+import io.github.wax911.library.annotation.processor.GraphProcessor
+import io.github.wax911.library.annotation.processor.contract.AbstractGraphProcessor
+import io.github.wax911.library.annotation.processor.plugin.AssetManagerDiscoveryPlugin
+import io.github.wax911.library.logger.DefaultGraphLogger
+import io.github.wax911.library.logger.contract.ILogger
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -23,15 +28,32 @@ private val coreModule = module {
             applicationContext = androidContext()
         )
     }
+    factory {
+        AssetManagerDiscoveryPlugin(
+            assetManager = androidContext().assets
+        )
+    }
+    single {
+        val level = if (BuildConfig.DEBUG)
+            ILogger.Level.VERBOSE
+        else
+            ILogger.Level.ERROR
+
+        GraphProcessor(
+            discoveryPlugin = get<AssetManagerDiscoveryPlugin>(),
+            logger = DefaultGraphLogger(level)
+        )
+    }
 }
 
 private val networkModule = module {
     factory {
+        val converterFactory = SampleConverterFactory(
+            processor = get<GraphProcessor>()
+        )
         Retrofit.Builder()
             .addConverterFactory(
-                SampleConverterFactory.create(
-                    context = androidContext()
-                )
+                converterFactory
             )
     }
 }

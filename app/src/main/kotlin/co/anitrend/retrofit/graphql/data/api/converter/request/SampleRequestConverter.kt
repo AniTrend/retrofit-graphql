@@ -3,9 +3,8 @@ package co.anitrend.retrofit.graphql.data.api.converter.request
 import co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper
 import co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper.containsImage
 import co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper.createMultiPartBody
-import co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper.supportsFileUpload
 import com.google.gson.Gson
-import io.github.wax911.library.annotation.processor.GraphProcessor
+import io.github.wax911.library.annotation.processor.contract.AbstractGraphProcessor
 import io.github.wax911.library.converter.request.GraphRequestConverter
 import io.github.wax911.library.model.request.QueryContainerBuilder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -17,10 +16,10 @@ import okhttp3.RequestBody.Companion.toRequestBody
  * a [RequestBody]
  */
 internal class SampleRequestConverter(
-    methodAnnotations: Array<out Annotation>,
-    graphProcessor: GraphProcessor,
+    annotations: Array<out Annotation>,
+    processor: AbstractGraphProcessor,
     gson: Gson
-) : GraphRequestConverter(methodAnnotations, graphProcessor, gson) {
+) : GraphRequestConverter(annotations, processor, gson) {
 
     /**
      * Converter for the request body, gets the GraphQL query from the method annotation

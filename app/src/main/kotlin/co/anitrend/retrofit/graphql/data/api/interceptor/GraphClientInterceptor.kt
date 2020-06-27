@@ -3,7 +3,6 @@ package co.anitrend.retrofit.graphql.data.api.interceptor
 import co.anitrend.retrofit.graphql.data.api.common.EndpointType
 import co.anitrend.retrofit.graphql.data.api.converter.request.SampleRequestConverter
 import co.anitrend.retrofit.graphql.sample.BuildConfig
-import io.github.wax911.library.annotation.processor.GraphProcessor
 import io.github.wax911.library.converter.GraphConverter
 import okhttp3.Interceptor
 import okhttp3.Response
