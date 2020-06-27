@@ -1,10 +1,9 @@
 package io.github.wax911.library.annotation.processor.fragment
 
+import io.github.wax911.library.helpers.logger.TestLogger
 import io.mockk.every
 import io.mockk.mockk
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
 
 class FragmentPatcherTest {
@@ -17,7 +16,7 @@ class FragmentPatcherTest {
     private val fragmentB = "fragmentB"
     private val fragmentC = "fragmentC"
 
-    private val subj = FragmentPatcher(defaultExtension, mockFragmentAnalyzer)
+    private val subj = FragmentPatcher(defaultExtension, mockFragmentAnalyzer, TestLogger())
 
     /**
      * Tests this scenario:
