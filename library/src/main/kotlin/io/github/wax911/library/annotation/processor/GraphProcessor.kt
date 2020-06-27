@@ -2,138 +2,142 @@ package io.github.wax911.library.annotation.processor
 
 import android.content.res.AssetManager
 import io.github.wax911.library.annotation.GraphQuery
+import io.github.wax911.library.annotation.processor.contract.AbstractGraphProcessor
 import io.github.wax911.library.annotation.processor.fragment.FragmentPatcher
 import io.github.wax911.library.annotation.processor.fragment.GraphRegexUtil
-import io.github.wax911.library.util.Logger
-import java.io.BufferedReader
+import io.github.wax911.library.annotation.processor.plugin.AssetManagerDiscoveryPlugin
+import io.github.wax911.library.annotation.processor.plugin.contract.AbstractDiscoveryPlugin
+import io.github.wax911.library.logger.DefaultGraphLogger
+import io.github.wax911.library.logger.core.AbstractLogger
 import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
 import java.util.*
 
 /**
- * Created by max on 2018/03/12.
- * GraphQL annotation processor
+ * GraphQL annotation processor that resolves `graphql` queries, mutations and fragments
+ * by a given file name declared in [GraphQuery]
+ *
+ * @param discoveryPlugin A plugin which handles the discovery of .graphql files
+ * in this case we will be using [AssetManagerDiscoveryPlugin]
  */
-class GraphProcessor private constructor(
-    assetManager: AssetManager?,
-    private val fragmentPatcher: FragmentPatcher = FragmentPatcher(defaultExtension)
-) {
+class GraphProcessor(
+    discoveryPlugin: AbstractDiscoveryPlugin<*>,
+    override val logger: AbstractLogger = DefaultGraphLogger(),
+    override val fragmentPatcher: FragmentPatcher = FragmentPatcher(
+        defaultExtension = discoveryPlugin.targetExtension,
+        logger = logger
+    )
+) : AbstractGraphProcessor() {
+    override val defaultExtension: String = discoveryPlugin.targetExtension
+    override val defaultDirectory: String = discoveryPlugin.targetPath
 
-    private val _graphFiles: MutableMap<String, String> by lazy {
-        HashMap<String, String>()
-    }
+    private val _graphFiles: MutableMap<String, String> = HashMap()
 
-    val graphFiles: Map<String, String>
-        get() {
-            return Collections.unmodifiableMap(_graphFiles)
-        }
+    /**
+     * Returns a pair of query or mutation name and graphql contents
+     */
+    override val graphFiles: Map<String, String> get() = _graphFiles
 
     init {
         synchronized(lock) {
-            Logger.d("GraphProcessor", Thread.currentThread().name + ": has obtained a synchronized lock on the object")
+            val currentThread = Thread.currentThread().name
+            logger.v(TAG, "$currentThread: has obtained a synchronized lock on the object")
             if (_graphFiles.isEmpty()) {
-                Logger.d("GraphProcessor", Thread.currentThread().name + ": is initializing query files")
-                createGraphQLMap(defaultDirectory, assetManager)
-                Logger.d("GraphProcessor", Thread.currentThread().name + ": has completed initializing all files")
-                Logger.d("GraphProcessor", Thread.currentThread().name + ": Total count of graphFiles -> size: " + _graphFiles.size)
+                logger.v(TAG, "$currentThread: is initializing query files")
+                createGraphQLMap(discoveryPlugin)
+                logger.v(TAG, "$currentThread: has completed initializing all graphql files")
+                logger.v(TAG, "$currentThread: discovered `${_graphFiles.size}` graphql files")
             } else
-                Logger.d("GraphProcessor", Thread.currentThread().name + ": skipped initialization of graphFiles -> size: " + _graphFiles.size)
-        }
-    }
-
-    @Synchronized
-    fun getQuery(annotations: Array<Annotation>): String? {
-        var graphQuery: GraphQuery? = null
-
-        for (annotation in annotations)
-            if (annotation is GraphQuery) {
-                graphQuery = annotation
-                break
-            }
-
-        if (graphQuery != null) {
-            val fileName = String.format("%s%s", graphQuery.value, defaultExtension)
-            Logger.d("GraphProcessor", fileName)
-            if (_graphFiles.containsKey(fileName))
-                return _graphFiles[fileName]
-            Logger.e(this.toString(), String.format("The request query %s could not be found!", graphQuery.value))
-            Logger.e(this.toString(), String.format("Current size of graphFiles -> size: %d", _graphFiles.size))
-        }
-        return null
-    }
-
-    @Synchronized
-    private fun createGraphQLMap(path: String, assetManager: AssetManager?) {
-        try {
-            assetManager?.apply {
-                val paths = list(path)
-                paths?.also {
-                    for (item in it) {
-                        val absolute = "$path/$item"
-                        if (item.endsWith(defaultExtension))
-                            _graphFiles[item] = getFileContents(open(absolute))
-                        else
-                            createGraphQLMap(absolute, this)
-                    }
-                }
-            }
-
-            patchQueries()
-        } catch (e: IOException) {
-            e.printStackTrace()
+                logger.v(TAG, "$currentThread: is skipping initialization because graphFiles are not empty size -> ${_graphFiles.size}")
         }
     }
 
     /**
-     * Patch any query with fragment references, that don't already have the fragment defined with the query.
+     * Finds graphql content matching the value provided by [GraphQuery]
+     *
+     * @param annotations A collection of method annotation from an ongoing request
+     *
+     * @return GraphQL query in the form of [String] or null if the request method was not
+     * annotated with [GraphQuery] or if the no such file could be found
      */
-    @Synchronized
-    private fun patchQueries() {
+    @Synchronized override fun getQuery(annotations: Array<out Annotation>): String? {
+        val graphQuery = annotations.filterIsInstance(
+            GraphQuery::class.java
+        ).firstOrNull()
+
+        if (graphQuery != null) {
+            val fileName = "${graphQuery.value}$defaultExtension"
+            logger.d(TAG, "Looking up `$defaultExtension` file matching: $fileName")
+            if (_graphFiles.containsKey(fileName))
+                return _graphFiles[fileName]
+            logger.e(TAG, "The requested query annotated with value: ${graphQuery.value} could not be found!")
+            logger.e(TAG, "Discovered GraphQL files with the size of -> ${_graphFiles.size}")
+        }
+        return null
+    }
+
+    /**
+     * Patch any query with fragment references, that don't already have the
+     * fragment defined with the query.
+     */
+    @Synchronized override fun patchQueries() {
         _graphFiles.entries
-            .filter { GraphRegexUtil.containsAnOperation(it.value) }
-            .forEach {
-                val patch = fragmentPatcher.includeMissingFragments(it.key, it.value, _graphFiles)
-                if (patch.isNotEmpty()) {
-                    it.setValue("${it.value}$patch")
-                }
+            .filter { entry ->
+                GraphRegexUtil.containsAnOperation(entry.value)
+            }
+            .forEach { entry ->
+                val patch = fragmentPatcher.includeMissingFragments(
+                    entry.key, entry.value, _graphFiles
+                )
+                if (patch.isNotEmpty())
+                    entry.setValue("${entry.value}$patch")
             }
     }
 
-    @Synchronized
-    private fun getFileContents(inputStream: InputStream): String {
-        val queryBuffer = StringBuilder()
+    /**
+     * Recursively discovers graphql files for a given [path] that resides in [assetManager]
+     * with an extension matching [defaultExtension]
+     *
+     * @param discoveryPlugin Root path used for discovery
+     */
+    @Synchronized private fun createGraphQLMap(discoveryPlugin: AbstractDiscoveryPlugin<*>) {
         try {
-            val inputStreamReader = InputStreamReader(inputStream)
-            val bufferedReader = BufferedReader(inputStreamReader)
-
-            var line: String?
-            do {
-                line = bufferedReader.readLine()
-                line?.apply {
-                    queryBuffer.append(this)
-                }
-            } while (line != null)
-
-            inputStreamReader.close()
-            bufferedReader.close()
+            val graphs = discoveryPlugin.startDiscovery(logger)
+            if (_graphFiles.isNotEmpty())
+                _graphFiles.clear()
+            _graphFiles.putAll(graphs)
+            patchQueries()
         } catch (e: IOException) {
-            e.printStackTrace()
+            logger.e(TAG, "Error encounter while searching for .graphql files", e)
         }
-
-        return queryBuffer.toString()
     }
 
     companion object {
+
+        private val TAG = GraphProcessor::class.java.simpleName
 
         @Volatile
         private var instance: GraphProcessor? = null
         private val lock = Any()
 
-        private const val defaultExtension = ".graphql"
-        private const val defaultDirectory = "graphql"
-
-        fun getInstance(assetManager: AssetManager?): GraphProcessor {
+        /**
+         * Return a single instance of the configured graph processor
+         *
+         * @assetManager The [AssetManager] which will be used to look for graphql files
+         * @param logger Custom logger facade
+         */
+        @Deprecated(
+            message = "Consider managing the singleton lifecycle of GraphProcessor on your " +
+                    "own, with something like Dagger, Hilt or even Koin",
+            replaceWith = ReplaceWith(
+                "GraphProcessor(assetManager)",
+                "io.github.wax911.library.annotation.processor.GraphProcessor"
+            )
+        )
+        @JvmOverloads
+        fun getInstance(
+            assetManager: AssetManager,
+            logger: AbstractLogger = DefaultGraphLogger()
+        ): GraphProcessor {
             val singleton = instance
             if (singleton != null)
                 return singleton
@@ -143,7 +147,12 @@ class GraphProcessor private constructor(
                 if (init != null)
                     init
                 else {
-                    val created = GraphProcessor(assetManager)
+                    val created = GraphProcessor(
+                        discoveryPlugin = AssetManagerDiscoveryPlugin(
+                            assetManager
+                        ),
+                        logger = logger
+                    )
                     instance = created
                     created
                 }

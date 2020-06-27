@@ -1,0 +1,6 @@
+fragment BucketFile on File {
+    contentType
+    filename
+    id
+    url
+}

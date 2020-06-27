@@ -28,6 +28,11 @@ object Libraries {
             const val activityKtx = "androidx.activity:activity-ktx:$version"
         }
 
+        object Annotation {
+            private const val version = "1.2.0-alpha01"
+            const val annotation = "androidx.annotation:annotation:$version"
+        }
+
         object AppCompat {
             private const val version = "1.3.0-alpha01"
             const val appcompat = "androidx.appcompat:appcompat:$version"

@@ -31,10 +31,7 @@ private fun DefaultConfig.applyAdditionalConfiguration(project: Project) {
 internal fun Project.configureAndroid(): Unit = baseExtension().run {
     compileSdkVersion(Versions.compileSdk)
     defaultConfig {
-        if (isSampleModule())
-            minSdkVersion(21)
-        else
-            minSdkVersion(Versions.minSdk)
+        minSdkVersion(Versions.minSdk)
         targetSdkVersion(Versions.targetSdk)
         versionCode = Versions.versionCode
         versionName = Versions.versionName
@@ -66,6 +63,11 @@ internal fun Project.configureAndroid(): Unit = baseExtension().run {
             androidSourceSet.java.srcDir(
                 "src/${androidSourceSet.name}/kotlin"
             )
+        }
+        if (!project.isSampleModule()) {
+            getByName("test") {
+                resources.srcDirs(file("src/test/resources"))
+            }
         }
     }
 

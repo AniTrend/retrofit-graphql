@@ -1,6 +1,6 @@
 package io.github.wax911.library.annotation.processor.fragment
 
-import io.github.wax911.library.util.Logger
+import io.github.wax911.library.logger.core.AbstractLogger
 
 /**
  * This class will return a String containing fragment definitions. This String can then be appended to a GraphQL
@@ -10,10 +10,13 @@ import io.github.wax911.library.util.Logger
  *
  * This class also properly handles recursion. This means fragments can have references to other fragments, and it will
  * do its best to resolve everything correctly.
+ *
+ * @author eschlenz
  */
 class FragmentPatcher(
     private val defaultExtension: String,
-    private val fragmentAnalyzer: FragmentAnalyzer = RegexFragmentAnalyzer()
+    private val fragmentAnalyzer: FragmentAnalyzer = RegexFragmentAnalyzer(),
+    private val logger: AbstractLogger
 ) {
     fun includeMissingFragments(
         graphFile: String,
@@ -22,7 +25,9 @@ class FragmentPatcher(
         aggregation: StringBuilder = StringBuilder()
     ): String {
         // Look for any missing fragment definitions in the current graph content.
-        val missingFragments = fragmentAnalyzer.analyzeFragments(graphContent).filter { !it.isDefined }
+        val missingFragments = fragmentAnalyzer
+            .analyzeFragments(graphContent)
+            .filter { !it.isDefined }
 
         if (missingFragments.isEmpty()) {
             // Nothing to do. We can short circuit and return early.
@@ -32,7 +37,7 @@ class FragmentPatcher(
         // There is at least one missing fragment definition. It may be defined in its own file though. We will do
         // our best to find and include it.
         val count = missingFragments.count()
-        Logger.d(TAG, "$count missing fragments in $graphFile. Attempting to find them elsewhere.")
+        logger.d(TAG, "$count missing fragments in $graphFile. Attempting to find them elsewhere.")
 
         missingFragments.forEach { missingFragment ->
             val includeFile = "${missingFragment.fragmentReference}$defaultExtension"
@@ -49,16 +54,16 @@ class FragmentPatcher(
                 }
             } else {
                 // This fragment is nowhere to be found.
-                Logger.e(TAG, "$graphFile references $missingFragment, but it could not be located.")
+                logger.e(TAG, "$graphFile references $missingFragment, but it could not be located.")
             }
         }
 
-        Logger.d(TAG, "Patch produced for: $graphFile\n$aggregation")
+        logger.d(TAG, "Patch produced for: $graphFile\n$aggregation")
 
         return aggregation.toString()
     }
 
     companion object {
-        private const val TAG = "FragmentPatcher"
+        private val TAG = FragmentPatcher::class.java.simpleName
     }
 }

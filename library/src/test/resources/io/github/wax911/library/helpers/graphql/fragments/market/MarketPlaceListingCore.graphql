@@ -1,0 +1,16 @@
+fragment MarketPlaceListingCore on MarketplaceListing {
+    id
+    primaryCategory {
+        name
+    }
+    secondaryCategory {
+        name
+    }
+    slug
+    shortDescription
+    isPaid
+    isVerified
+    logoBackgroundColor
+    logoUrl
+    name
+}
