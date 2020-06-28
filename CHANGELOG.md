@@ -3,7 +3,7 @@
 Change Log
 ==========
 
-Version 0.11.0 *(2020-06-28)*
+Version 0.11.0-alpha01 *(2020-06-28)*
 ----------------------------
 
 - **Update**: Refactor of graph request converter to reflect method signature changes in `retrofit 2.9.0`
