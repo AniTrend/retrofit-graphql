@@ -6,17 +6,16 @@ import kotlinx.android.parcel.RawValue
 import java.util.*
 
 /**
- * Actual query and variable container
- * used in retrofit requestBodyConverter
- */
+ * GraphQL request that follows the common GraphQL HTTP request format
+ *
+ * @see [GraphQL Over HTTP](https://graphql.org/learn/serving-over-http/#post-request)
+*/
 @Parcelize
 data class QueryContainer internal constructor(
-        var operationName: String? = null,
-        var query: String? = null,
-        val variables: @RawValue
-        MutableMap<String, Any?> = WeakHashMap(),
-        val extensions: @RawValue
-        MutableMap<String, Any?> = WeakHashMap()
+    var operationName: String? = null,
+    var query: String? = null,
+    val variables: @RawValue MutableMap<String, Any?> = WeakHashMap(),
+    val extensions: @RawValue MutableMap<String, Any?> = WeakHashMap()
 ) : Parcelable {
 
     internal fun putVariables(values: Map<String, Any?>) {

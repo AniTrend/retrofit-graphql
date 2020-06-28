@@ -4,21 +4,20 @@ import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 
 /**
- * Created by max on 2018/03/16.
  * Query & Variable builder for graph requests
  */
 @Parcelize
 class QueryContainerBuilder(
-        private val queryContainer: QueryContainer = QueryContainer()
+    private val queryContainer: QueryContainer = QueryContainer()
 ) : Parcelable {
 
     fun setQuery(query: String?): QueryContainerBuilder {
-        this.queryContainer.query = query
+        queryContainer.query = query
         return this
     }
 
     fun setOperationName(operationName: String?): QueryContainerBuilder{
-        this.queryContainer.operationName = operationName
+        queryContainer.operationName = operationName
         return this
     }
 
@@ -38,7 +37,13 @@ class QueryContainerBuilder(
     }
 
     fun putPersistedQueryHash(sha256Hash: String, version: Int = 1): QueryContainerBuilder {
-        putExtension(persistedQueryExtensionName, PersistedQuery(sha256Hash = sha256Hash, version = version))
+        putExtension(
+            persistedQueryExtensionName,
+            PersistedQuery(
+                sha256Hash = sha256Hash,
+                version = version
+            )
+        )
         return this
     }
 
@@ -56,6 +61,7 @@ class QueryContainerBuilder(
     /**
      * Should only be called by the GraphQLConverter or any other subclasses of it
      * after the query has been added to the request
+     *
      * @see io.github.wax911.library.converter.GraphConverter
      */
     fun build(): QueryContainer {
