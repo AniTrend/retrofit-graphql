@@ -6,27 +6,27 @@ Change Log
 Version 0.11.0 *(2020-06-28)*
 ----------------------------
 
-- **Update**: Refactor of graph request converter to reflect method signature changes in `retrofit 2.9.0`
+- **Update**: Refactor of graph request converter to reflect method signature changes in `retrofit 2.9.0`
 
-- **Update**: Refactor `GraphConverter` signature and expose constructor aff4ab5
+- **Update**: Refactor `GraphConverter` signature and expose constructor [aff4ab5](https://github.com/AniTrend/retrofit-graphql/commit/aff4ab5029978b659f119c4a8d36f5ae803e3ac0)
 
-- **New**: Add new persisted query hash calculator and errors to new packages and minor class signature changes with deprecation warnings on old classes 175e40c, af619fa
+- **New**: Add new persisted query hash calculator and errors to new packages and minor class signature changes with deprecation warnings on old classes [175e40c](https://github.com/AniTrend/retrofit-graphql/commit/175e40c724153b4d76a04b1ac6077304aa4f1793), [af619fa](https://github.com/AniTrend/retrofit-graphql/commit/af619faf488e75dc45d8a293886783a53c13684a)
 
-- **Update**: Refactor `GraphProcessor` and add deprecation warning to singleton factory #71, 278f292 & bd6fe97
+- **Update**: Refactor `GraphProcessor` and add deprecation warning to singleton factory [#71](https://github.com/AniTrend/retrofit-graphql/issues/71), [278f292](https://github.com/AniTrend/retrofit-graphql/commit/278f2926514984ec5a9d4390dd5575c1d90935a4) & [bd6fe97](https://github.com/AniTrend/retrofit-graphql/commit/bd6fe97f060a58890aa5819b5a1c2222ef99ff33)
 
-- **New**: Add abstract contract for a files discovery plugin #71,  c6dfa15
+- **New**: Add abstract contract for a files discovery plugin [#71](https://github.com/AniTrend/retrofit-graphql/issues/71), [c6dfa15](https://github.com/AniTrend/retrofit-graphql/commit/c6dfa1546bfebe95242ac07962d9b138bf5e08a0)
 
-- **New**: Add new logger facade contracts for full control over logger #59, 3202ec6 & fcf329e
+- **New**: Add new logger facade contracts for full control over logger [#59](https://github.com/AniTrend/retrofit-graphql/issues/59), [3202ec6](https://github.com/AniTrend/retrofit-graphql/commit/3202ec651c8b17c6385dc38356339d2a58414aba) & [fcf329e](https://github.com/AniTrend/retrofit-graphql/commit/fcf329ee9f1f952c3000b97522d466dad8e5e184)
 
-- **Breaking**: Bump minimum sdk version from API 17 to API 21 90ec67f
+- **Breaking**: Bump minimum sdk version from API 17 to API 21 [90ec67f](https://github.com/AniTrend/retrofit-graphql/commit/90ec67f2f6221dad043cdd029e76972ee8835133)
 
-- **Update**: Rewrite sample app, migrate to github api 8ce9257
+- **Update**: Rewrite sample app, migrate to github api [8ce9257](https://github.com/AniTrend/retrofit-graphql/commit/8ce9257fa1379b03df8b4483c5e6a58c3a7104c2)
 
-- **New**: Migrate to buildSrc and bump retofit to 2.9.0 cff0fd8
+- **New**: Migrate to buildSrc and bump retofit to 2.9.0 [cff0fd8](https://github.com/AniTrend/retrofit-graphql/commit/cff0fd8a90e58164264a395b22d0f9f8cf6a4a1f)
 
-- **Update**: Bump gradle from 3.6.3 to 4.0.0 #104
+- **Update**: Bump gradle from 3.6.3 to 4.0.0 [#104](https://github.com/AniTrend/retrofit-graphql/pull/104)
 
-- **Update**: Bump mockk from 1.9.3 to 1.10.0 #95
+- **Update**: Bump mockk from 1.9.3 to 1.10.0 [#95](https://github.com/AniTrend/retrofit-graphql/pull/95)
 
 Version 0.10.3 *(2020-04-16)*
 ----------------------------
