@@ -1,0 +1,10 @@
+jdk:
+  - openjdk8
+install:
+  - echo "Running test, build documentation generator and publish commands"
+  - ./gradlew clean build
+  - ./gradlew dokka
+  - ./gradlew test
+  - ./gradlew publishMavenPublicationToMavenLocal
+env:
+  CI: "true"

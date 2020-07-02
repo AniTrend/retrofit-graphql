@@ -1,0 +1,14 @@
+query GetMarketPlaceApps($first: Int, $after: String, $before: String) {
+    marketplaceListings(first: $first, after: $after, before: $before) {
+        edges {
+            cursor
+            node {
+                ... MarketPlaceListingCore
+            }
+        }
+        pageInfo {
+            ... PageInfo
+        }
+        totalCount
+    }
+}

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <co.anitrend.arch.ui.view.widget.SupportStateLayout
+        android:id="@+id/uploadStateLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/selectUploadFile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/text_select_upload_file"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:backgroundTint="@color/colorAccent"
+                app:icon="@drawable/ic_gesture_black_24dp"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </co.anitrend.arch.ui.view.widget.SupportStateLayout>
+
+    <!-- Since I can't set weight with an included element -->
+    <!--<include layout="@layout/support_list" />-->
+
+    <co.anitrend.arch.ui.view.widget.SupportStateLayout
+        android:id="@+id/supportStateLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2.5">
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/supportRefreshLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:descendantFocusability="blocksDescendants">
+
+            <co.anitrend.arch.recycler.SupportRecyclerView
+                android:id="@+id/supportRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scrollbars="vertical"/>
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    </co.anitrend.arch.ui.view.widget.SupportStateLayout>
+
+</androidx.appcompat.widget.LinearLayoutCompat>

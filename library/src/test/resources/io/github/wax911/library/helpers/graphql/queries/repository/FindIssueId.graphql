@@ -1,0 +1,7 @@
+query FindIssueID($owner: String!, $name: String!, $issueId: Int!) {
+    repository(owner:$owner, name:$name) {
+        issue(number:$issueId) {
+            id
+        }
+    }
+}

@@ -1,0 +1,5 @@
+mutation UploadToStorageBucket($upload: Upload!) {
+    uploadFile(fileData: $upload) {
+        ...BucketFile
+    }
+}

@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="material_700">#616161</color>
+    <color name="colorPrimary">#EAE5E5</color>
+    <color name="colorItemNavBackgroundSelected">@color/colorStateBlue</color>
 
-    <color name="nav_divider">#e0e0e0</color>
-
-    <color name="white">#FFF</color>
-    <color name="colorPrimary">#F2F5FB</color>
-    <color name="colorPrimaryDark">#F2F5FB</color>
-
+    <color name="colorUnderLineTab">#33000000</color>
 </resources>

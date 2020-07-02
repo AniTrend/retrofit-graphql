@@ -1,0 +1,12 @@
+fragment UserCore on User {
+    avatarUrl
+    bio
+    company
+    id
+    status {
+        createdAt
+        emoji
+        message
+    }
+    login
+}

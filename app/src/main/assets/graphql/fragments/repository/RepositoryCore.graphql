@@ -1,0 +1,18 @@
+fragment RepositoryCore on Repository {
+    createdAt
+    description
+    forkCount
+    homepageUrl
+    id
+    isFork
+    isLocked
+    isPrivate
+    isTemplate
+    name
+    projectsUrl
+    url
+    viewerHasStarred
+    watchers {
+        totalCount
+    }
+}
