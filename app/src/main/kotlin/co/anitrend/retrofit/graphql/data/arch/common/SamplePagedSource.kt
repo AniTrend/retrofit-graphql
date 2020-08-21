@@ -71,7 +71,7 @@ internal abstract class SamplePagedSource<T>(
     override fun onZeroItemsLoaded() {
         val requestType = PagingRequestHelper.RequestType.INITIAL
         pagingRequestHelper.runIfNotRunning(
-            PagingRequestHelper.RequestType.INITIAL
+            requestType
         ) { pagingRequestCallback ->
             launch {
                 invoke(
