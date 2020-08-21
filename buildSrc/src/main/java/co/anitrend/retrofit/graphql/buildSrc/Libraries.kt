@@ -269,7 +269,7 @@ object Libraries {
         }
 
         object Kotlin {
-            private const val version = "1.3.72"
+            private const val version = "1.4.0"
             const val stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$version"
             const val reflect = "org.jetbrains.kotlin:kotlin-reflect:$version"
 
