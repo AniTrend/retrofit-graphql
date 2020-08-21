@@ -19,7 +19,10 @@ class KoinInitializer : Initializer<KoinApplication> {
      * @param context The application context.
      */
     override fun create(context: Context): KoinApplication {
-        val logLevel = if (BuildConfig.DEBUG) Level.DEBUG else Level.INFO
+        //val logLevel = if (BuildConfig.DEBUG) Level.DEBUG else Level.INFO
+        // https://github.com/InsertKoinIO/koin/issues/847 koin crashes after upgrading to 1.4.0
+        // this is a temporary fix for now
+        val logLevel = Level.NONE
         return startKoin {
             fragmentFactory()
             androidContext(context)
