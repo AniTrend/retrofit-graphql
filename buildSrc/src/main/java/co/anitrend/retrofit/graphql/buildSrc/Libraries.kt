@@ -49,12 +49,6 @@ object Libraries {
             private const val version = "1.5.0-alpha01"
             const val core = "androidx.core:core:$version"
             const val coreKtx = "androidx.core:core-ktx:$version"
-
-            object Animation {
-                private const val version = "1.0.0-alpha01"
-                const val animation = "androidx.core:core-animation:${version}"
-                const val animationTest = "androidx.core:core-animation-testing:${version}"
-            }
         }
 
         object ContraintLayout {
@@ -84,29 +78,6 @@ object Libraries {
             const val liveDataCoreKtx = "androidx.lifecycle:lifecycle-livedata-core-ktx:$version"
         }
 
-        object Navigation {
-            private const val version = "2.3.0-rc01"
-            const val common = "androidx.navigation:navigation-common:$version"
-            const val commonKtx = "androidx.navigation:navigation-common-ktx:$version"
-
-            const val dynamicFragment = "androidx.navigation:navigation-dynamic-features-fragment:$version"
-            const val dynamicRuntime = "androidx.navigation:navigation-dynamic-features-runtime:$version"
-
-            const val fragment = "androidx.navigation:navigation-fragment:$version"
-            const val fragmentKtx = "androidx.navigation:navigation-fragment-ktx:$version"
-
-            const val runtime = "androidx.navigation:navigation-runtime:$version"
-            const val runtimeKtx = "androidx.navigation:navigation-runtime-ktx:$version"
-
-            const val safeArgsgenerator = "androidx.navigation:navigation-safe-args-generator:$version"
-            const val safeArgsGradlePlugin = "androidx.navigation:navigation-safe-args-gradle-plugin:$version"
-
-            const val test = "androidx.navigation:navigation-testing:$version"
-
-            const val ui = "androidx.navigation:navigation-ui:$version"
-            const val uiKtx = "androidx.navigation:navigation-ui-ktx:$version"
-        }
-
         object Paging {
             private const val version = "2.1.2"
             const val common = "androidx.paging:paging-common-ktx:$version"
@@ -132,11 +103,6 @@ object Libraries {
             const val runtime = "androidx.room:room-runtime:$version"
             const val test = "androidx.room:room-testing:$version"
             const val ktx = "androidx.room:room-ktx:$version"
-        }
-
-        object Slice {
-            private const val version = "1.1.0-alpha01"
-            const val core = "androidx.slice:slice-core:$version"
         }
 
         object StartUp {
@@ -211,54 +177,12 @@ object Libraries {
         const val video = "io.coil-kt:coil-video:$version"
     }
 
-    object DropBox {
-        private const val version = "4.0.0-alpha06"
-        const val store = "com.dropbox.mobile.store:store4:$version"
-    }
-
     object Google {
-
-        object Firebase {
-            private const val version = "17.4.3"
-            const val firebaseCore = "com.google.firebase:firebase-core:$version"
-
-            object Analytics {
-                private const val version = "17.4.3"
-                const val analytics = "com.google.firebase:firebase-analytics:$version"
-                const val analyticsKtx = "com.google.firebase:firebase-analytics-ktx:$version"
-            }
-
-            object Crashlytics {
-                private const val version = "17.0.1"
-                const val crashlytics = "com.google.firebase:firebase-crashlytics:$version"
-
-                object Gradle {
-                    private const val version = "2.1.1"
-                    const val plugin = "com.google.firebase:firebase-crashlytics-gradle:$version"
-                }
-            }
-        }
-
-        object Gson {
-            private const val version = "2.8.6"
-            const val gson = "com.google.code.gson:gson:$version"
-        }
 
         object Material {
             private const val version = "1.3.0-alpha01"
             const val material = "com.google.android.material:material:$version"
         }
-
-        object Services {
-            private const val version = "4.3.3"
-            const val googleServices = "com.google.gms:google-services:$version"
-        }
-    }
-
-    object Glide {
-        private const val version = "4.11.0"
-        const val glide = "com.github.bumptech.glide:glide:$version"
-        const val compiler = "com.github.bumptech.glide:compiler:$version"
     }
 
     object JetBrains {
@@ -353,22 +277,6 @@ object Libraries {
             const val okhttp = "com.squareup.okhttp3:okhttp:$version"
             const val logging = "com.squareup.okhttp3:logging-interceptor:$version"
             const val mockServer = "com.squareup.okhttp3:mockwebserver:$version"
-        }
-
-        object WorkFlow {
-            private const val version = "0.28.0"
-            const val coreJvm = "com.squareup.workflow:workflow-core-jvm:$version"
-            const val coreAndroid = "com.squareup.workflow:workflow-ui-core-android:$version"
-            const val modalAndroid = "com.squareup.workflow:workflow-ui-modal-android:$version"
-            const val backStackAndroid = "com.squareup.workflow:workflow-ui-backstack-android:$version"
-            const val testJvm = "com.squareup.workflow:workflow-testing-jvm:$version"
-        }
-    }
-
-    object Tinder {
-        object StateMachine {
-            private const val version = "0.2.0"
-            const val stateMachine = "com.tinder.statemachine:statemachine:${version}"
         }
     }
 }
