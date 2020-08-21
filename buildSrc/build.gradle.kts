@@ -9,8 +9,8 @@ repositories {
     mavenCentral()
 }
 
-val kotlinVersion = "1.3.72"
-val buildToolsVersion = "4.0.0"
+val buildToolsVersion = "4.0.1"
+val kotlinVersion = "1.4.0"
 val dokkaVersion = "0.10.1"
 
 dependencies {

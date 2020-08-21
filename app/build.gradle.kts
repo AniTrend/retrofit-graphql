@@ -27,7 +27,7 @@ dependencies {
     implementation(Libraries.AndroidX.Fragment.fragmentKtx)
     implementation(Libraries.AndroidX.Activity.activityKtx)
     implementation(Libraries.AndroidX.Emoji.appCompat)
-    implementation(Libraries.AndroidX.ContraintLayout.constraintLayout)
+    implementation(Libraries.AndroidX.ConstraintLayout.constraintLayout)
     implementation(Libraries.AndroidX.SwipeRefresh.swipeRefreshLayout)
     implementation(Libraries.AndroidX.Preference.preferenceKtx)
     implementation(Libraries.AndroidX.Recycler.recyclerView)
