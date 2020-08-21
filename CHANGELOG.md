@@ -3,6 +3,15 @@
 Change Log
 ==========
 
+Version 0.11.0-alpha02 *(2020-08-21)*
+----------------------------
+
+- **Update**: Revert minimum sdk from 21 to 17 for library module [#112](https://github.com/AniTrend/retrofit-graphql/issues/112)
+
+- **Update**: Bump kotlin version from 1.3.72 to 1.4.0 [f918c7](https://github.com/AniTrend/retrofit-graphql/commit/f918c71d82f970c6a48281a9cc1f2e23996ef9a0)
+
+- **Update**: Bump gradle from 4.0.0 to 4.0.1 [3c6496](https://github.com/AniTrend/retrofit-graphql/commit/3c6496d345ee97373cdb218b0126473a62c6727d)
+
 Version 0.11.0-alpha01 *(2020-06-28)*
 ----------------------------
 

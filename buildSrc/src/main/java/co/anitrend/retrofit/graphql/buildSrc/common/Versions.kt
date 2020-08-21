@@ -4,10 +4,10 @@ object Versions {
 
     const val compileSdk = 29
     const val targetSdk = 29
-    const val minSdk = 21
+    const val minSdk = 17
 
-    const val versionCode = 11001
-    const val versionName = "0.11.0-alpha01"
+    const val versionCode = 11002
+    const val versionName = "0.11.0-alpha02"
 
     const val mockk = "1.10.0"
     const val junit = "4.13"
