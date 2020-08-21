@@ -269,7 +269,7 @@ object Libraries {
         }
 
         object Kotlin {
-            private const val version = "1.3.72"
+            private const val version = "1.4.0"
             const val stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$version"
             const val reflect = "org.jetbrains.kotlin:kotlin-reflect:$version"
 
@@ -285,7 +285,7 @@ object Libraries {
 
         object KotlinX {
             object Coroutines {
-                private const val version = "1.3.7"
+                private const val version = "1.3.8"
                 const val core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$version"
                 const val android = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$version"
                 const val test = "org.jetbrains.kotlinx:kotlinx-coroutines-test:$version"
