@@ -51,7 +51,7 @@ object Libraries {
             const val coreKtx = "androidx.core:core-ktx:$version"
         }
 
-        object ContraintLayout {
+        object ConstraintLayout {
             private const val version = "2.0.0-beta7"
             const val constraintLayout = "androidx.constraintlayout:constraintlayout:$version"
             const val constraintLayoutSolver = "androidx.constraintlayout:constraintlayout-solver:$version"
@@ -106,7 +106,7 @@ object Libraries {
         }
 
         object StartUp {
-            private const val version = "1.0.0-alpha01"
+            private const val version = "1.0.0-alpha02"
             const val startUpRuntime = "androidx.startup:startup-runtime:$version"
         }
 
