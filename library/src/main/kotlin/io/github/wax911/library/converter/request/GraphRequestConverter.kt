@@ -11,9 +11,9 @@ import retrofit2.Converter
  * GraphQL request body converter and injector, uses method annotation for a given retrofit method
  */
 open class GraphRequestConverter(
-        protected val methodAnnotations: Array<out Annotation>,
-        protected val graphProcessor: AbstractGraphProcessor,
-        protected val gson: Gson
+    protected val methodAnnotations: Array<out Annotation>,
+    protected val graphProcessor: AbstractGraphProcessor,
+    protected val gson: Gson
 ) : Converter<QueryContainerBuilder, RequestBody> {
 
     /**
@@ -25,7 +25,10 @@ open class GraphRequestConverter(
     override fun convert(containerBuilder: QueryContainerBuilder): RequestBody {
         val rawQuery = graphProcessor.getQuery(methodAnnotations)
         val queryContainer =
-            containerBuilder.setQuery(rawQuery)
+            containerBuilder.apply {
+                if (containerBuilder.isQueryNullOrEmpty())
+                    setQuery(rawQuery)
+            }
                 .build()
         val queryJson = gson.toJson(queryContainer)
         return RequestBody.create(MEDIA_TYPE, queryJson)

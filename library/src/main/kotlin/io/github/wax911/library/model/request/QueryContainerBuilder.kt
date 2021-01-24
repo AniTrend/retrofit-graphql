@@ -16,6 +16,8 @@ class QueryContainerBuilder(
         return this
     }
 
+    fun isQueryNullOrEmpty() = queryContainer.query.isNullOrEmpty()
+
     fun setOperationName(operationName: String?): QueryContainerBuilder{
         queryContainer.operationName = operationName
         return this
