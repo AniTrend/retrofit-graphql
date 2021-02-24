@@ -2,8 +2,8 @@ package co.anitrend.retrofit.graphql.buildSrc.common
 
 object Versions {
 
-    const val compileSdk = 29
-    const val targetSdk = 29
+    const val compileSdk = 30
+    const val targetSdk = 30
     const val minSdk = 17
 
     const val versionCode = 11003
