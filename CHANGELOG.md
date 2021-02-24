@@ -3,6 +3,13 @@
 Change Log
 ==========
 
+Version 0.11.0-alpha03 *(2021-02-24)*
+----------------------------
+
+- **Update**: Bump compile and target SDK from 29 to 30 [18c670](https://github.com/AniTrend/retrofit-graphql/commit/18c6705bebfdc23d3a4e1c0afc91747ebc686fce)
+
+- **New**: Open QueryContainerBuilder for extension [#116](https://github.com/AniTrend/retrofit-graphql/issues/116)
+
 Version 0.11.0-alpha02 *(2020-08-21)*
 ----------------------------
 

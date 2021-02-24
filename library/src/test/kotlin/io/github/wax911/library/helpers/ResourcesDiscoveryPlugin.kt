@@ -29,14 +29,10 @@ class ResourcesDiscoveryPlugin(
     override fun resolveContents(
         inputStream: InputStream,
         logger: AbstractLogger
-    ): String {
-        val queryBuffer = StringBuilder()
-        return runCatching {
-            inputStream.bufferedReader().useLines { sequence ->
-                sequence.forEach { queryBuffer.append(it) }
-            }
-            queryBuffer.toString()
-        }.getOrThrow()
+    ) = buildString {
+        inputStream.bufferedReader().useLines { sequence ->
+            sequence.forEach(::append)
+        }
     }
 
     /**
