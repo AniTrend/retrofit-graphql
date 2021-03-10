@@ -3,6 +3,15 @@
 Change Log
 ==========
 
+Version 0.11.0-beta01 *(2021-03-10)*
+----------------------------
+
+- **Update**: Default FragmentPatcher log level from debug to verbose [90e8a19](https://github.com/AniTrend/retrofit-graphql/commit/90e8a19edc2afee99bd71e91fe72f86acb7f1c67)
+
+- **Update**: Bump kotlin from 1.4.0 to 1.4.31 [7991132](https://github.com/AniTrend/retrofit-graphql/commit/7991132a5d2240cd9b7d2ac6f31bb12f286f54f4)
+
+- **Update**: Bump gradle from 4.0.1 to 4.1.2 [c6aa302](https://github.com/AniTrend/retrofit-graphql/commit/c6aa302a7f9bedc63222d23bd32676b6b364e10f)
+
 Version 0.11.0-alpha03 *(2021-02-24)*
 ----------------------------
 
