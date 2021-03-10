@@ -10,7 +10,7 @@ repositories {
 }
 
 val buildToolsVersion = "4.1.2"
-val kotlinVersion = "1.4.0"
+val kotlinVersion = "1.4.31"
 val dokkaVersion = "0.10.1"
 
 dependencies {
