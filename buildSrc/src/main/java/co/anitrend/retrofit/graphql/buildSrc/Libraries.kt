@@ -15,7 +15,7 @@ object Libraries {
     object Android {
 
         object Tools {
-            private const val version = "4.0.1"
+            private const val version = "4.1.2"
             const val buildGradle = "com.android.tools.build:gradle:$version"
         }
     }
@@ -31,12 +31,6 @@ object Libraries {
         object Annotation {
             private const val version = "1.2.0-alpha01"
             const val annotation = "androidx.annotation:annotation:$version"
-        }
-
-        object AppCompat {
-            private const val version = "1.3.0-alpha01"
-            const val appcompat = "androidx.appcompat:appcompat:$version"
-            const val appcompatResources = "androidx.appcompat:appcompat-resources:$version"
         }
 
         object Collection {
@@ -98,7 +92,7 @@ object Libraries {
         }
 
         object Room {
-            private const val version = "2.2.5"
+            private const val version = "2.2.6"
             const val compiler = "androidx.room:room-compiler:$version"
             const val runtime = "androidx.room:room-runtime:$version"
             const val test = "androidx.room:room-testing:$version"
@@ -188,12 +182,12 @@ object Libraries {
     object JetBrains {
 
         object Dokka {
-            private const val version = "0.10.1"
+            private const val version = "1.4.0"
             const val gradlePlugin = "org.jetbrains.dokka:dokka-gradle-plugin:$version"
         }
 
         object Kotlin {
-            private const val version = "1.4.0"
+            private const val version = "1.4.31"
             const val stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$version"
             const val reflect = "org.jetbrains.kotlin:kotlin-reflect:$version"
 

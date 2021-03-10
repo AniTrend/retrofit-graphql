@@ -37,7 +37,7 @@ class FragmentPatcher(
         // There is at least one missing fragment definition. It may be defined in its own file though. We will do
         // our best to find and include it.
         val count = missingFragments.count()
-        logger.d(TAG, "$count missing fragments in $graphFile. Attempting to find them elsewhere.")
+        logger.v(TAG, "$count missing fragments in $graphFile. Attempting to find them elsewhere.")
 
         missingFragments.forEach { missingFragment ->
             val includeFile = "${missingFragment.fragmentReference}$defaultExtension"
@@ -58,7 +58,7 @@ class FragmentPatcher(
             }
         }
 
-        logger.d(TAG, "Patch produced for: $graphFile\n$aggregation")
+        logger.v(TAG, "Patch produced for: $graphFile\n$aggregation")
 
         return aggregation.toString()
     }

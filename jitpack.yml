@@ -5,6 +5,7 @@ install:
   - ./gradlew clean build
   - ./gradlew dokka
   - ./gradlew test
+  - ./gradlew dependencyUpdates
   - ./gradlew publishMavenPublicationToMavenLocal
 env:
   CI: "true"
