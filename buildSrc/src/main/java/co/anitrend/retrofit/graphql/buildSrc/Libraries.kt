@@ -15,7 +15,7 @@ object Libraries {
     object Android {
 
         object Tools {
-            private const val version = "4.1.2"
+            private const val version = "4.1.3"
             const val buildGradle = "com.android.tools.build:gradle:$version"
         }
     }
@@ -187,7 +187,7 @@ object Libraries {
         }
 
         object Kotlin {
-            private const val version = "1.4.31"
+            private const val version = "1.4.32"
             const val stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$version"
             const val reflect = "org.jetbrains.kotlin:kotlin-reflect:$version"
 
