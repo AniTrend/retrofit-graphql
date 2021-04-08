@@ -1,7 +1,7 @@
 package io.github.wax911.library.model.request
 
 import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 
 /**
  * Query & Variable builder for graph requests
