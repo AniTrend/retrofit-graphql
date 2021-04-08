@@ -11,8 +11,8 @@ import java.lang.reflect.Type
  * resulting in a smaller generic tree for requests
  */
 open class GraphResponseConverter<T>(
-        protected val type: Type?,
-        protected val gson: Gson
+    protected val type: Type?,
+    protected val gson: Gson
 ) : Converter<ResponseBody, T> {
 
     /**
