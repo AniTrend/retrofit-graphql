@@ -41,4 +41,18 @@ tasks.named(
     outputFormatter = "json"
     outputDir = "build/dependencyUpdates"
     reportfileName = "report"
+    resolutionStrategy {
+        componentSelection {
+            all {
+                val reject = listOf("preview", "alpha", "m")
+                    .map { qualifier ->
+                        val pattern = "(?i).*[.-]$qualifier[.\\d-]*"
+                        Regex(pattern, RegexOption.IGNORE_CASE)
+                    }
+                    .any { it.matches(candidate.version) }
+                if (reject)
+                    reject("Preview releases not wanted")
+            }
+        }
+    }
 }
