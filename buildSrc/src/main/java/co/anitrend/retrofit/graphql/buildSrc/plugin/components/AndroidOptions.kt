@@ -6,7 +6,6 @@ import org.gradle.kotlin.dsl.get
 import org.jetbrains.dokka.gradle.DokkaTask
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.baseExtension
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.baseAppExtension
-import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.androidExtensionsExtension
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.publishingExtension
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.libraryExtension
 import co.anitrend.retrofit.graphql.buildSrc.common.Versions
@@ -200,7 +199,4 @@ internal fun Project.configureOptions() {
                 applyConfiguration(this@configureOptions)
             }
         }
-
-    println("Enabling experimental extension options for feature module -> ${project.path}")
-    androidExtensionsExtension().isExperimental = true
 }
