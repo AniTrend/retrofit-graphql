@@ -3,10 +3,19 @@
 Change Log
 ==========
 
+Version 0.11.0-beta02 *(2021-04-08)*
+----------------------------
+
+- **Update**: Replace deprecated `kotlin-android-extensions` with `kotlin-parcelize` [181820b](https://github.com/AniTrend/retrofit-graphql/commit/181820b0dd77ea21841ca8e954a6584ced411e5d)
+
+- **Update**: Set fragment reference not found log level from `error` to `warning` [7c94b0a](https://github.com/AniTrend/retrofit-graphql/commit/7c94b0a3634848dbc112ac9e07123978348bff94)
+
+- **Update**: Bump gradle from 4.1.2 to 4.1.3 [49f69cd](https://github.com/AniTrend/retrofit-graphql/commit/49f69cdbeab7b571c67e23f3a04edf98e53302cc)
+
 Version 0.11.0-beta01 *(2021-03-10)*
 ----------------------------
 
-- **Update**: Default FragmentPatcher log level from debug to verbose [90e8a19](https://github.com/AniTrend/retrofit-graphql/commit/90e8a19edc2afee99bd71e91fe72f86acb7f1c67)
+- **Update**: Default FragmentPatcher log level from `debug` to `verbose` [90e8a19](https://github.com/AniTrend/retrofit-graphql/commit/90e8a19edc2afee99bd71e91fe72f86acb7f1c67)
 
 - **Update**: Bump kotlin from 1.4.0 to 1.4.31 [7991132](https://github.com/AniTrend/retrofit-graphql/commit/7991132a5d2240cd9b7d2ac6f31bb12f286f54f4)
 
