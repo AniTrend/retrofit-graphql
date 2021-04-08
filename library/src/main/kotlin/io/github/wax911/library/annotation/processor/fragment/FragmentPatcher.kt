@@ -56,8 +56,7 @@ class FragmentPatcher(
                 // This fragment is nowhere to be found.
                 logger.w(
                     TAG,
-                    "$graphFile references ${missingFragment.fragmentReference}, but it could not be located.",
-                    Throwable("$missingFragment")
+                    "$graphFile references ${missingFragment}, but it could not be located."
                 )
             }
         }
