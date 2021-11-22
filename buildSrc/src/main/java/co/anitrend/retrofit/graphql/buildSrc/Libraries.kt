@@ -23,13 +23,13 @@ object Libraries {
     object AndroidX {
 
         object Activity {
-            private const val version = "1.2.0-alpha06"
+            private const val version = "1.2.0"
             const val activity = "androidx.activity:activity:$version"
             const val activityKtx = "androidx.activity:activity-ktx:$version"
         }
 
         object Annotation {
-            private const val version = "1.2.0-alpha01"
+            private const val version = "1.2.0"
             const val annotation = "androidx.annotation:annotation:$version"
         }
 
@@ -40,24 +40,24 @@ object Libraries {
         }
 
         object Core {
-            private const val version = "1.5.0-alpha01"
+            private const val version = "1.5.0"
             const val core = "androidx.core:core:$version"
             const val coreKtx = "androidx.core:core-ktx:$version"
         }
 
         object ConstraintLayout {
-            private const val version = "2.0.0-beta7"
+            private const val version = "2.0.0"
             const val constraintLayout = "androidx.constraintlayout:constraintlayout:$version"
             const val constraintLayoutSolver = "androidx.constraintlayout:constraintlayout-solver:$version"
         }
 
         object Emoji {
-            private const val version = "1.1.0-rc01"
+            private const val version = "1.1.0"
             const val appCompat = "androidx.emoji:emoji-appcompat:$version"
         }
 
         object Fragment {
-            private const val version = "1.3.0-alpha06"
+            private const val version = "1.3.0"
             const val fragment = "androidx.fragment:fragment:$version"
             const val fragmentKtx = "androidx.fragment:fragment-ktx:$version"
             const val test = "androidx.fragment:fragment-ktx:fragment-testing$version"
@@ -86,7 +86,7 @@ object Libraries {
         }
 
         object Recycler {
-            private const val version = "1.2.0-alpha03"
+            private const val version = "1.2.0"
             const val recyclerView = "androidx.recyclerview:recyclerview:$version"
             const val recyclerViewSelection = "androidx.recyclerview:recyclerview-selection:$version"
         }
@@ -100,36 +100,36 @@ object Libraries {
         }
 
         object StartUp {
-            private const val version = "1.0.0-alpha02"
+            private const val version = "1.1.0"
             const val startUpRuntime = "androidx.startup:startup-runtime:$version"
         }
 
         object SwipeRefresh {
-            private const val version = "1.1.0-rc01"
+            private const val version = "1.1.0"
             const val swipeRefreshLayout = "androidx.swiperefreshlayout:swiperefreshlayout:$version"
         }
 
         object Test {
-            private const val version = "1.3.0-rc01"
+            private const val version = "1.3.0"
             const val core = "androidx.test:core:$version"
             const val coreKtx = "androidx.test:core-ktx:$version"
             const val runner = "androidx.test:runner:$version"
             const val rules = "androidx.test:rules:$version"
 
             object Espresso {
-                private const val version = "3.3.0-rc01"
+                private const val version = "3.3.0"
                 const val core = "androidx.test.espresso:espresso-core:$version"
             }
 
             object Extension {
-                private const val version = "1.1.2-rc01"
+                private const val version = "1.1.2"
                 const val junit = "androidx.test.ext:junit:$version"
                 const val junitKtx = "androidx.test.ext:junit-ktx:$version"
             }
         }
 
         object Work {
-            private const val version = "2.4.0-beta01"
+            private const val version = "2.4.0"
             const val runtimeKtx = "androidx.work:work-runtime-ktx:$version"
             const val runtime = "androidx.work:work-runtime:$version"
             const val test = "androidx.work:work-test:$version"
@@ -163,7 +163,7 @@ object Libraries {
     }
 
     object Coil {
-        private const val version = "0.11.0"
+        private const val version = "1.2.1"
         const val coil = "io.coil-kt:coil:$version"
         const val base = "io.coil-kt:coil-base:$version"
         const val gif = "io.coil-kt:coil-gif:$version"
@@ -174,7 +174,7 @@ object Libraries {
     object Google {
 
         object Material {
-            private const val version = "1.3.0-alpha01"
+            private const val version = "1.3.0"
             const val material = "com.google.android.material:material:$version"
         }
     }
@@ -182,7 +182,7 @@ object Libraries {
     object JetBrains {
 
         object Dokka {
-            private const val version = "1.4.0"
+            private const val version = "1.4.32"
             const val gradlePlugin = "org.jetbrains.dokka:dokka-gradle-plugin:$version"
         }
 
@@ -203,7 +203,7 @@ object Libraries {
 
         object KotlinX {
             object Coroutines {
-                private const val version = "1.3.8"
+                private const val version = "1.4.3"
                 const val core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$version"
                 const val android = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$version"
                 const val test = "org.jetbrains.kotlinx:kotlinx-coroutines-test:$version"
