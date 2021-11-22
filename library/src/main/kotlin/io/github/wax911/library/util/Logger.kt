@@ -1,3 +1,19 @@
+/**
+ * Copyright 2021 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.github.wax911.library.util
 
 import android.util.Log
@@ -60,7 +76,7 @@ internal object Logger {
      * @param tr An exception to log
      */
     fun d(tag: String, msg: String, tr: Throwable? = null) {
-        if(level < LogLevel.DEBUG) return
+        if (level < LogLevel.DEBUG) return
         else Log.d(tag, msg, tr)
     }
 
@@ -72,7 +88,7 @@ internal object Logger {
      * @param tr An exception to log
      */
     fun e(tag: String, msg: String, tr: Throwable? = null) {
-        if(level < LogLevel.ERROR) return
+        if (level < LogLevel.ERROR) return
         else Log.e(tag, msg, tr)
     }
 
@@ -84,7 +100,7 @@ internal object Logger {
      * @param tr An exception to log
      */
     fun i(tag: String, msg: String, tr: Throwable? = null) {
-        if(level < LogLevel.INFO) return
+        if (level < LogLevel.INFO) return
         else Log.i(tag, msg, tr)
     }
 
@@ -96,7 +112,7 @@ internal object Logger {
      * @param tr An exception to log
      */
     fun v(tag: String, msg: String, tr: Throwable? = null) {
-        if(level < LogLevel.VERBOSE) return
+        if (level < LogLevel.VERBOSE) return
         else Log.v(tag, msg, tr)
     }
 
@@ -108,7 +124,7 @@ internal object Logger {
      * @param tr An exception to log
      */
     fun w(tag: String, msg: String, tr: Throwable? = null) {
-        if(level < LogLevel.WARN) return
+        if (level < LogLevel.WARN) return
         else Log.w(tag, msg, tr)
     }
 
@@ -120,7 +136,7 @@ internal object Logger {
      * @param tr An exception to log.  May be null.
      */
     fun wtf(tag: String, msg: String, tr: Throwable? = null) {
-        if(level < LogLevel.ASSERT) return
+        if (level < LogLevel.ASSERT) return
         else Log.wtf(tag, msg, tr)
     }
 }

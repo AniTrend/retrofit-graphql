@@ -1,10 +1,25 @@
+/**
+ * Copyright 2021 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.github.wax911.library.persisted.query
 
 import io.github.wax911.library.annotation.processor.contract.AbstractGraphProcessor
 import io.github.wax911.library.persisted.contract.IAutomaticPersistedQuery
 import java.math.BigInteger
 import java.security.MessageDigest
-import java.util.*
 
 /**
  * Utility class for calculating SHA256 hashes based off of the `.graphql` files held in memory by
@@ -52,9 +67,8 @@ class AutomaticPersistedQueryCalculator(
      */
     override fun getOrCreateAPQHash(queryName: String): String? {
         val fileKey = "$queryName${processor.defaultExtension}"
-        return if(apqHashes.containsKey(fileKey)) apqHashes[fileKey]
+        return if (apqHashes.containsKey(fileKey)) apqHashes[fileKey]
         else createAndStoreHash(queryName, fileKey)
-
     }
 
     companion object {
