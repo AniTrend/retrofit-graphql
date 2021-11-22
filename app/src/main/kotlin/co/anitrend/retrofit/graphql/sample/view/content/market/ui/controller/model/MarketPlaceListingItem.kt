@@ -19,14 +19,14 @@ import co.anitrend.retrofit.graphql.domain.entities.market.MarketPlaceListing
 import co.anitrend.retrofit.graphql.sample.R
 import co.anitrend.retrofit.graphql.sample.databinding.MarketPlaceItemBinding
 import co.anitrend.retrofit.graphql.sample.view.content.market.ui.adapter.MarketPlaceCategoryAdapter
-import coil.request.RequestDisposable
+import coil.request.Disposable
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class MarketPlaceListingItem(
     private val entity: MarketPlaceListing?
 ) : RecyclerItem(entity?.id?.hashCode()?.toLong()) {
 
-    private var disposable: RequestDisposable? = null
+    private var disposable: Disposable? = null
     private var binding: MarketPlaceItemBinding? = null
 
     private fun setUpCategories() {
