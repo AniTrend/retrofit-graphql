@@ -1,11 +1,8 @@
 jdk:
-  - openjdk8
+  - openjdk11
 install:
-  - echo "Running test, build documentation generator and publish commands"
+  - echo "Running clean, build, publishMavenPublicationToMavenLocal commands"
   - ./gradlew clean build
-  - ./gradlew dokka
-  - ./gradlew test
-  - ./gradlew dependencyUpdates
   - ./gradlew publishMavenPublicationToMavenLocal
 env:
   CI: "true"

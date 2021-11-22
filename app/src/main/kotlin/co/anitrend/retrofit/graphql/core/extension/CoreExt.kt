@@ -10,8 +10,8 @@ import androidx.fragment.app.commit
 import co.anitrend.arch.ui.view.image.SupportImageView
 import co.anitrend.retrofit.graphql.core.model.FragmentItem
 import coil.Coil
-import coil.request.LoadRequest
-import coil.request.RequestDisposable
+import coil.load
+import coil.request.Disposable
 import coil.transform.Transformation
 import coil.transition.CrossfadeTransition
 import timber.log.Timber
@@ -67,16 +67,10 @@ fun SupportImageView.using(
     imageUrl: String?,
     placeHolder: Drawable? = null,
     vararg transformations: Transformation = emptyArray()
-): RequestDisposable? {
-    val requestBuilder = LoadRequest.Builder(context)
-
-
-    @Suppress("EXPERIMENTAL_API_USAGE")
-    val request = requestBuilder
-        .placeholder(drawable)
-        .transition(CrossfadeTransition(350))
-        .transformations(transformations.asList())
-        .data(imageUrl).target(this).build()
-
-    return Coil.imageLoader(context).execute(request)
+): Disposable {
+    return load(imageUrl) {
+        placeholder(placeHolder)
+        transition(CrossfadeTransition(350))
+        transformations(transformations.toList())
+    }
 }

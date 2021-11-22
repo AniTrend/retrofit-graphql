@@ -4,6 +4,7 @@ import co.anitrend.retrofit.graphql.buildSrc.plugin.components.configureAndroid
 import co.anitrend.retrofit.graphql.buildSrc.plugin.components.configureDependencies
 import co.anitrend.retrofit.graphql.buildSrc.plugin.components.configureOptions
 import co.anitrend.retrofit.graphql.buildSrc.plugin.components.configurePlugins
+import co.anitrend.retrofit.graphql.buildSrc.plugin.components.configureSpotless
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -38,5 +39,6 @@ open class CorePlugin : Plugin<Project> {
         project.configureAndroid()
         project.configureOptions()
         project.configureDependencies()
+        project.configureSpotless()
     }
 }

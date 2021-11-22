@@ -13,7 +13,7 @@ import co.anitrend.retrofit.graphql.core.extension.using
 import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
 import co.anitrend.retrofit.graphql.sample.R
 import co.anitrend.retrofit.graphql.sample.databinding.BucketFileItemBinding
-import coil.request.RequestDisposable
+import coil.request.Disposable
 import coil.transform.RoundedCornersTransformation
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -21,7 +21,7 @@ internal class BucketFileItem(
     private val entity: BucketFile?
 ) : RecyclerItem(entity?.id?.toLong()) {
 
-    private var disposable: RequestDisposable? = null
+    private var disposable: Disposable? = null
     private var binding: BucketFileItemBinding? = null
 
     /**

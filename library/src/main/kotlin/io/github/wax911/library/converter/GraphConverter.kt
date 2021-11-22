@@ -1,3 +1,19 @@
+/**
+ * Copyright 2021 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.github.wax911.library.converter
 
 import android.content.Context
@@ -11,11 +27,11 @@ import io.github.wax911.library.logger.DefaultGraphLogger
 import io.github.wax911.library.logger.contract.ILogger
 import io.github.wax911.library.logger.core.AbstractLogger
 import io.github.wax911.library.util.LogLevel
+import java.lang.reflect.Type
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
-import java.lang.reflect.Type
 
 /**
  * Body for GraphQL requests and responses, closed for modification
@@ -28,7 +44,6 @@ open class GraphConverter(
     protected val graphProcessor: AbstractGraphProcessor,
     protected val gson: Gson
 ) : Converter.Factory() {
-
 
     /**
      * Response body converter delegates logic processing to a child class that handles
@@ -123,10 +138,10 @@ open class GraphConverter(
                     DefaultGraphLogger(level)
                 ),
                 gson = GsonBuilder()
-                        .enableComplexMapKeySerialization()
-                        .serializeNulls()
-                        .setLenient()
-                        .create()
+                    .enableComplexMapKeySerialization()
+                    .serializeNulls()
+                    .setLenient()
+                    .create()
             )
 
         /**
