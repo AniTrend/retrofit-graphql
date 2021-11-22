@@ -3,7 +3,7 @@ package co.anitrend.retrofit.graphql.buildSrc.plugin.extensions
 import com.android.build.gradle.*
 import org.gradle.api.Project
 import com.android.build.gradle.api.AndroidBasePlugin
-import com.android.build.gradle.api.BaseVariantOutput
+import com.diffplug.gradle.spotless.SpotlessExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.internal.plugins.DefaultArtifactPublicationSet
 import org.gradle.api.plugins.ExtraPropertiesExtension
@@ -14,6 +14,10 @@ import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 import org.jetbrains.kotlin.gradle.testing.internal.KotlinTestsRegistry
+import co.anitrend.retrofit.graphql.buildSrc.module.Modules
+
+fun Project.isSampleModule() = name == Modules.Components.App.id
+fun Project.isLibraryModule() = name == Modules.Components.Library.id
 
 internal fun Project.baseExtension() =
     extensions.getByType<BaseExtension>()
@@ -42,9 +46,6 @@ internal fun Project.sourceSetContainer() =
 internal fun Project.javaPluginExtension() =
     extensions.getByType<JavaPluginExtension>()
 
-internal fun Project.variantOutput() =
-    extensions.getByType<BaseVariantOutput>()
-
 internal fun Project.kotlinAndroidProjectExtension() =
     extensions.getByType<KotlinAndroidProjectExtension>()
 
@@ -53,6 +54,9 @@ internal fun Project.kotlinTestsRegistry() =
 
 internal fun Project.publishingExtension() =
     extensions.getByType<PublishingExtension>()
+
+internal fun Project.spotlessExtension() =
+    extensions.getByType<SpotlessExtension>()
 
 internal fun Project.containsAndroidPlugin(): Boolean {
     return project.plugins.toList().any { plugin ->
