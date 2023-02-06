@@ -1,0 +1,85 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+  "branchPrefix": "dependencies/",
+  "reviewers": ["wax911"],
+  "baseBranches": [
+    "develop"
+  ],
+  "packageRules": [
+    {
+      "groupName": "Sample Module Dependencies",
+      "packagePatterns": [
+        "^androidx\\.activity",
+        "^androidx\\.fragment",
+        "^androidx\\.core",
+        "^androidx\\.constraintlayout",
+        "^androidx\\.swiperefreshlayout",
+        "^androidx\\.preference",
+        "^androidx\\.recyclerview",
+        "^com\\.google\\.android\\.material",
+        "^io\\.coil-kt",
+        "^com\\.github\\.anitrend\\.support-arch",
+        "^com\\.jakewharton\\.threetenabp",
+        "^com\\.jakewharton\\.timber"
+      ],
+      "matchPaths": [
+        "sample/**"
+      ]
+    },
+    {
+      "groupName": "Room Dependencies",
+      "packagePatterns": [
+        "^androidx\\.room"
+      ],
+      "matchPaths": [
+        "sample/**"
+      ]
+    },
+    {
+      "groupName": "Paging Dependencies",
+      "packagePatterns": [
+        "^androidx\\.paging"
+      ],
+      "matchPaths": [
+        "sample/**"
+      ]
+    },
+    {
+      "groupName": "Kotlinx Serialization",
+      "packagePatterns": [
+        "^org\\.jetbrains\\.kotlinx\\.serialization"
+      ],
+      "matchPaths": [
+        "sample/**"
+      ]
+    },
+    {
+      "groupName": "Koin Dependencies",
+      "packagePatterns": [
+        "^org\\.koin"
+      ],
+      "matchPaths": [
+        "sample/**"
+      ]
+    },
+    {
+      "groupName": "Testing Dependencies",
+      "packagePatterns": [
+        "^junit",
+        "^io\\.mockk",
+        "^androidx\\.test",
+        "^androidx\\.test\\.espresso",
+        "^androidx\\.test\\.ext"
+      ]
+    },
+    {
+      "groupName": "Jetbrains Dependencies",
+      "packagePatterns": [
+        "^org\\.jetbrains\\.kotlin"
+      ]
+    }
+  ]
+}

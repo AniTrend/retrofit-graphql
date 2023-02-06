@@ -1,9 +1,9 @@
 package co.anitrend.retrofit.graphql.buildSrc.plugin.components
 
-import co.anitrend.retrofit.graphql.buildSrc.common.Versions
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.baseAppExtension
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.baseExtension
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.isLibraryModule
+import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.props
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.publishingExtension
 import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.ApplicationDefaultConfig
@@ -19,25 +19,27 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import java.net.URL
 import java.util.*
 
-private fun Properties.applyToBuildConfigForBuild(buildType: ApplicationBuildType) {
+@Suppress("UnstableApiUsage")
+private fun Properties.applyToBuildConfigForBuild(project: Project, buildType: ApplicationBuildType) {
     forEach { propEntry ->
         val key = propEntry.key as String
         val value = propEntry.value as String
-        println("Adding build config field property -> key: $key value: $value")
+        project.logger.lifecycle("Adding build config field property -> key: $key value: $value")
         buildType.buildConfigField("String", key, value)
     }
 }
 
+@Suppress("UnstableApiUsage")
 private fun NamedDomainObjectContainer<ApplicationBuildType>.applyConfiguration(project: Project) {
     asMap.forEach { buildTypeEntry ->
-        println("Configuring build type -> ${buildTypeEntry.key}")
+        project.logger.lifecycle("Configuring build type -> ${buildTypeEntry.key}")
         val buildType = buildTypeEntry.value
 
         val secretsFile = project.file(".config/secrets.properties")
         if (secretsFile.exists())
             secretsFile.inputStream().use { fis ->
                 Properties().run {
-                    load(fis); applyToBuildConfigForBuild(buildType)
+                    load(fis); applyToBuildConfigForBuild(project, buildType)
                 }
             }
 
@@ -45,14 +47,15 @@ private fun NamedDomainObjectContainer<ApplicationBuildType>.applyConfiguration(
         if (configurationFile.exists())
             configurationFile.inputStream().use { fis ->
                 Properties().run {
-                    load(fis); applyToBuildConfigForBuild(buildType)
+                    load(fis); applyToBuildConfigForBuild(project, buildType)
                 }
             }
     }
 }
 
+@Suppress("UnstableApiUsage")
 private fun ApplicationDefaultConfig.applyRoomCompilerOptions(project: Project) {
-    println("Adding java compiler options for room on module-> ${project.path}")
+    project.logger.lifecycle("Adding java compiler options for room on module-> ${project.path}")
     javaCompileOptions {
         annotationProcessorOptions {
             arguments(
@@ -67,18 +70,18 @@ private fun ApplicationDefaultConfig.applyRoomCompilerOptions(project: Project) 
 }
 
 private fun Project.createMavenPublicationUsing(sourcesJar: Jar) {
-    println("Applying publication configuration on ${project.path}")
+    logger.lifecycle("Applying publication configuration on ${project.path}")
     publishingExtension().publications {
         val component = components.findByName("android")
 
-        println("Configuring maven publication options for ${project.path}:maven with component-> ${component?.name}")
+        logger.lifecycle("Configuring maven publication options for ${project.path}:maven with component-> ${component?.name}")
         create("maven", MavenPublication::class.java) {
             groupId = "co.anitrend"
             artifactId = "retrofit-graphql"
-            version = Versions.versionName
+            version = props[PropertyTypes.NAME]
 
             artifact(sourcesJar)
-            artifact("${project.buildDir}/outputs/aar/${project.name}-release.aar")
+            artifact("${project.layout.buildDirectory.get()}/outputs/aar/${project.name}-release.aar")
             from(component)
 
             pom {
@@ -107,7 +110,7 @@ private fun Project.createDokkaTaskProvider() = tasks.named<DokkaTask>("dokkaHtm
     outputDirectory.set(buildDir.resolve("docs/dokka"))
 
     // Set module name displayed in the final output
-    moduleName.set(project.name)
+    moduleName.set(this@createDokkaTaskProvider.name)
 
     // Use default or set to custom path to cache directory
     // to enable package-list caching
@@ -159,7 +162,7 @@ private fun Project.createDokkaTaskProvider() = tasks.named<DokkaTask>("dokkaHtm
             sourceRoot(file("src"))
 
             // Used for linking to JDK documentation
-            jdkVersion.set(8)
+            jdkVersion.set(17)
 
             // Disable linking to online kotlin-stdlib documentation
             noStdlibLink.set(false)
@@ -199,13 +202,12 @@ private fun Project.createDokkaTaskProvider() = tasks.named<DokkaTask>("dokkaHtm
     }
 }
 
-@Suppress("UnstableApiUsage")
 internal fun Project.configureOptions() {
-    println("Applying extension options for ${project.path}")
+    logger.lifecycle("Applying extension options for ${project.path}")
     if (isLibraryModule()) {
         val baseExt = baseExtension()
 
-        println("Applying additional tasks options for dokka and javadoc on ${project.path}")
+        logger.lifecycle("Applying additional tasks options for dokka and javadoc on ${project.path}")
 
         createDokkaTaskProvider()
 
@@ -215,7 +217,7 @@ internal fun Project.configureOptions() {
         }
 
         val classesJar by tasks.register("classesJar", Jar::class.java) {
-            from("${project.buildDir}/intermediates/classes/release")
+            from("${project.layout.buildDirectory.get()}/intermediates/classes/release")
         }
 
         artifacts {

@@ -4,6 +4,8 @@ import com.android.build.gradle.*
 import org.gradle.api.Project
 import com.android.build.gradle.api.AndroidBasePlugin
 import com.diffplug.gradle.spotless.SpotlessExtension
+import org.gradle.accessors.dm.LibrariesForLibs
+import co.anitrend.retrofit.graphql.buildSrc.plugin.components.PropertiesReader
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.internal.plugins.DefaultArtifactPublicationSet
 import org.gradle.api.plugins.ExtraPropertiesExtension
@@ -19,6 +21,12 @@ import co.anitrend.retrofit.graphql.buildSrc.module.Modules
 fun Project.isSampleModule() = name == Modules.Components.App.id
 fun Project.isLibraryModule() = name == Modules.Components.Library.id
 
+internal val Project.props: PropertiesReader
+    get() = PropertiesReader(this)
+
+internal val Project.libs: LibrariesForLibs
+    get() = extensions.getByType<LibrariesForLibs>()
+
 internal fun Project.baseExtension() =
     extensions.getByType<BaseExtension>()
 
@@ -27,9 +35,6 @@ internal fun Project.baseAppExtension() =
 
 internal fun Project.libraryExtension() =
     extensions.getByType<LibraryExtension>()
-
-internal fun Project.dynamicFeatureExtension() =
-    extensions.getByType<BaseAppModuleExtension>()
 
 internal fun Project.extraPropertiesExtension() =
     extensions.getByType<ExtraPropertiesExtension>()

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🗣 Ask a Question, Discuss
+    url: https://github.com/anitrend/retrofit-graphql/discussions
+    about: General discussion, suggest ideas, share concepts or resources or ask questions, like "How does this work 🤔?"
+  - name: 🤗 Support the Project
+    url: https://patreon.com/wax911
+    about: Support the AniTrend financially.

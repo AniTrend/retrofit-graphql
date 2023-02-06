@@ -146,7 +146,8 @@ class GraphProcessor(
             replaceWith = ReplaceWith(
                 "GraphProcessor(assetManager)",
                 "io.github.wax911.library.annotation.processor.GraphProcessor"
-            )
+            ),
+            level = DeprecationLevel.ERROR
         )
         @JvmOverloads
         fun getInstance(

@@ -21,6 +21,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import io.github.wax911.library.annotation.processor.GraphProcessor
 import io.github.wax911.library.annotation.processor.contract.AbstractGraphProcessor
+import io.github.wax911.library.annotation.processor.plugin.AssetManagerDiscoveryPlugin
 import io.github.wax911.library.converter.request.GraphRequestConverter
 import io.github.wax911.library.converter.response.GraphResponseConverter
 import io.github.wax911.library.logger.DefaultGraphLogger
@@ -97,7 +98,8 @@ open class GraphConverter(
         ReplaceWith(
             "setMinimumLogLevel(ILogger.Level)",
             "io.github.wax911.library.logger.contract.ILogger.Level"
-        )
+        ),
+        level = DeprecationLevel.ERROR
     )
     fun setLogLevel(logLevel: LogLevel) {
         val level = when (logLevel) {
@@ -133,8 +135,8 @@ open class GraphConverter(
         @JvmOverloads
         fun create(context: Context, level: ILogger.Level = ILogger.Level.INFO): GraphConverter =
             GraphConverter(
-                graphProcessor = GraphProcessor.getInstance(
-                    context.assets,
+                graphProcessor = GraphProcessor(
+                    AssetManagerDiscoveryPlugin(context.assets),
                     DefaultGraphLogger(level)
                 ),
                 gson = GsonBuilder()
@@ -155,8 +157,8 @@ open class GraphConverter(
         @JvmOverloads
         fun create(context: Context, gson: Gson, level: ILogger.Level = ILogger.Level.INFO): GraphConverter =
             GraphConverter(
-                graphProcessor = GraphProcessor.getInstance(
-                    context.assets,
+                graphProcessor = GraphProcessor(
+                    AssetManagerDiscoveryPlugin(context.assets),
                     DefaultGraphLogger(level)
                 ),
                 gson = gson

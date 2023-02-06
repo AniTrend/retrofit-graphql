@@ -1,7 +1,7 @@
 ---
 name: Question
 about: Ask any general question regarding the project, also if you use this if you don't know what category to use
-
+labels: ["question"]
 ---
 
 # Issue Guidelines
@@ -13,9 +13,6 @@ https://github.com/AniTrend/retrofit-graphql/issues?q=is%3Aissue+is%3Aclosed
 
 ## Question
 <!-- Clearly and explicitly explain the details about your question -->
-I would like to know if... I have also searched in the closed issues and...
 
 ## Additional Context
 <!-- Any additional information regarding your question, you may also add screenshots if any under this section -->
-
-I am currently using...

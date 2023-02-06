@@ -1,0 +1,71 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: '$RESOLVED_VERSION'
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'feature'
+    collapse-after: 5
+  - title: '✨ Improvements'
+    labels:
+      - 'enhancement'
+    collapse-after: 5
+  - title: '🛠️ Bug Fixes'
+    labels:
+      - 'bug fix'
+    collapse-after: 5
+  - title: '🧰 Maintenance'
+    labels:
+      - 'refactor'
+    collapse-after: 5
+  - title: '📦 Dependencies'
+    labels:
+      - 'dependencies'
+    collapse-after: 5
+  - title: '🔖 Other changes'
+autolabeler:
+  - label: 'docs'
+    files:
+      - '*.md'
+    branch:
+      - '/docs{0,1}\/.+/'
+  - label: 'bug fix'
+    branch:
+      - '/bugfix\/.+/'
+      - '/hotfix\/.+/'
+  - label: 'feature'
+    branch:
+      - '/feature\/.+/'
+  - label: 'enhancement'
+    branch:
+      - '/enhancement\/.+/'
+  - label: 'refactor'
+    branch:
+      - '/refactor\/.+/'
+  - label: 'dependencies'
+    branch:
+      - '/dependencies\/.+/'
+      - '/renovate\/.+/'
+change-template: '- $TITLE by @$AUTHOR in #$NUMBER'
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+version-resolver:
+  major:
+    labels:
+      - 'breaking'
+  minor:
+    labels:
+      - 'enhancement'
+      - 'feature'
+  patch:
+    labels:
+      - 'bug fix'
+      - 'dependencies'
+      - 'refactor'
+  default: patch
+exclude-labels:
+  - 'skip-changelog'
+template: |
+  # What's Changed
+
+  $CHANGES
+  
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION

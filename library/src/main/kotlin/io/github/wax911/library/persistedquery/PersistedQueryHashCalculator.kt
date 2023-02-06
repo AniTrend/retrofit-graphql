@@ -19,6 +19,7 @@ package io.github.wax911.library.persistedquery
 import android.content.Context
 import io.github.wax911.library.annotation.processor.GraphProcessor
 import io.github.wax911.library.annotation.processor.contract.AbstractGraphProcessor
+import io.github.wax911.library.annotation.processor.plugin.AssetManagerDiscoveryPlugin
 import java.math.BigInteger
 import java.security.MessageDigest
 
@@ -42,7 +43,7 @@ class PersistedQueryHashCalculator(context: Context) {
     }
 
     private val graphProcessor: AbstractGraphProcessor by lazy {
-        GraphProcessor.getInstance(context.assets)
+        GraphProcessor(AssetManagerDiscoveryPlugin(context.assets))
     }
 
     fun getOrCreateAPQHash(queryName: String): String? {
