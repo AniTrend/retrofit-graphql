@@ -2,10 +2,14 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/retrofit-graphql.iml" filepath="$PROJECT_DIR$/retrofit-graphql.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/retrofit-graphql.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/retrofit-graphql.app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/retrofit-graphql.buildSrc.iml" filepath="$PROJECT_DIR$/.idea/modules/retrofit-graphql.buildSrc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/retrofit-graphql.iml" filepath="$PROJECT_DIR$/.idea/modules/retrofit-graphql.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/buildSrc/retrofit-graphql.buildSrc.iml" filepath="$PROJECT_DIR$/.idea/modules/buildSrc/retrofit-graphql.buildSrc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/retrofit-graphql.buildSrc.main.iml" filepath="$PROJECT_DIR$/.idea/modules/retrofit-graphql.buildSrc.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/retrofit-graphql.buildSrc.test.iml" filepath="$PROJECT_DIR$/.idea/modules/retrofit-graphql.buildSrc.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/library/retrofit-graphql.library.iml" filepath="$PROJECT_DIR$/.idea/modules/library/retrofit-graphql.library.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/library/retrofit-graphql.library.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/library/retrofit-graphql.library.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/library/retrofit-graphql.library.main.iml" filepath="$PROJECT_DIR$/.idea/modules/library/retrofit-graphql.library.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/library/retrofit-graphql.library.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/library/retrofit-graphql.library.unitTest.iml" />
     </modules>
   </component>
 </project>

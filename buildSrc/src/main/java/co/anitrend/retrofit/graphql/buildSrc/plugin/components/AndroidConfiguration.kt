@@ -1,62 +1,67 @@
 package co.anitrend.retrofit.graphql.buildSrc.plugin.components
 
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.baseExtension
-import co.anitrend.retrofit.graphql.buildSrc.common.Versions
-import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.isLibraryModule
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.isSampleModule
+import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.libraryExtension
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.spotlessExtension
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.baseAppExtension
-import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.libraryExtension
-import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.libraryExtension
+import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.kotlinAndroidProjectExtension
+import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.libs
+import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.props
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile
 import java.io.File
 
-internal fun Project.configureSpotless(): Unit {
+
+private fun Project.configureLint() = libraryExtension().run {
+    lint {
+        abortOnError = false
+        ignoreWarnings = false
+        ignoreTestSources = true
+    }
+}
+
+internal fun Project.configureSpotless() {
     if (!isSampleModule())
         spotlessExtension().run {
             kotlin {
                 target("**/*.kt")
-                targetExclude("$buildDir/**/*.kt", "bin/**/*.kt", "**/test/**")
-                ktlint(Versions.ktlint).userData(
-                    mapOf(
-                        "android" to "true",
-                        "max_line_length" to "120"
-                    )
+                targetExclude(
+                    "${layout.buildDirectory.get()}/**/*.kt",
+                    "**/androidTest/**/*.kt",
+                    "**/test/**/*.kt",
+                    "bin/**/*.kt"
                 )
+                ktlint(libs.pintrest.ktlint.get().version)
                 licenseHeaderFile(rootProject.file("spotless/copyright.kt"))
             }
         }
 }
 
-@Suppress("UnstableApiUsage")
 private fun DefaultConfig.applyAdditionalConfiguration(project: Project) {
     if (project.isSampleModule()) {
         applicationId = "co.anitrend.retrofit.graphql.sample"
         project.baseAppExtension().buildFeatures {
             viewBinding = true
         }
+        project.logger.lifecycle("Applying vector drawables configuration for module -> ${project.path}")
+        vectorDrawables.useSupportLibrary = true
     }
-    else
+    else {
+        project.configureLint()
         consumerProguardFiles.add(File("consumer-rules.pro"))
-
-    println("Applying vector drawables configuration for module -> ${project.path}")
-    vectorDrawables.useSupportLibrary = true
+    }
 }
 
 internal fun Project.configureAndroid(): Unit = baseExtension().run {
-    compileSdkVersion(Versions.compileSdk)
+    compileSdkVersion(34)
     defaultConfig {
-        if (isSampleModule())
-            minSdk = 21
-        else
-            minSdk = Versions.minSdk
-        targetSdk = Versions.targetSdk
-        versionCode = Versions.versionCode
-        versionName = Versions.versionName
+        minSdk = if (isSampleModule()) 21 else 17
+        targetSdk = 34
+        versionCode = props[PropertyTypes.CODE].toInt()
+        versionName = props[PropertyTypes.VERSION]
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         applyAdditionalConfiguration(project)
     }
@@ -75,9 +80,8 @@ internal fun Project.configureAndroid(): Unit = baseExtension().run {
     }
 
     packagingOptions {
-        excludes.add("META-INF/NOTICE.txt")
-        excludes.add("META-INF/LICENSE")
-        excludes.add("META-INF/LICENSE.txt")
+        resources.excludes.add("META-INF/NOTICE.*")
+        resources.excludes.add("META-INF/LICENSE*")
     }
 
     sourceSets {
@@ -98,15 +102,9 @@ internal fun Project.configureAndroid(): Unit = baseExtension().run {
         unitTests.isReturnDefaultValues = true
     }
 
-    lintOptions {
-        isAbortOnError = false
-        isIgnoreWarnings = false
-        isIgnoreTestSources = true
-    }
-
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     tasks.withType(KotlinCompile::class.java) {
@@ -116,17 +114,13 @@ internal fun Project.configureAndroid(): Unit = baseExtension().run {
                 allWarningsAsErrors = false
                 // Filter out modules that won't be using coroutines
                 freeCompilerArgs = if (isSampleModule()) listOf(
-                    "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                    "-Xopt-in=kotlinx.coroutines.FlowPreview",
-                    "-Xopt-in=kotlin.Experimental"
-                ) else listOf("-Xopt-in=kotlin.Experimental")
+                    "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                ) else emptyList()
             }
         }
     }
 
-    tasks.withType(KotlinJvmCompile::class.java) {
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
+    kotlinAndroidProjectExtension().run {
+        jvmToolchain(17)
     }
 }

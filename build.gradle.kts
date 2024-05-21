@@ -1,22 +1,12 @@
-import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
-
-plugins {
-    id("com.github.ben-manes.versions")
-}
-
 buildscript {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
-        classpath(co.anitrend.retrofit.graphql.buildSrc.Libraries.Android.Tools.buildGradle)
-        classpath(co.anitrend.retrofit.graphql.buildSrc.Libraries.JetBrains.Kotlin.Gradle.plugin)
-        classpath(co.anitrend.retrofit.graphql.buildSrc.Libraries.JetBrains.Kotlin.Gradle.serialization)
-        classpath(co.anitrend.retrofit.graphql.buildSrc.Libraries.Koin.Gradle.plugin)
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        classpath(libs.android.gradle.plugin)
+        classpath(libs.jetbrains.kotlin.gradle)
+        classpath(libs.jetbrains.kotlin.serialization)
     }
 }
 
@@ -24,35 +14,10 @@ allprojects {
     repositories {
         google()
         jcenter()
+        mavenCentral()
     }
 }
 
-tasks {
-    val clean by registering(Delete::class) {
-        delete(rootProject.buildDir)
-    }
-}
-
-tasks.named(
-    "dependencyUpdates",
-    DependencyUpdatesTask::class.java
-).configure {
-    checkForGradleUpdate = false
-    outputFormatter = "json"
-    outputDir = "build/dependencyUpdates"
-    reportfileName = "report"
-    resolutionStrategy {
-        componentSelection {
-            all {
-                val reject = listOf("preview", "alpha", "m")
-                    .map { qualifier ->
-                        val pattern = "(?i).*[.-]$qualifier[.\\d-]*"
-                        Regex(pattern, RegexOption.IGNORE_CASE)
-                    }
-                    .any { it.matches(candidate.version) }
-                if (reject)
-                    reject("Preview releases not wanted")
-            }
-        }
-    }
+tasks.create("clean", Delete::class) {
+    delete(rootProject.layout.buildDirectory)
 }

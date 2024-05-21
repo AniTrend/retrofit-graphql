@@ -1,0 +1,56 @@
+name: version-update
+
+on:
+  repository_dispatch:
+    types: [version-update-and-push]
+
+permissions:
+  contents: read
+
+jobs:
+  version-update:
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Extract version information to file
+        run: echo "${{ github.event.client_payload.version }}" > VERSION
+
+      - name: Create version.properties using extracted version
+        run: |
+          IFS='.' read -ra VER <<< "$(cat VERSION)"
+          MAJOR=$((VER[0] * 1000000000))
+          MINOR=$((VER[1] * 1000000))
+          PATCH=$((VER[2] * 1000))
+          CODE=$((MAJOR + MINOR + PATCH))
+          echo "version=$(cat VERSION)" > gradle/version.properties
+          echo "code=$CODE" >> gradle/version.properties
+          echo "name=v$(cat VERSION)" >> gradle/version.properties
+
+      - name: Clean up version information file
+        run: rm VERSION
+
+      - name: Preview created version.properties
+        run: cat gradle/version.properties
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          signoff: true
+          delete-branch: true
+          commit-message: "automation: update version.properties"
+          author: "Author <actions@github.com>"
+          title: "platform: automated version update"
+          body: |
+            This PR was automatically generated to update `version.properties`
+          branch: platform/update-version-meta-data
+          labels: "skip-changelog"
+          assignees: "wax911"
+          reviewers: "wax911"

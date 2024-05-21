@@ -14,7 +14,7 @@ class ResourcesDiscoveryPlugin(
 
     private val temporaryMap = HashMap<String, String>()
 
-    private fun getResourceFolderFiles(url: URL): List<File>? {
+    private fun getResourceFolderFiles(url: URL): List<File> {
         val path = url.path
         val sequenceFiles = File(path).walk()
         return sequenceFiles.filter {
@@ -42,7 +42,7 @@ class ResourcesDiscoveryPlugin(
         val urlPath = source.getResource(targetPath)
         if (urlPath != null) {
             val files = getResourceFolderFiles(urlPath)
-            files?.forEach { file ->
+            files.forEach { file ->
                 val contents = resolveContents(file.inputStream(), logger)
                 assert(contents.isNotEmpty()) {
                     "Contents of a file that needs to be read should never be empty"

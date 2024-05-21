@@ -56,7 +56,7 @@ Version 0.11.0-alpha01 *(2020-06-28)*
 
 - **Update**: Rewrite sample app, migrate to github api [8ce9257](https://github.com/AniTrend/retrofit-graphql/commit/8ce9257fa1379b03df8b4483c5e6a58c3a7104c2)
 
-- **New**: Migrate to buildSrc and bump retofit to 2.9.0 [cff0fd8](https://github.com/AniTrend/retrofit-graphql/commit/cff0fd8a90e58164264a395b22d0f9f8cf6a4a1f)
+- **New**: Migrate to buildSrc and bump retrofit to 2.9.0 [cff0fd8](https://github.com/AniTrend/retrofit-graphql/commit/cff0fd8a90e58164264a395b22d0f9f8cf6a4a1f)
 
 - **Update**: Bump gradle from 3.6.3 to 4.0.0 [#104](https://github.com/AniTrend/retrofit-graphql/pull/104)
 

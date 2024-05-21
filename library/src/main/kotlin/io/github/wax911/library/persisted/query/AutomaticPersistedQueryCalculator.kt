@@ -17,6 +17,7 @@
 package io.github.wax911.library.persisted.query
 
 import io.github.wax911.library.annotation.processor.contract.AbstractGraphProcessor
+import io.github.wax911.library.logger.core.AbstractLogger
 import io.github.wax911.library.persisted.contract.IAutomaticPersistedQuery
 import java.math.BigInteger
 import java.security.MessageDigest
@@ -30,20 +31,20 @@ import java.security.MessageDigest
  * @author Krillsson
  */
 class AutomaticPersistedQueryCalculator(
-    private val processor: AbstractGraphProcessor
+    private val processor: AbstractGraphProcessor,
+    private val logger: AbstractLogger = processor.logger
 ) : IAutomaticPersistedQuery {
 
     private val apqHashes: MutableMap<String, String> = HashMap()
 
     private fun hashOfQuery(query: String): String {
-        val md = MessageDigest.getInstance(sha256Algorithm)
+        val md = MessageDigest.getInstance(ALGORITHM)
         md.update(query.toByteArray())
         val digest = md.digest()
         return String.format("%064x", BigInteger(1, digest))
     }
 
     private fun createAndStoreHash(queryName: String, fileKey: String): String? {
-        val logger = processor.logger
         logger.d(TAG, "Creating APQ hash for $queryName")
         return if (processor.graphFiles.containsKey(fileKey)) {
             val hashOfQuery = hashOfQuery(processor.graphFiles.getValue(fileKey))
@@ -73,6 +74,6 @@ class AutomaticPersistedQueryCalculator(
 
     companion object {
         private val TAG = AutomaticPersistedQueryCalculator::class.java.simpleName
-        private const val sha256Algorithm = "SHA-256"
+        private const val ALGORITHM = "SHA-256"
     }
 }
