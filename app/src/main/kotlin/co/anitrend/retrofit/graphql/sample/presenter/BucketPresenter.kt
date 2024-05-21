@@ -39,7 +39,7 @@ class BucketPresenter(
             val uploadImage = File(cache, "upload_image.webp")
             if (!uploadImage.exists()) {
                 if (!uploadImage.createNewFile()) {
-                    Timber.tag(BucketPresenter::class.java.simpleName)
+                    Timber
                         .e("Failed to create optimized image for upload")
                     return null
                 }

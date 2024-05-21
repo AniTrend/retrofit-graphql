@@ -1,7 +1,7 @@
 package co.anitrend.retrofit.graphql.sample.view.content.bucket.viewmodel.state
 
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
+import androidx.lifecycle.switchMap
 import co.anitrend.arch.core.model.ISupportViewModelState
 import co.anitrend.arch.data.model.UserInterfaceState
 import co.anitrend.retrofit.graphql.data.bucket.usecase.BucketUseCaseContract
@@ -14,11 +14,11 @@ class BucketState(
     private val useCaseResult = MutableLiveData<UserInterfaceState<List<BucketFile>>>()
 
     override val model =
-        Transformations.switchMap(useCaseResult) { it.model }
+        useCaseResult.switchMap() { it.model }
     override val networkState =
-        Transformations.switchMap(useCaseResult) { it.networkState }
+        useCaseResult.switchMap() { it.networkState }
     override val refreshState =
-        Transformations.switchMap(useCaseResult) { it.refreshState }
+        useCaseResult.switchMap() { it.refreshState }
 
     operator fun invoke() {
         val result = useCase()

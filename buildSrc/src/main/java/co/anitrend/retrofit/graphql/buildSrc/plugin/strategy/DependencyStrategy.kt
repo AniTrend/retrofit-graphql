@@ -26,12 +26,6 @@ internal class DependencyStrategy(
         test(project.libs.mockk)
     }
 
-    private fun DependencyHandler.applyTestDependencies() {
-        androidTest(project.libs.mockk.android)
-        androidTest(project.libs.androidx.test.core)
-        androidTest(project.libs.androidx.test.runner)
-    }
-
 
     private fun DependencyHandler.applyNetworkingDependencies() {
         implementation(project.libs.square.retrofit)
@@ -41,6 +35,5 @@ internal class DependencyStrategy(
     fun applyDependenciesOn(handler: DependencyHandler) {
         handler.applyDefaultDependencies()
         handler.applyNetworkingDependencies()
-        handler.applyTestDependencies()
     }
 }

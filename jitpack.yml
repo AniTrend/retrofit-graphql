@@ -1,5 +1,5 @@
 jdk:
-  - openjdk11
+  - openjdk17
 install:
   - echo "Running clean, build, publishMavenPublicationToMavenLocal commands"
   - ./gradlew clean build

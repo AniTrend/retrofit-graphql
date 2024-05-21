@@ -34,7 +34,7 @@ internal object RetrofitProvider {
         when (endpointType) {
             EndpointType.BUCKET,
             EndpointType.GITHUB -> {
-                Timber.tag(moduleTag).d("""
+                Timber.d("""
                     Adding request interceptors for endpoint: ${endpointType.name}
                     """.trimIndent()
                 )
@@ -66,13 +66,13 @@ internal object RetrofitProvider {
     fun provideRetrofit(endpointType: EndpointType, scope: Scope): Retrofit {
         val reference = retrofitCache.get(endpointType)
         return if (reference != null) {
-            Timber.tag(moduleTag).d(
+            Timber.d(
                 "Using cached retrofit instance for endpoint: ${endpointType.name}"
             )
             reference
         }
         else {
-            Timber.tag(moduleTag).d(
+            Timber.d(
                 "Creating new retrofit instance for endpoint: ${endpointType.name}"
             )
             val retrofit =

@@ -56,7 +56,7 @@ inline fun FragmentManager.commit(
         return fragmentTag
     }
 
-    Timber.tag(javaClass.simpleName).v("FragmentItem model is null")
+    Timber.v("FragmentItem model is null")
     return null
 }
 
@@ -70,7 +70,6 @@ fun SupportImageView.using(
 ): Disposable {
     return load(imageUrl) {
         placeholder(placeHolder)
-        transition(CrossfadeTransition(350))
         transformations(transformations.toList())
     }
 }

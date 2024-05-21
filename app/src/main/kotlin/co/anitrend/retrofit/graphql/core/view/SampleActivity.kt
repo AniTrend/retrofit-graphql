@@ -15,7 +15,7 @@ abstract class SampleActivity : SupportActivity() {
      * Can be used to configure custom theme styling as desired
      */
     override fun configureActivity() {
-        setupKoinFragmentFactory(koinLifecycleScope)
+        setupKoinFragmentFactory()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val systemUiOptions = window.decorView.systemUiVisibility
             when (AppCompatDelegate.getDefaultNightMode()) {

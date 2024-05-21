@@ -1,14 +1,10 @@
 package co.anitrend.retrofit.graphql.core.koin
 
-import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.P
 import co.anitrend.arch.extension.dispatchers.SupportDispatchers
 import co.anitrend.retrofit.graphql.core.settings.Settings
 import coil.ImageLoader
 import coil.ImageLoaderFactory
-import coil.decode.GifDecoder
-import coil.decode.ImageDecoderDecoder
-import coil.util.CoilUtils
+import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.koin.androidApplication
@@ -41,27 +37,18 @@ private val coilModules = module {
                 }
             )
             .cache(
-                CoilUtils.createDefaultCache(
-                    androidApplication()
-                )
+                Cache(androidApplication().cacheDir, 50 * 1024 * 1024)
             ).build()
     }
     factory<ImageLoaderFactory> {
-        object : ImageLoaderFactory {
-            override fun newImageLoader(): ImageLoader {
-                return ImageLoader.Builder(androidContext())
-                    .crossfade(true)
-                    .allowHardware(true)
-                    .bitmapPoolPercentage(0.35)
-                    .okHttpClient {
-                        get(named("coilOkHttp"))
-                    }
-                    .componentRegistry {
-                        if (SDK_INT >= P) add(ImageDecoderDecoder())
-                        else add(GifDecoder())
-                    }
-                    .build()
-            }
+        ImageLoaderFactory {
+            ImageLoader.Builder(androidContext())
+                .crossfade(true)
+                .allowHardware(true)
+                .okHttpClient {
+                    get(named("coilOkHttp"))
+                }
+                .build()
         }
     }
 }

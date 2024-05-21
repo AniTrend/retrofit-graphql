@@ -16,7 +16,7 @@ internal abstract class GraphQLMapper<S, D> : SupportResponseMapper<S, D>() {
      * Simple logger for empty response
      */
     protected fun onEmptyResponse() {
-        Timber.tag(moduleTag).v(
+        Timber.v(
             "onResponseDatabaseInsert -> mappedData is empty"
         )
     }

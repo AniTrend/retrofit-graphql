@@ -39,9 +39,13 @@ dependencies {
     implementation(libs.androidx.recycler.view)
 
     implementation(libs.androidx.lifecycle.livedata.core)
+    implementation(libs.androidx.lifecycle.livedata.core.ktx)
+    implementation(libs.androidx.lifecycle.livedata)
     implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.extensions)
+    implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
     implementation(libs.androidx.paging.common)
@@ -53,16 +57,28 @@ dependencies {
     kapt(libs.androidx.room.compiler)
 
     implementation(libs.anitrend.arch.ui)
-    implementation(libs.anitrend.arch.ext)
+    implementation(libs.anitrend.arch.extension)
+    implementation(libs.anitrend.arch.analytics)
     implementation(libs.anitrend.arch.core)
     implementation(libs.anitrend.arch.data)
     implementation(libs.anitrend.arch.theme)
     implementation(libs.anitrend.arch.domain)
     implementation(libs.anitrend.arch.recycler)
+    implementation(libs.anitrend.arch.request)
+    implementation(libs.anitrend.arch.paging.legacy)
+    implementation(libs.anitrend.arch.recycler.paging.legacy)
+
     implementation(libs.anitrend.emojify)
+    implementation(libs.anitrend.emojify.contract)
+    implementation(libs.anitrend.emojify.kotlinx)
 
     implementation(libs.coil)
     implementation(libs.coil.gif)
+
+    implementation(libs.square.retrofit)
+    implementation(libs.square.okhttp)
+    implementation(libs.square.okhttp.logger)
+
 
     implementation(libs.timber)
 

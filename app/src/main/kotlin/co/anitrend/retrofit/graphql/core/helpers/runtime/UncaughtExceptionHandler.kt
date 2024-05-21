@@ -18,7 +18,7 @@ internal class UncaughtExceptionHandler(
      * @param throwable the exception
      */
     override fun uncaughtException(thread: Thread, throwable: Throwable) {
-        Timber.tag(thread.name).e(throwable)
+        Timber.e(throwable)
         exceptionHandler?.uncaughtException(thread, throwable)
     }
 

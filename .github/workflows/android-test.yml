@@ -7,6 +7,9 @@ on:
     branches:
       - develop
 
+env:
+  CI: "true"
+
 jobs:
   android-unit-test:
     runs-on: ubuntu-latest

@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MarketPlaceContent(
-    override val defaultSpanSize: Int = R.integer.single_list_size,
+    override val defaultSpanSize: Int = co.anitrend.arch.ui.R.integer.single_list_size,
     override val stateConfig: StateLayoutConfig,
     override val supportViewAdapter: ISupportAdapter<MarketPlaceListing>
 ) : SampleListFragment<MarketPlaceListing>() {

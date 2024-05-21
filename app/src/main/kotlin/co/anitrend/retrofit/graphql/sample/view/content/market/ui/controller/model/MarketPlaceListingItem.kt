@@ -76,7 +76,7 @@ class MarketPlaceListingItem(
             binding?.listingVerification?.setImageDrawable(
                 view.context.getCompatDrawable(
                     R.drawable.ic_whatshot_24dp,
-                    R.color.colorStateBlue
+                    co.anitrend.arch.ui.R.color.colorStateBlue
                 )
             )
         }
@@ -93,7 +93,7 @@ class MarketPlaceListingItem(
      * @param resources optionally useful for dynamic size check with different configurations
      */
     override fun getSpanSize(spanCount: Int, position: Int, resources: Resources): Int {
-        return resources.getInteger(R.integer.single_list_size)
+        return resources.getInteger(co.anitrend.arch.ui.R.integer.single_list_size)
     }
 
     /**

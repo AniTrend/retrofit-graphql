@@ -43,7 +43,7 @@ internal class BucketFileItem(
     ) {
         binding = BucketFileItemBinding.bind(view)
         binding?.bucketImageName?.text = entity?.fileName
-        val margin = view.resources.getDimension(R.dimen.lg_margin)
+        val margin = view.resources.getDimension(co.anitrend.arch.ui.R.dimen.lg_margin)
         binding?.bucketImage?.using(
             entity?.url,
             ColorDrawable(-0x333334),
@@ -61,7 +61,7 @@ internal class BucketFileItem(
      * @param resources optionally useful for dynamic size check with different configurations
      */
     override fun getSpanSize(spanCount: Int, position: Int, resources: Resources): Int {
-        return resources.getInteger(R.integer.grid_list_x3)
+        return resources.getInteger(co.anitrend.arch.ui.R.integer.grid_list_x3)
     }
 
     /**

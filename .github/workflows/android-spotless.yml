@@ -7,6 +7,9 @@ on:
     branches:
       - '*'
 
+env:
+  CI: "true"
+
 jobs:
   android-spotless:
     runs-on: ubuntu-latest

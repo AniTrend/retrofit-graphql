@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.startup.Initializer
 import coil.Coil
 import coil.ImageLoaderFactory
-import org.koin.core.KoinComponent
-import org.koin.core.get
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
 internal class CoilInitializer : Initializer<Unit> {
 
@@ -17,8 +17,7 @@ internal class CoilInitializer : Initializer<Unit> {
     override fun create(context: Context) {
         // I could just have koin component declared on the class level
         val component = object : KoinComponent {}
-        val factory =
-            component.get<ImageLoaderFactory>()
+        val factory = component.get<ImageLoaderFactory>()
         Coil.setImageLoader(factory)
     }
 

@@ -1,9 +1,12 @@
 package co.anitrend.retrofit.graphql.sample.viewmodel.model
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
+import androidx.lifecycle.switchMap
 import co.anitrend.arch.core.model.ISupportViewModelState
 import co.anitrend.arch.data.model.UserInterfaceState
+import co.anitrend.arch.domain.entities.LoadState
+import co.anitrend.arch.domain.state.UiState
 import co.anitrend.retrofit.graphql.data.user.usecase.UserUseCaseContract
 import co.anitrend.retrofit.graphql.domain.entities.user.User
 
@@ -11,15 +14,14 @@ data class MainState(
     private val useCase: UserUseCaseContract
 ) : ISupportViewModelState<User> {
 
-    private val useCaseResult = MutableLiveData<UserInterfaceState<User>>()
+    private val useCaseResult = MutableLiveData<UiState<LoadState>>()
 
     override val model =
-        Transformations.switchMap(useCaseResult) { it.model }
-    override val networkState =
-        Transformations.switchMap(useCaseResult) { it.networkState }
+        useCaseResult.switchMap { it.model }
     override val refreshState =
-        Transformations.switchMap(useCaseResult) { it.refreshState }
-
+        useCaseResult.switchMap { it.refreshState }
+    override val loadState =
+        useCaseResult.switchMap { it.loadState }
 
     operator fun invoke() {
         val result = useCase()

@@ -43,7 +43,7 @@ internal class OfflineControllerPolicy<D> private constructor() : ControllerStra
             block()
             pagingRequestHelper.recordSuccess()
         }.exceptionOrNull()?.also { e ->
-            Timber.tag(moduleTag).e(e)
+            Timber.e(e)
             pagingRequestHelper.recordFailure(e)
         }
     }
@@ -64,7 +64,7 @@ internal class OfflineControllerPolicy<D> private constructor() : ControllerStra
             networkState.postValue(NetworkState.Success)
             result
         }.getOrElse {
-            Timber.tag(moduleTag).e(it)
+            Timber.e(it)
             networkState.postValue(
                 NetworkState.Error(
                     heading = it.cause?.message ?: "Unexpected error encountered",

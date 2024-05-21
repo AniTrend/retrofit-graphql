@@ -22,11 +22,10 @@ import co.anitrend.retrofit.graphql.sample.view.content.market.MarketPlaceConten
 import co.anitrend.retrofit.graphql.sample.viewmodel.MainViewModel
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.navigation.NavigationView
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import timber.log.Timber
-import org.koin.androidx.scope.lifecycleScope as koinScope
 
 class MainScreen : SampleActivity(), NavigationView.OnNavigationItemSelectedListener {
 
@@ -43,7 +42,7 @@ class MainScreen : SampleActivity(), NavigationView.OnNavigationItemSelectedList
 
     private val viewModel by viewModel<MainViewModel>()
 
-    private val presenter by koinScope.inject<MainPresenter>()
+    private val presenter by inject<MainPresenter>()
 
     private val headerBinding by lazy(LAZY_MODE_UNSAFE) {
         val headerView = binding.bottomNavigationView.getHeaderView(0)
@@ -168,7 +167,7 @@ class MainScreen : SampleActivity(), NavigationView.OnNavigationItemSelectedList
             runCatching {
                 onNavigate(menu)
             }.onFailure {
-                Timber.tag(moduleTag).e(it)
+                Timber.e(it)
             }
         }
     }

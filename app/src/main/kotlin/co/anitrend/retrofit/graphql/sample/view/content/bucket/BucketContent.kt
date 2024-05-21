@@ -30,7 +30,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.androidx.scope.lifecycleScope as koinScope
 
 class BucketContent(
-    override val defaultSpanSize: Int = R.integer.grid_list_x3,
+    override val defaultSpanSize: Int = co.anitrend.arch.ui.R.integer.grid_list_x3,
     override val stateConfig: StateLayoutConfig,
     override val supportViewAdapter: ISupportAdapter<BucketFile>,
     override val inflateLayout: Int = R.layout.bucket_content
@@ -38,7 +38,7 @@ class BucketContent(
 
     private lateinit var binding: BucketContentBinding
     private val viewModel by viewModel<BucketViewModel>()
-    private val presenter by koinScope.inject<BucketPresenter>()
+    private val presenter by inject<BucketPresenter>()
     private val dispatchers by inject<SupportDispatchers>()
 
     private val activityResultLauncher =

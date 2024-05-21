@@ -30,7 +30,7 @@ internal class OnlineControllerPolicy<D> private constructor(
                 pagingRequestHelper.recordSuccess()
             }.exceptionOrNull()?.also { e ->
                 e.printStackTrace()
-                Timber.tag(moduleTag).e(e)
+                Timber.e(e)
                 pagingRequestHelper.recordFailure(e)
             }
         }
@@ -58,7 +58,7 @@ internal class OnlineControllerPolicy<D> private constructor(
                 networkState.postValue(NetworkState.Success)
                 result
             }.getOrElse {
-                Timber.tag(moduleTag).e(it)
+                Timber.e(it)
                 networkState.postValue(
                     NetworkState.Error(
                         heading = it.cause?.message ?: "Unexpected error encountered \uD83E\uDD2D",

@@ -1,10 +1,9 @@
 package co.anitrend.retrofit.graphql.sample
 
-import androidx.startup.AppInitializer
 import co.anitrend.retrofit.graphql.core.SampleApp
 import co.anitrend.retrofit.graphql.core.helpers.runtime.UncaughtExceptionHandler
 import io.wax911.emojify.EmojiManager
-import io.wax911.emojify.initializer.EmojiInitializer
+import io.wax911.emojify.serializer.kotlinx.KotlinxDeserializer
 
 class App : SampleApp() {
 
@@ -12,8 +11,7 @@ class App : SampleApp() {
      * Emoji manager instance
      */
     override val emojiManager: EmojiManager by lazy {
-        AppInitializer.getInstance(this)
-            .initializeComponent(EmojiInitializer::class.java)
+        EmojiManager.create(this, serializer = KotlinxDeserializer())
     }
 
     /**
