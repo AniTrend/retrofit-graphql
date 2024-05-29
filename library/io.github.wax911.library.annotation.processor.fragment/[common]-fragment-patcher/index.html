@@ -1,101 +1,150 @@
-<html>
-  <head>
+<!DOCTYPE html>
+<html class="no-js">
+<head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>[common]FragmentPatcher</title>
-<link href="../../../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" async="async"></script>  </head>
-  <body>
-    <div id="container">
-      <div id="leftColumn"><a href="../../../index.html">
-          <div id="logo"></div>
-        </a>
-        <div id="paneSearch"></div>
-        <div id="sideMenu"></div>
-      </div>
-      <div id="main">
-        <div id="leftToggler"><span class="icon-toggler"></span></div>
-<script type="text/javascript" src="../../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="library::io.github.wax911.library.annotation.processor.fragment/FragmentPatcher///PointingToDeclaration//1623189549">
-          <div class="navigation-wrapper" id="navigation-wrapper">
-            <div class="breadcrumbs"><a href="../../../index.html">library</a>/<a href="../index.html">io.github.wax911.library.annotation.processor.fragment</a>/<a href="index.html">[common]FragmentPatcher</a></div>
-            <div class="pull-right d-flex">
-              <div class="filter-section" id="filter-section"><button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":library:dokkaHtml/androidTestRelease">common</button></div>
-              <div id="searchBar"></div>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../../index.html">
+                            library
+                    </a>
             </div>
-          </div>
-          <div class="cover ">
-            <h1 class="cover"><span>Fragment</span><wbr></wbr><span>Patcher</span></h1>
-            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":library:dokkaHtml/androidTestRelease"><div class="symbol monospace">class <a href="index.html">FragmentPatcher</a>(defaultExtension: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>, fragmentAnalyzer: <a href="../[common]-fragment-analyzer/index.html">FragmentAnalyzer</a>, logger: <a href="../../io.github.wax911.library.logger.core/[common]-abstract-logger/index.html">AbstractLogger</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">This class will return a String containing fragment definitions. This String can then be appended to a GraphQL operation in order to have all referenced fragments fully defined, before sending it to the server. This allows a GraphQL operation to reference fragments, but have the definition of those fragments live outside of the file that the operation lives in.</p><p class="paragraph">This class also properly handles recursion. This means fragments can have references to other fragments, and it will do its best to resolve everything correctly.</p><h4 class="">Author</h4><p class="paragraph">eschlenz</p></div></div>
-          </div>
-          <div class="tabbedcontent">
-            <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Types">Types</button><button class="section-tab" data-togglable="Constructors">Constructors</button><button class="section-tab" data-togglable="Functions">Functions</button></div>
-            <div class="tabs-section-body">
-              <h2 class="tabbedcontent">Constructors</h2>
-              <div class="table" data-togglable="Constructors"><a data-name="-124656401%2FConstructors%2F1623189549" anchor-label="FragmentPatcher" id="-124656401%2FConstructors%2F1623189549" data-filterable-set=":library:dokkaHtml/androidTestRelease"></a>
-                <div class="table-row" data-filterable-current=":library:dokkaHtml/androidTestRelease" data-filterable-set=":library:dokkaHtml/androidTestRelease">
-                  <div class="main-subrow keyValue TabbedContent">
-                    <div class=""><span class="inline-flex"><a href="-fragment-patcher.html">FragmentPatcher</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-124656401%2FConstructors%2F1623189549"></span>
-                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                        </span></span></div>
-                    <div>
-                      <div class="platform-tags ">
-                        <div class="platform-tag jvm-like">common</div>
-                      </div>
-                      <div class="title">
-                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":library:dokkaHtml/androidTestRelease"><div class="symbol monospace">fun <a href="-fragment-patcher.html">FragmentPatcher</a>(defaultExtension: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>, fragmentAnalyzer: <a href="../[common]-fragment-analyzer/index.html">FragmentAnalyzer</a> = RegexFragmentAnalyzer(), logger: <a href="../../io.github.wax911.library.logger.core/[common]-abstract-logger/index.html">AbstractLogger</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <h2 class="">Types</h2>
-              <div class="table" data-togglable="Types"><a data-name="1091407589%2FClasslikes%2F1623189549" anchor-label="Companion" id="1091407589%2FClasslikes%2F1623189549" data-filterable-set=":library:dokkaHtml/androidTestRelease"></a>
-                <div class="table-row" data-filterable-current=":library:dokkaHtml/androidTestRelease" data-filterable-set=":library:dokkaHtml/androidTestRelease">
-                  <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="-companion/index.html">Companion</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1091407589%2FClasslikes%2F1623189549"></span>
-                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                        </span></span></div>
-                    <div>
-                      <div class="platform-tags ">
-                        <div class="platform-tag jvm-like">common</div>
-                      </div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":library:dokkaHtml/androidTestRelease" data-filterable-set=":library:dokkaHtml/androidTestRelease"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":library:dokkaHtml/androidTestRelease"><div class="symbol monospace">object <a href="-companion/index.html">Companion</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":library:dokkaHtml/testFixturesRelease">common</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="library::io.github.wax911.library.annotation.processor.fragment/FragmentPatcher///PointingToDeclaration//-1767530138">
+  <div class="breadcrumbs"><a href="../../../index.html">library</a><span class="delimiter">/</span><a href="../index.html">io.github.wax911.library.annotation.processor.fragment</a><span class="delimiter">/</span><span class="current">[common]FragmentPatcher</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Fragment</span><wbr></wbr><span><span>Patcher</span></span></h1>
+    <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+      <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":library:dokkaHtml/testFixturesRelease" data-filterable-set=":library:dokkaHtml/testFixturesRelease" data-active="" data-toggle=":library:dokkaHtml/testFixturesRelease">common</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/testFixturesRelease"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">FragmentPatcher</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">defaultExtension<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">fragmentAnalyzer<span class="token operator">: </span><a href="../[common]-fragment-analyzer/index.html">FragmentAnalyzer</a><span class="token operator"> = </span>RegexFragmentAnalyzer()<span class="token punctuation">, </span></span><span class="parameter ">logger<span class="token operator">: </span><a href="../../io.github.wax911.library.logger.core/[common]-abstract-logger/index.html">AbstractLogger</a></span></span><span class="token punctuation">)</span></div><p class="paragraph">This class will return a String containing fragment definitions. This String can then be appended to a GraphQL operation in order to have all referenced fragments fully defined, before sending it to the server. This allows a GraphQL operation to reference fragments, but have the definition of those fragments live outside of the file that the operation lives in.</p><p class="paragraph">This class also properly handles recursion. This means fragments can have references to other fragments, and it will do its best to resolve everything correctly.</p><span class="kdoc-tag"><h4 class="">Author</h4><p class="paragraph">eschlenz</p></span></div>    </div>
   </div>
-</div>
-</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <h2 class="">Functions</h2>
-              <div class="table" data-togglable="Functions"><a data-name="-1278749170%2FFunctions%2F1623189549" anchor-label="includeMissingFragments" id="-1278749170%2FFunctions%2F1623189549" data-filterable-set=":library:dokkaHtml/androidTestRelease"></a>
-                <div class="table-row" data-filterable-current=":library:dokkaHtml/androidTestRelease" data-filterable-set=":library:dokkaHtml/androidTestRelease">
-                  <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="include-missing-fragments.html">includeMissingFragments</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1278749170%2FFunctions%2F1623189549"></span>
-                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                        </span></span></div>
-                    <div>
-                      <div class="platform-tags ">
-                        <div class="platform-tag jvm-like">common</div>
-                      </div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":library:dokkaHtml/androidTestRelease" data-filterable-set=":library:dokkaHtml/androidTestRelease"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":library:dokkaHtml/androidTestRelease"><div class="symbol monospace">fun <a href="include-missing-fragments.html">includeMissingFragments</a>(graphFile: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>, graphContent: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>, availableGraphFiles: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html">Map</a>&lt;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>, <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>&gt;, aggregation: <a href="https://developer.android.com/reference/kotlin/java/lang/StringBuilder.html">StringBuilder</a> = StringBuilder()): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-  </div>
-</div>
-</div>
-                    </div>
-                  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="-124656401%2FConstructors%2F-1767530138" anchor-label="FragmentPatcher" id="-124656401%2FConstructors%2F-1767530138" data-filterable-set=":library:dokkaHtml/testFixturesRelease"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":library:dokkaHtml/testFixturesRelease" data-filterable-set=":library:dokkaHtml/testFixturesRelease">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-fragment-patcher.html"><span>Fragment</span><wbr></wbr><span><span>Patcher</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-124656401%2FConstructors%2F-1767530138"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":library:dokkaHtml/testFixturesRelease" data-filterable-set=":library:dokkaHtml/testFixturesRelease" data-active="" data-toggle=":library:dokkaHtml/testFixturesRelease">common</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/testFixturesRelease"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">defaultExtension<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">fragmentAnalyzer<span class="token operator">: </span><a href="../[common]-fragment-analyzer/index.html">FragmentAnalyzer</a><span class="token operator"> = </span>RegexFragmentAnalyzer()<span class="token punctuation">, </span></span><span class="parameter ">logger<span class="token operator">: </span><a href="../../io.github.wax911.library.logger.core/[common]-abstract-logger/index.html">AbstractLogger</a></span></span><span class="token punctuation">)</span></div></div>                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2023 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="1091407589%2FClasslikes%2F-1767530138" anchor-label="Companion" id="1091407589%2FClasslikes%2F-1767530138" data-filterable-set=":library:dokkaHtml/testFixturesRelease"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/testFixturesRelease" data-filterable-set=":library:dokkaHtml/testFixturesRelease">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1091407589%2FClasslikes%2F-1767530138"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":library:dokkaHtml/testFixturesRelease" data-filterable-set=":library:dokkaHtml/testFixturesRelease" data-active="" data-toggle=":library:dokkaHtml/testFixturesRelease">common</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/testFixturesRelease"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-1278749170%2FFunctions%2F-1767530138" anchor-label="includeMissingFragments" id="-1278749170%2FFunctions%2F-1767530138" data-filterable-set=":library:dokkaHtml/testFixturesRelease"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/testFixturesRelease" data-filterable-set=":library:dokkaHtml/testFixturesRelease">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="include-missing-fragments.html"><span>include</span><wbr></wbr><span>Missing</span><wbr></wbr><span><span>Fragments</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1278749170%2FFunctions%2F-1767530138"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":library:dokkaHtml/testFixturesRelease" data-filterable-set=":library:dokkaHtml/testFixturesRelease" data-active="" data-toggle=":library:dokkaHtml/testFixturesRelease">common</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/testFixturesRelease"><div class="symbol monospace"><span class="token keyword">fun </span><a href="include-missing-fragments.html"><span class="token function">includeMissingFragments</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">graphFile<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">graphContent<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">availableGraphFiles<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">aggregation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/lang/StringBuilder.html">StringBuilder</a><span class="token operator"> = </span>StringBuilder()</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </body>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Copyright</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
 </html>
-

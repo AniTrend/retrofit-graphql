@@ -1,112 +1,150 @@
-<html>
-  <head>
+<!DOCTYPE html>
+<html class="no-js">
+<head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>[androidJvm]AbstractGraphProcessor</title>
-<link href="../../../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" async="async"></script>  </head>
-  <body>
-    <div id="container">
-      <div id="leftColumn"><a href="../../../index.html">
-          <div id="logo"></div>
-        </a>
-        <div id="paneSearch"></div>
-        <div id="sideMenu"></div>
-      </div>
-      <div id="main">
-        <div id="leftToggler"><span class="icon-toggler"></span></div>
-<script type="text/javascript" src="../../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="library::io.github.wax911.library.annotation.processor.contract/AbstractGraphProcessor///PointingToDeclaration//1467804585">
-          <div class="navigation-wrapper" id="navigation-wrapper">
-            <div class="breadcrumbs"><a href="../../../index.html">library</a>/<a href="../index.html">io.github.wax911.library.annotation.processor.contract</a>/<a href="index.html">[androidJvm]AbstractGraphProcessor</a></div>
-            <div class="pull-right d-flex">
-              <div class="filter-section" id="filter-section"><button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":library:dokkaHtml/testRelease">androidJvm</button><button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":library:dokkaHtml/androidTestRelease">common</button></div>
-              <div id="searchBar"></div>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../../index.html">
+                            library
+                    </a>
             </div>
-          </div>
-          <div class="cover ">
-            <h1 class="cover"><span>Abstract</span><wbr></wbr><span>Graph</span><wbr></wbr><span>Processor</span></h1>
-            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":library:dokkaHtml/testRelease"><div class="symbol monospace">abstract class <a href="index.html">AbstractGraphProcessor</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">GraphQL annotation processor contract</p></div></div>
-          </div>
-          <div class="tabbedcontent">
-            <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Constructors">Constructors</button><button class="section-tab" data-togglable="Functions">Functions</button><button class="section-tab" data-togglable="Properties">Properties</button><button class="section-tab" data-togglable="See also">See also</button><button class="section-tab" data-togglable="Inheritors">Inheritors</button></div>
-            <div class="tabs-section-body">
-              <h2 class="">See also</h2>
-              <div data-togglable="See also">
-                <div class="platform-hinted WithExtraAttributes" data-platform-hinted="data-platform-hinted" data-togglable="See also"><div class="content sourceset-depenent-content" data-active="" data-togglable=":library:dokkaHtml/testRelease"><div data-togglable="See also"><div class="table" data-togglable="See also"><div class="table-row" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease"><div class="main-subrow keyValue WithExtraAttributes RowTitle"><div class=""><span class="inline-flex"><a href="../../io.github.wax911.library.annotation.processor.fragment/[android-jvm]-fragment-patcher/index.html">io.github.wax911.library.annotation.processor.fragment.FragmentPatcher</a></span><span class="inline-flex"><div data-togglable="See also"></div></span></div><div></div></div></div><div class="table-row" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease"><div class="main-subrow keyValue WithExtraAttributes RowTitle"><div class=""><span class="inline-flex"><a href="../../io.github.wax911.library.logger.core/[android-jvm]-abstract-logger/index.html">io.github.wax911.library.logger.core.AbstractLogger</a></span><span class="inline-flex"><div data-togglable="See also"></div></span></div><div></div></div></div></div></div></div></div>
-              </div>
-              <h2 class="tabbedcontent">Constructors</h2>
-              <div class="table" data-togglable="Constructors"><a data-name="-620824093%2FConstructors%2F1467804585" anchor-label="AbstractGraphProcessor" id="-620824093%2FConstructors%2F1467804585" data-filterable-set=":library:dokkaHtml/testRelease"></a>
-                <div class="table-row" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease">
-                  <div class="main-subrow keyValue TabbedContent">
-                    <div class=""><span class="inline-flex"><a href="-abstract-graph-processor.html">AbstractGraphProcessor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-620824093%2FConstructors%2F1467804585"></span>
-                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                        </span></span></div>
-                    <div>
-                      <div class="platform-tags ">
-                        <div class="platform-tag jvm-like">androidJvm</div>
-                      </div>
-                      <div class="title">
-                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":library:dokkaHtml/testRelease"><div class="symbol monospace">fun <a href="-abstract-graph-processor.html">AbstractGraphProcessor</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <h2 class="">Functions</h2>
-              <div class="table" data-togglable="Functions"><a data-name="567819707%2FFunctions%2F1467804585" anchor-label="getQuery" id="567819707%2FFunctions%2F1467804585" data-filterable-set=":library:dokkaHtml/testRelease"></a>
-                <div class="table-row" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease">
-                  <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="get-query.html">getQuery</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="567819707%2FFunctions%2F1467804585"></span>
-                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                        </span></span></div>
-                    <div>
-                      <div class="platform-tags ">
-                        <div class="platform-tag jvm-like">androidJvm</div>
-                      </div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":library:dokkaHtml/testRelease"><div class="symbol monospace">abstract fun <a href="get-query.html">getQuery</a>(annotations: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html">Array</a>&lt;out <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-annotation/index.html">Annotation</a>&gt;): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":library:dokkaHtml/testRelease">androidJvm</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="library::io.github.wax911.library.annotation.processor.contract/AbstractGraphProcessor///PointingToDeclaration//1467804585">
+  <div class="breadcrumbs"><a href="../../../index.html">library</a><span class="delimiter">/</span><a href="../index.html">io.github.wax911.library.annotation.processor.contract</a><span class="delimiter">/</span><span class="current">[androidJvm]AbstractGraphProcessor</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Abstract</span><wbr></wbr><span>Graph</span><wbr></wbr><span><span>Processor</span></span></h1>
+    <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+      <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease" data-active="" data-toggle=":library:dokkaHtml/testRelease">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/testRelease"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="index.html">AbstractGraphProcessor</a></div><p class="paragraph">GraphQL annotation processor contract</p><h4 class="">See also</h4><div class="table"><div class="table-row" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../io.github.wax911.library.annotation.processor.fragment/[android-jvm]-fragment-patcher/index.html"><span>Fragment</span><wbr></wbr><span><span>Patcher</span></span></a></div></span></div><div></div></div></div><div class="table-row" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../io.github.wax911.library.logger.core/[android-jvm]-abstract-logger/index.html"><span>Abstract</span><wbr></wbr><span><span>Logger</span></span></a></div></span></div><div></div></div></div></div><h4 class="">Inheritors</h4><div class="table"><div class="table-row" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../io.github.wax911.library.annotation.processor/[android-jvm]-graph-processor/index.html">GraphProcessor</a></div></span></div><div></div></div></div></div></div>    </div>
   </div>
-<a data-name="567819707%2FFunctions%2F1467804585" anchor-label="getQuery" id="567819707%2FFunctions%2F1467804585" data-filterable-set=":library:dokkaHtml/testRelease"></a><div class="brief "><a data-name="567819707%2FFunctions%2F1467804585" anchor-label="getQuery" id="567819707%2FFunctions%2F1467804585" data-filterable-set=":library:dokkaHtml/testRelease"></a>Finds graphql content matching the value provided by <a href="../../io.github.wax911.library.annotation/[android-jvm]-graph-query/index.html">GraphQuery</a></div></div>
-</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <h2 class="">Properties</h2>
-              <div class="table" data-togglable="Properties"><a data-name="-1323453632%2FProperties%2F1467804585" anchor-label="graphFiles" id="-1323453632%2FProperties%2F1467804585" data-filterable-set=":library:dokkaHtml/testRelease"></a>
-                <div class="table-row" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease">
-                  <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="graph-files.html">graphFiles</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1323453632%2FProperties%2F1467804585"></span>
-                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                        </span></span></div>
-                    <div>
-                      <div class="platform-tags ">
-                        <div class="platform-tag jvm-like">androidJvm</div>
-                      </div>
-                      <div class="title">
-                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":library:dokkaHtml/testRelease"><a data-name="-1323453632%2FProperties%2F1467804585" anchor-label="graphFiles" id="-1323453632%2FProperties%2F1467804585" data-filterable-set=":library:dokkaHtml/testRelease"></a><div class="symbol monospace">abstract val <a href="graph-files.html">graphFiles</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html">Map</a>&lt;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>, <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>&gt;<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1323453632%2FProperties%2F1467804585" anchor-label="graphFiles" id="-1323453632%2FProperties%2F1467804585" data-filterable-set=":library:dokkaHtml/testRelease"></a>Returns a pair of query or mutation name and graphql contents</div></div></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <h2 class="">Inheritors</h2>
-              <div class="table" data-togglable="Inheritors"><a data-name="-1734736796%2FInheritors%2F1037887720" anchor-label="GraphProcessor" id="-1734736796%2FInheritors%2F1037887720" data-filterable-set=":library:dokkaHtml/testRelease :library:dokkaHtml/androidTestRelease"></a>
-                <div class="table-row" data-filterable-current=":library:dokkaHtml/testRelease :library:dokkaHtml/androidTestRelease" data-filterable-set=":library:dokkaHtml/testRelease :library:dokkaHtml/androidTestRelease">
-                  <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><span data-unresolved-link="io.github.wax911.library.annotation.processor/GraphProcessor///PointingToDeclaration/">GraphProcessor</span><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1734736796%2FInheritors%2F1037887720"></span>
-                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                        </span></span></div>
-                    <div></div>
-                  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="-620824093%2FConstructors%2F1467804585" anchor-label="AbstractGraphProcessor" id="-620824093%2FConstructors%2F1467804585" data-filterable-set=":library:dokkaHtml/testRelease"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-abstract-graph-processor.html"><span>Abstract</span><wbr></wbr><span>Graph</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-620824093%2FConstructors%2F1467804585"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease" data-active="" data-toggle=":library:dokkaHtml/testRelease">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/testRelease"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div>                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2023 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-1323453632%2FProperties%2F1467804585" anchor-label="graphFiles" id="-1323453632%2FProperties%2F1467804585" data-filterable-set=":library:dokkaHtml/testRelease"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="graph-files.html"><span>graph</span><wbr></wbr><span><span>Files</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1323453632%2FProperties%2F1467804585"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease" data-active="" data-toggle=":library:dokkaHtml/testRelease">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/testRelease"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="graph-files.html">graphFiles</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a pair of query or mutation name and graphql contents</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="567819707%2FFunctions%2F1467804585" anchor-label="getQuery" id="567819707%2FFunctions%2F1467804585" data-filterable-set=":library:dokkaHtml/testRelease"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-query.html"><span>get</span><wbr></wbr><span><span>Query</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="567819707%2FFunctions%2F1467804585"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":library:dokkaHtml/testRelease" data-filterable-set=":library:dokkaHtml/testRelease" data-active="" data-toggle=":library:dokkaHtml/testRelease">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/testRelease"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="get-query.html"><span class="token function">getQuery</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">annotations<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-annotation/index.html">Annotation</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Finds graphql content matching the value provided by <a href="../../io.github.wax911.library.annotation/[android-jvm]-graph-query/index.html">GraphQuery</a></p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </body>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Copyright</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
 </html>
-
