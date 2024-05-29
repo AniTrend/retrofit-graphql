@@ -74,12 +74,6 @@
         "^androidx\\.test\\.espresso",
         "^androidx\\.test\\.ext"
       ]
-    },
-    {
-      "groupName": "Jetbrains Dependencies",
-      "packagePatterns": [
-        "^org\\.jetbrains\\.kotlin"
-      ]
     }
   ]
 }
