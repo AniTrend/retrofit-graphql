@@ -1,11 +1,9 @@
 package co.anitrend.retrofit.graphql.data.market.source
 
-import androidx.lifecycle.liveData
-import androidx.paging.PagedList
-import androidx.paging.PagingRequestHelper
-import androidx.paging.toLiveData
-import co.anitrend.arch.data.util.SupportDataKeyStore
-import co.anitrend.arch.extension.dispatchers.SupportDispatchers
+import co.anitrend.arch.extension.dispatchers.contract.ISupportDispatcher
+import co.anitrend.arch.paging.legacy.FlowPagedListBuilder
+import co.anitrend.arch.paging.legacy.util.PAGING_CONFIGURATION
+import co.anitrend.arch.request.callback.RequestCallback
 import co.anitrend.retrofit.graphql.data.arch.controller.strategy.ControllerStrategy
 import co.anitrend.retrofit.graphql.data.arch.extensions.controller
 import co.anitrend.retrofit.graphql.data.market.converters.MarketPlaceEntityConverter
@@ -15,9 +13,10 @@ import co.anitrend.retrofit.graphql.data.market.entity.MarketPlaceEntity
 import co.anitrend.retrofit.graphql.data.market.mapper.MarketPlaceResponseMapper
 import co.anitrend.retrofit.graphql.data.market.model.query.MarketPlaceListingQuery
 import co.anitrend.retrofit.graphql.data.market.source.contract.MarketPlaceSource
-import co.anitrend.retrofit.graphql.domain.entities.market.MarketPlaceListing
 import io.github.wax911.library.model.request.QueryContainerBuilder
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 
 internal class MarketPlaceSourceImpl(
     private val mapper: MarketPlaceResponseMapper,
@@ -25,65 +24,46 @@ internal class MarketPlaceSourceImpl(
     private val remoteSource: MarketPlaceRemoteSource,
     private val localSource: MarketPlaceLocalSource,
     private val strategy: ControllerStrategy<List<MarketPlaceEntity>>,
-    dispatchers: SupportDispatchers
-) : MarketPlaceSource(dispatchers) {
+    override val dispatcher: ISupportDispatcher
+) : MarketPlaceSource() {
 
-    private fun buildMarketPlaceListingQuery(
-        requestType: PagingRequestHelper.RequestType,
-        model: MarketPlaceListing?
-    ): MarketPlaceListingQuery {
-        val query = MarketPlaceListingQuery(first = supportPagingHelper.pageSize)
-        when (requestType) {
-            PagingRequestHelper.RequestType.BEFORE ->
-                query.before = model?.cursorId
-            PagingRequestHelper.RequestType.AFTER ->
-                query.after = model?.cursorId
-            PagingRequestHelper.RequestType.INITIAL -> {}
-        }
-        return query
-    }
-
-    override val observable = liveData {
-        val factory = localSource.findAllByFactory()
-        val pagingSource = factory.mapByPage { entities ->
-            converter.convertFrom(entities)
-        }
-
-        val callback: PagedList.BoundaryCallback<MarketPlaceListing> = this@MarketPlaceSourceImpl
-
-        emitSource(
-            pagingSource.toLiveData(
-                config = SupportDataKeyStore.PAGING_CONFIGURATION,
-                boundaryCallback = callback
-            )
-        )
-    }
+    override val observable = FlowPagedListBuilder(
+        dataSourceFactory = localSource.findAllByFactory()
+            .mapByPage { entities ->
+                converter.convertFrom(entities)
+            },
+        config = PAGING_CONFIGURATION,
+        initialLoadKey = null,
+        boundaryCallback = this,
+    ).buildFlow()
 
     /**
      * Invoked when a request to the network needs to happen
      */
-    override suspend fun invoke(
-        callback: PagingRequestHelper.Request.Callback,
-        requestType: PagingRequestHelper.RequestType,
-        model: MarketPlaceListing?
+    override suspend fun getMarketPlaceListing(
+        requestCallback: RequestCallback,
+        marketPlaceListingQuery: MarketPlaceListingQuery,
     ) {
-        val marketPlaceQuery = buildMarketPlaceListingQuery(requestType, model)
         val deferred = async {
             val queryBuilder = QueryContainerBuilder()
-                .putVariables(marketPlaceQuery.toMap())
+                .putVariables(marketPlaceListingQuery.toMap())
             remoteSource.getMarketPlaceApps(queryBuilder)
         }
 
         val controller =
-            mapper.controller(strategy, dispatchers)
+            mapper.controller(strategy, dispatcher)
 
-        controller(deferred, callback)
+        controller(deferred, requestCallback)
     }
 
     /**
      * Clears data sources (databases, preferences, e.t.c)
+     *
+     * @param context Dispatcher context to run in
      */
-    override suspend fun clearDataSource() {
-        localSource.clear()
+    override suspend fun clearDataSource(context: CoroutineDispatcher) {
+        withContext(dispatcher.io) {
+            localSource.clear()
+        }
     }
 }

@@ -1,9 +1,8 @@
 package co.anitrend.retrofit.graphql.data.arch.controller.policy
 
-import androidx.lifecycle.MutableLiveData
-import androidx.paging.PagingRequestHelper
-import co.anitrend.arch.domain.entities.NetworkState
+import co.anitrend.arch.domain.entities.RequestError
 import co.anitrend.arch.extension.network.SupportConnectivity
+import co.anitrend.arch.request.callback.RequestCallback
 import co.anitrend.retrofit.graphql.data.arch.controller.strategy.ControllerStrategy
 import timber.log.Timber
 
@@ -14,67 +13,36 @@ internal class OnlineControllerPolicy<D> private constructor(
     private val connectivity: SupportConnectivity
 ) : ControllerStrategy<D>() {
 
-    /**
-     * Execute a paging task under an implementation strategy
-     *
-     * @param block what will be executed
-     * @param pagingRequestHelper paging event emitter
-     */
-    override suspend fun invoke(
-        block: suspend () -> Unit,
-        pagingRequestHelper: PagingRequestHelper.Request.Callback
-    ) {
-        if (connectivity.isConnected) {
-            runCatching {
-                block()
-                pagingRequestHelper.recordSuccess()
-            }.exceptionOrNull()?.also { e ->
-                e.printStackTrace()
-                Timber.e(e)
-                pagingRequestHelper.recordFailure(e)
-            }
-        }
-        else {
-            pagingRequestHelper.recordFailure(
-                Throwable("Please check your internet connection")
-            )
-        }
-    }
 
     /**
      * Execute a task under an implementation strategy
      *
+     * @param callback event emitter
      * @param block what will be executed
-     * @param networkState network state event emitter
      */
     override suspend fun invoke(
-        block: suspend () -> D?,
-        networkState: MutableLiveData<NetworkState>
+        callback: RequestCallback,
+        block: suspend () -> D?
     ): D? {
-        if (connectivity.isConnected) {
-            return runCatching{
-                networkState.postValue(NetworkState.Loading)
-                val result = block()
-                networkState.postValue(NetworkState.Success)
-                result
-            }.getOrElse {
-                Timber.e(it)
-                networkState.postValue(
-                    NetworkState.Error(
-                        heading = it.cause?.message ?: "Unexpected error encountered \uD83E\uDD2D",
-                        message = it.message
-                    )
+        runCatching {
+            if (connectivity.isConnected)
+                block()
+            else
+                throw RequestError(
+                    "No internet connection",
+                    "Make sure you have an active internet connection"
                 )
-                null
+        }.onSuccess { result ->
+            callback.recordSuccess()
+            return result
+        }.onFailure { exception ->
+            Timber.e(exception)
+            when (exception) {
+                is RequestError -> callback.recordFailure(exception)
+                else -> callback.recordFailure(RequestError(exception))
             }
-        } else {
-            networkState.postValue(
-                NetworkState.Error(
-                    heading = "No internet connection detected \uD83E\uDD2D",
-                    message = "Please check your internet connection"
-                )
-            )
         }
+
         return null
     }
 

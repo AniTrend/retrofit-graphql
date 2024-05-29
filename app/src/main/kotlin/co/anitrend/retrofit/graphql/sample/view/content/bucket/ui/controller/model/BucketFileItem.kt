@@ -18,8 +18,8 @@ import coil.transform.RoundedCornersTransformation
 import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class BucketFileItem(
-    private val entity: BucketFile?
-) : RecyclerItem(entity?.id?.toLong()) {
+    private val entity: BucketFile
+) : RecyclerItem(entity.id.toLong()) {
 
     private var disposable: Disposable? = null
     private var binding: BucketFileItemBinding? = null
@@ -38,14 +38,14 @@ internal class BucketFileItem(
         view: View,
         position: Int,
         payloads: List<Any>,
-        stateFlow: MutableStateFlow<ClickableItem?>,
+        stateFlow: MutableStateFlow<ClickableItem>,
         selectionMode: ISupportSelectionMode<Long>?
     ) {
         binding = BucketFileItemBinding.bind(view)
-        binding?.bucketImageName?.text = entity?.fileName
-        val margin = view.resources.getDimension(co.anitrend.arch.ui.R.dimen.lg_margin)
+        binding?.bucketImageName?.text = entity.fileName
+        val margin = view.resources.getDimension(co.anitrend.arch.theme.R.dimen.lg_margin)
         binding?.bucketImage?.using(
-            entity?.url,
+            entity.url,
             ColorDrawable(-0x333334),
             RoundedCornersTransformation(
                 margin, margin, margin, margin
@@ -61,7 +61,7 @@ internal class BucketFileItem(
      * @param resources optionally useful for dynamic size check with different configurations
      */
     override fun getSpanSize(spanCount: Int, position: Int, resources: Resources): Int {
-        return resources.getInteger(co.anitrend.arch.ui.R.integer.grid_list_x3)
+        return resources.getInteger(co.anitrend.arch.theme.R.integer.grid_list_x3)
     }
 
     /**
@@ -79,6 +79,6 @@ internal class BucketFileItem(
             viewGroup: ViewGroup
         ) = BucketFileItemBinding.inflate(
             this, viewGroup, false
-        ).let { SupportViewHolder(it.root) }
+        ).let { SupportViewHolder(it) }
     }
 }

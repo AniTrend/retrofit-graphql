@@ -1,23 +1,22 @@
-package co.anitrend.retrofit.graphql.sample.view.content.market.viewmodel
+package co.anitrend.retrofit.graphql.sample.view.content.bucket.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagedList
 import co.anitrend.arch.core.model.ISupportViewModelState
 import co.anitrend.arch.data.state.DataState
 import co.anitrend.retrofit.graphql.data.bucket.model.upload.mutation.UploadMutation
-import co.anitrend.retrofit.graphql.data.market.usecase.MarketPlaceUseCaseContract
-import co.anitrend.retrofit.graphql.domain.entities.market.MarketPlaceListing
+import co.anitrend.retrofit.graphql.data.bucket.usecase.upload.UploadUseCaseContract
+import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
 import kotlinx.coroutines.flow.merge
 
-class MarketPlaceViewModel(
-    private val useCase: MarketPlaceUseCaseContract
-) : ViewModel(), ISupportViewModelState<PagedList<MarketPlaceListing>> {
+class UploadViewModel(
+    private val useCase: UploadUseCaseContract
+) : ViewModel(), ISupportViewModelState<BucketFile> {
 
-    private val state = MutableLiveData<DataState<PagedList<MarketPlaceListing>>>()
+    private val state = MutableLiveData<DataState<BucketFile>>()
 
     override val model = state.switchMap {
         it.model.asLiveData(viewModelScope.coroutineContext)
@@ -36,8 +35,8 @@ class MarketPlaceViewModel(
         result.asLiveData(viewModelScope.coroutineContext)
     }
 
-    operator fun invoke() {
-        val result = useCase()
+    operator fun invoke(mutation: UploadMutation) {
+        val result = useCase(mutation)
         state.postValue(result)
     }
 

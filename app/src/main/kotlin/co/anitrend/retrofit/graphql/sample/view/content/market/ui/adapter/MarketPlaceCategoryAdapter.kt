@@ -8,18 +8,18 @@ import co.anitrend.arch.core.model.IStateLayoutConfig
 import co.anitrend.arch.recycler.action.contract.ISupportSelectionMode
 import co.anitrend.arch.recycler.adapter.SupportListAdapter
 import co.anitrend.arch.recycler.model.contract.IRecyclerItem
-import co.anitrend.arch.theme.animator.contract.ISupportAnimator
+import co.anitrend.arch.theme.animator.contract.AbstractAnimator
 import co.anitrend.arch.ui.view.widget.model.StateLayoutConfig
 import co.anitrend.retrofit.graphql.sample.view.content.market.ui.controller.helpers.CATEGORY_DIFFER
 import co.anitrend.retrofit.graphql.sample.view.content.market.ui.controller.model.MarketPlaceCategoryItem
 import co.anitrend.retrofit.graphql.sample.view.content.market.ui.controller.model.MarketPlaceCategoryItem.Companion.createViewHolder
 
 class MarketPlaceCategoryAdapter(
-    override val customSupportAnimator: ISupportAnimator? = null,
-    override val mapper: (String?) -> IRecyclerItem = { MarketPlaceCategoryItem(it) },
     override val resources: Resources,
+    override val mapper: (String) -> IRecyclerItem = ::MarketPlaceCategoryItem,
     override val stateConfiguration: IStateLayoutConfig = StateLayoutConfig(),
-    override val supportAction: ISupportSelectionMode<Long>? = null
+    override val supportAction: ISupportSelectionMode<Long>? = null,
+    override val customSupportAnimator: AbstractAnimator? = null,
 ) : SupportListAdapter<String>(CATEGORY_DIFFER) {
     /**
      * Should provide the required view holder, this function is a substitute for

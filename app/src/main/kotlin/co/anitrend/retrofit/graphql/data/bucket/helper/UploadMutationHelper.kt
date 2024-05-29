@@ -40,7 +40,7 @@ internal object UploadMutationHelper {
      * by checking if is annotated with [GraphMultiPartUpload]
      */
     fun Array<out Annotation>.supportsFileUpload(): Boolean {
-        return filterIsInstance(GraphMultiPartUpload::class.java).isNotEmpty()
+        return filterIsInstance<GraphMultiPartUpload>().isNotEmpty()
     }
 
     @Throws(Throwable::class)

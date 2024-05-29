@@ -239,3 +239,9 @@ fabric.properties
 app/.config/secrets.properties
 
 app/schema.graphql
+
+.idea/deploymentTargetSelector.xml
+
+.idea/appInsightsSettings.xml
+
+app/lint-baseline.xml

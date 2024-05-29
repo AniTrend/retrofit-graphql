@@ -8,13 +8,6 @@ import io.wax911.emojify.serializer.kotlinx.KotlinxDeserializer
 class App : SampleApp() {
 
     /**
-     * Emoji manager instance
-     */
-    override val emojiManager: EmojiManager by lazy {
-        EmojiManager.create(this, serializer = KotlinxDeserializer())
-    }
-
-    /**
      * Called when the application is starting, before any activity, service,
      * or receiver objects (excluding content providers) have been created.
      *

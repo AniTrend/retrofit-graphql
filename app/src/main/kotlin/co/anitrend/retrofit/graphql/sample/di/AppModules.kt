@@ -1,6 +1,5 @@
 package co.anitrend.retrofit.graphql.sample.di
 
-import android.content.Context
 import android.net.ConnectivityManager
 import co.anitrend.arch.core.provider.SupportFileProvider
 import co.anitrend.arch.extension.ext.systemServiceOf
@@ -15,10 +14,13 @@ import co.anitrend.retrofit.graphql.sample.view.MainScreen
 import co.anitrend.retrofit.graphql.sample.view.content.bucket.BucketContent
 import co.anitrend.retrofit.graphql.sample.view.content.bucket.ui.adapter.BucketAdapter
 import co.anitrend.retrofit.graphql.sample.view.content.bucket.viewmodel.BucketViewModel
+import co.anitrend.retrofit.graphql.sample.view.content.bucket.viewmodel.UploadViewModel
 import co.anitrend.retrofit.graphql.sample.view.content.market.MarketPlaceContent
 import co.anitrend.retrofit.graphql.sample.view.content.market.ui.adapter.MarketPlaceAdapter
 import co.anitrend.retrofit.graphql.sample.view.content.market.viewmodel.MarketPlaceViewModel
 import co.anitrend.retrofit.graphql.sample.viewmodel.MainViewModel
+import io.wax911.emojify.EmojiManager
+import io.wax911.emojify.serializer.kotlinx.KotlinxDeserializer
 import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.fragment.dsl.fragment
@@ -40,9 +42,13 @@ private val appModule = module {
     single {
         SupportConnectivity(
             androidApplication()
-                .systemServiceOf<ConnectivityManager>(
-                    Context.CONNECTIVITY_SERVICE
-                )
+                .systemServiceOf<ConnectivityManager>()
+        )
+    }
+    single(createdAtStart = true) {
+        EmojiManager.create(
+            context = androidApplication(),
+            serializer = KotlinxDeserializer()
         )
     }
 }
@@ -60,8 +66,12 @@ private val viewModelModule = module {
     }
     viewModel {
         BucketViewModel(
-            bucketUseCase = get(),
-            uploadUseCase = get()
+            useCase = get(),
+        )
+    }
+    viewModel {
+        UploadViewModel(
+            useCase = get(),
         )
     }
 }
@@ -72,7 +82,8 @@ private val presenterModule = module {
             MainPresenter(
                 context = androidContext(),
                 settings = get(),
-                stateLayoutConfig = get()
+                stateLayoutConfig = get(),
+                emojiManager = get(),
             )
         }
     }
@@ -80,7 +91,8 @@ private val presenterModule = module {
         scoped {
             BucketPresenter(
                 context = androidContext(),
-                settings = get()
+                settings = get(),
+                emojiManager = get(),
             )
         }
     }
@@ -95,7 +107,7 @@ private val fragmentModule = module {
                 supportViewAdapter = MarketPlaceAdapter(
                     resources = androidContext().resources,
                     stateConfiguration = stateConfig
-                )
+                ),
             )
         }
     }

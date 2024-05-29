@@ -19,7 +19,7 @@
 
         <co.anitrend.arch.ui.view.image.SupportImageView
             android:id="@+id/listingImage"
-            android:layout_width="@dimen/avatar_size_lg"
+            android:layout_width="48dp"
             android:layout_height="0dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"

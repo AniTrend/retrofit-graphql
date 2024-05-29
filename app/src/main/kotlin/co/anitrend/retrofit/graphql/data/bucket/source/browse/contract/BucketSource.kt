@@ -1,28 +1,28 @@
 package co.anitrend.retrofit.graphql.data.bucket.source.browse.contract
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.liveData
-import co.anitrend.arch.data.source.coroutine.SupportCoroutineDataSource
-import co.anitrend.arch.extension.dispatchers.SupportDispatchers
+import co.anitrend.arch.data.source.core.SupportCoreDataSource
+import co.anitrend.arch.request.callback.RequestCallback
+import co.anitrend.arch.request.model.Request
 import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.launch
 
-internal abstract class BucketSource(
-    dispatchers: SupportDispatchers
-) : SupportCoroutineDataSource(dispatchers) {
+internal abstract class BucketSource : SupportCoreDataSource() {
 
     protected abstract val observable: StateFlow<List<BucketFile>?>
 
-    protected open suspend fun getStorageBucketFiles() {
-        retry = { getStorageBucketFiles() }
-    }
+    protected abstract suspend fun getStorageBucketFiles(requestCallback: RequestCallback)
 
-    operator fun invoke(): LiveData<List<BucketFile>> =
-        liveData {
-            getStorageBucketFiles()
-            val bucketFlow = observable.mapNotNull { it }
-            emitSource(bucketFlow.asLiveData())
+    operator fun invoke(): Flow<List<BucketFile>> {
+        scope.launch {
+            requestHelper.runIfNotRunning(
+                Request.Default("getStorageBucketFiles", Request.Type.INITIAL)
+            ) {
+                getStorageBucketFiles(it)
+            }
         }
+        return observable.mapNotNull { it }
+    }
 }

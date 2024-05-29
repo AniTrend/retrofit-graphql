@@ -6,8 +6,11 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import co.anitrend.arch.core.presenter.SupportPresenter
+import co.anitrend.arch.domain.entities.LoadState
+import co.anitrend.arch.domain.entities.RequestError
 import co.anitrend.retrofit.graphql.core.settings.Settings
 import co.anitrend.retrofit.graphql.data.bucket.model.upload.mutation.UploadMutation
+import io.wax911.emojify.EmojiManager
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -16,7 +19,8 @@ import java.io.InputStream
 
 class BucketPresenter(
     context: Context,
-    settings: Settings
+    settings: Settings,
+    private val emojiManager: EmojiManager,
 ) : SupportPresenter<Settings>(context, settings) {
 
     /**
@@ -31,6 +35,16 @@ class BucketPresenter(
         val stream = contentResolver.openInputStream(uri)
         val outputFile = stream?.optimizeImage(context)
         return outputFile?.let { UploadMutation(it.absolutePath) }
+    }
+
+    fun loadStateFailure(): LoadState {
+        val emoji = emojiManager.getForAlias("gallery")
+        return LoadState.Error(
+            RequestError(
+                topic = "${emoji?.unicode} No images found",
+                description = "Try to upload some pictures and they will show up here"
+            )
+        )
     }
 
     companion object {

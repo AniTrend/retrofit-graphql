@@ -1,8 +1,8 @@
 package co.anitrend.retrofit.graphql.data.bucket.repository
 
-import co.anitrend.arch.data.model.UserInterfaceState
-import co.anitrend.arch.data.model.UserInterfaceState.Companion.create
 import co.anitrend.arch.data.repository.SupportRepository
+import co.anitrend.arch.data.state.DataState
+import co.anitrend.arch.data.state.DataState.Companion.create
 import co.anitrend.retrofit.graphql.data.bucket.source.browse.contract.BucketSource
 import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
 import co.anitrend.retrofit.graphql.domain.repositories.BucketRepository
@@ -16,4 +16,4 @@ internal class BucketRepositoryImpl(
         )
 }
 
-typealias BucketRepositoryContract = BucketRepository<UserInterfaceState<List<BucketFile>>>
+typealias BucketRepositoryContract = BucketRepository<DataState<List<BucketFile>>>
