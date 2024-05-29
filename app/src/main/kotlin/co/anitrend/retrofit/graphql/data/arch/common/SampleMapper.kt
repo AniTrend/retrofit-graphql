@@ -1,6 +1,6 @@
 package co.anitrend.retrofit.graphql.data.arch.common
 
-import co.anitrend.arch.data.mapper.contract.ISupportMapperHelper
+import co.anitrend.arch.data.mapper.SupportResponseMapper
 import co.anitrend.retrofit.graphql.domain.common.EntityId
 
 /**
@@ -8,6 +8,6 @@ import co.anitrend.retrofit.graphql.domain.common.EntityId
  * @param M model
  */
 internal abstract class SampleMapper<E: EntityId, M: Any> {
-    protected abstract fun from(): ISupportMapperHelper<E, M>
-    protected abstract fun to(): ISupportMapperHelper<M, E>
+    protected abstract fun from(): SupportResponseMapper<E, M>
+    protected abstract fun to(): SupportResponseMapper<M, E>
 }

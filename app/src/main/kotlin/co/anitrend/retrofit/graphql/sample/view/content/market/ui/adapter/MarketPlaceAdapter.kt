@@ -6,9 +6,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import co.anitrend.arch.core.model.IStateLayoutConfig
 import co.anitrend.arch.recycler.action.contract.ISupportSelectionMode
-import co.anitrend.arch.recycler.adapter.SupportPagedListAdapter
 import co.anitrend.arch.recycler.model.contract.IRecyclerItem
-import co.anitrend.arch.theme.animator.contract.ISupportAnimator
+import co.anitrend.arch.recycler.paging.legacy.adapter.SupportPagedListAdapter
+import co.anitrend.arch.theme.animator.contract.AbstractAnimator
 import co.anitrend.retrofit.graphql.domain.entities.market.MarketPlaceListing
 import co.anitrend.retrofit.graphql.sample.view.content.market.ui.controller.helpers.DIFFER
 import co.anitrend.retrofit.graphql.sample.view.content.market.ui.controller.model.MarketPlaceListingItem
@@ -17,11 +17,9 @@ import co.anitrend.retrofit.graphql.sample.view.content.market.ui.controller.mod
 class MarketPlaceAdapter(
     override val resources: Resources,
     override val stateConfiguration: IStateLayoutConfig,
-    override val customSupportAnimator: ISupportAnimator? = null,
+    override val customSupportAnimator: AbstractAnimator? = null,
     override val supportAction: ISupportSelectionMode<Long>? = null,
-    override val mapper: (MarketPlaceListing?) -> IRecyclerItem = {
-        MarketPlaceListingItem(it)
-    }
+    override val mapper: (MarketPlaceListing) -> IRecyclerItem = ::MarketPlaceListingItem
 ) : SupportPagedListAdapter<MarketPlaceListing>(DIFFER) {
 
     /**

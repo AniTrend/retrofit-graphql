@@ -1,5 +1,7 @@
 package co.anitrend.retrofit.graphql.domain.repositories
 
-interface UserRepository<D> {
+import co.anitrend.arch.domain.state.UiState
+
+interface UserRepository<D: UiState<*>> {
     fun getCurrentUser(): D
 }

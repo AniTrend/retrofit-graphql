@@ -1,36 +1,39 @@
 package co.anitrend.retrofit.graphql.core.settings
 
 import android.content.Context
-import co.anitrend.arch.extension.preference.BooleanPreference
-import co.anitrend.arch.extension.preference.IntPreference
-import co.anitrend.arch.extension.preference.StringPreference
-import co.anitrend.arch.extension.preference.SupportSettings
+import co.anitrend.arch.extension.preference.SupportPreference
+import co.anitrend.arch.extension.settings.BooleanSetting
+import co.anitrend.arch.extension.settings.IntSetting
+import co.anitrend.arch.extension.settings.StringSetting
 import co.anitrend.retrofit.graphql.data.authentication.settings.IAuthenticationSettings
 import co.anitrend.retrofit.graphql.sample.R
 
-class Settings(context: Context) : SupportSettings(context), IAuthenticationSettings {
+class Settings(context: Context) : SupportPreference(context), IAuthenticationSettings {
 
-    override var authenticatedUserId by StringPreference(
-        R.string.setting_authenticated_user_id,
-        IAuthenticationSettings.INVALID_USER_ID,
-        context.resources
+    override val authenticatedUserId = StringSetting(
+        key = R.string.setting_authenticated_user_id,
+        default = IAuthenticationSettings.INVALID_USER_ID,
+        resources = context.resources,
+        preference = this,
     )
 
-    override var isNewInstallation by BooleanPreference(
-        R.string.setting_is_new_installation,
-        true,
-        context.resources
+    override val isNewInstallation = BooleanSetting(
+        key = R.string.setting_is_new_installation,
+        default = true,
+        resources = context.resources,
+        preference = this,
     )
 
-    override var versionCode by IntPreference(
-        R.string.setting_version_code,
-        1,
-        context.resources
+    override val versionCode = IntSetting(
+        key = R.string.setting_version_code,
+        default = 1,
+        resources = context.resources,
+        preference = this,
     )
 
     companion object {
         val BINDINGS = arrayOf(
-            Settings::class, SupportSettings::class, IAuthenticationSettings::class
+            Settings::class, SupportPreference::class, IAuthenticationSettings::class
         )
     }
 }

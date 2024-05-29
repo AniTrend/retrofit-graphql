@@ -1,6 +1,7 @@
 package co.anitrend.retrofit.graphql.core.koin
 
-import co.anitrend.arch.extension.dispatchers.SupportDispatchers
+import co.anitrend.arch.extension.dispatchers.SupportDispatcher
+import co.anitrend.arch.extension.dispatchers.contract.ISupportDispatcher
 import co.anitrend.retrofit.graphql.core.settings.Settings
 import coil.ImageLoader
 import coil.ImageLoaderFactory
@@ -20,8 +21,8 @@ private val coreModule = module {
             androidContext()
         )
     } binds(Settings.BINDINGS)
-    single {
-        SupportDispatchers()
+    single<ISupportDispatcher> {
+        SupportDispatcher()
     }
 }
 

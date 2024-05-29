@@ -1,7 +1,7 @@
 package co.anitrend.retrofit.graphql.data.arch.extensions
 
 import co.anitrend.arch.data.mapper.SupportResponseMapper
-import co.anitrend.arch.extension.dispatchers.SupportDispatchers
+import co.anitrend.arch.extension.dispatchers.contract.ISupportDispatcher
 import co.anitrend.retrofit.graphql.data.arch.controller.SampleController
 import co.anitrend.retrofit.graphql.data.arch.controller.policy.OfflineControllerPolicy
 import co.anitrend.retrofit.graphql.data.arch.controller.policy.OnlineControllerPolicy
@@ -42,7 +42,7 @@ private suspend inline fun <T> Deferred<Response<T>>.executeWithRetry(
                 // If we have a HttpException, check whether we have a Retry-After
                 // header to decide how long to delay
                 val retryAfterHeader = e.response()?.headers()?.get("Retry-After")
-                if (retryAfterHeader != null && retryAfterHeader.isNotEmpty()) {
+                if (!retryAfterHeader.isNullOrEmpty()) {
                     // Got a Retry-After value, try and parse it to an long
                     try {
                         nextDelay = (retryAfterHeader.toLong() + 10).coerceAtLeast(defaultDelay)
@@ -80,11 +80,11 @@ private fun defaultShouldRetry(exception: Exception) = when (exception) {
  */
 internal fun <S, D> SupportResponseMapper<S, D>.controller(
     strategy: ControllerStrategy<D>,
-    supportDispatchers: SupportDispatchers
+    supportDispatchers: ISupportDispatcher
 ) = SampleController.newInstance(
     responseMapper = this,
     strategy = strategy,
-    supportDispatchers = supportDispatchers
+    dispatcher = supportDispatchers.io
 )
 
 internal fun <T> Scope.onlineController() =

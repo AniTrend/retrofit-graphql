@@ -1,89 +1,48 @@
 package co.anitrend.retrofit.graphql.data.market.converters
 
 import co.anitrend.arch.data.converter.SupportConverter
-import co.anitrend.arch.data.mapper.contract.ISupportMapperHelper
-import co.anitrend.retrofit.graphql.data.arch.common.SampleMapper
 import co.anitrend.retrofit.graphql.data.market.entity.MarketPlaceEntity
 import co.anitrend.retrofit.graphql.data.market.model.edge.MarketPlaceListingEdge
 import co.anitrend.retrofit.graphql.domain.entities.market.MarketPlaceListing
 
 internal class MarketPlaceEntityConverter(
-    override val fromType: (MarketPlaceEntity) -> MarketPlaceListing = { from().transform(it) },
-    override val toType: (MarketPlaceListing) -> MarketPlaceEntity = { to().transform(it) }
-) : SupportConverter<MarketPlaceEntity, MarketPlaceListing>() {
-    companion object : SampleMapper<MarketPlaceEntity, MarketPlaceListing>() {
-        override fun from() =
-            object : ISupportMapperHelper<MarketPlaceEntity, MarketPlaceListing> {
-                /**
-                 * Transforms the the [source] to the target type
-                 */
-                override fun transform(source: MarketPlaceEntity) =
-                    MarketPlaceListing(
-                        id = source.id,
-                        cursorId = source.cursorId,
-                        logoUrl = source.logoUrl,
-                        background = source.logoBackground,
-                        name = source.name,
-                        categories = source.categories,
-                        slug = source.slug,
-                        description = source.description,
-                        isPaid = source.isPaid,
-                        isVerified = source.isVerified
-                    )
-            }
-
-        override fun to() =
-            object : ISupportMapperHelper<MarketPlaceListing, MarketPlaceEntity> {
-                /**
-                 * Transforms the the [source] to the target type
-                 */
-                override fun transform(source: MarketPlaceListing): MarketPlaceEntity {
-                    throw Throwable("Not yet implemented")
-                }
-            }
-    }
-}
+    override val fromType: (MarketPlaceEntity) -> MarketPlaceListing = {
+        MarketPlaceListing(
+            id = it.id,
+            cursorId = it.cursorId,
+            logoUrl = it.logoUrl,
+            background = it.logoBackground,
+            name = it.name,
+            categories = it.categories,
+            slug = it.slug,
+            description = it.description,
+            isPaid = it.isPaid,
+            isVerified = it.isVerified
+        )
+    },
+    override val toType: (MarketPlaceListing) -> MarketPlaceEntity = { throw NotImplementedError() }
+) : SupportConverter<MarketPlaceEntity, MarketPlaceListing>()
 
 internal class MarketPlaceModelConverter(
-    override val fromType: (MarketPlaceEntity) -> MarketPlaceListingEdge = { from().transform(it) },
-    override val toType: (MarketPlaceListingEdge) -> MarketPlaceEntity = { to().transform(it) }
-) : SupportConverter<MarketPlaceEntity, MarketPlaceListingEdge>() {
-    companion object : SampleMapper<MarketPlaceEntity, MarketPlaceListingEdge>() {
-        override fun from() =
-            object : ISupportMapperHelper<MarketPlaceEntity, MarketPlaceListingEdge> {
-                /**
-                 * Transforms the the [source] to the target type
-                 */
-                override fun transform(source: MarketPlaceEntity): MarketPlaceListingEdge {
-                    throw Throwable("Not yet implemented")
-                }
-            }
+    override val fromType: (MarketPlaceEntity) -> MarketPlaceListingEdge = { throw NotImplementedError() },
+    override val toType: (MarketPlaceListingEdge) -> MarketPlaceEntity = {
+        val categories = listOf(
+            it.node.primaryCategory.name,
+            it.node.secondaryCategory?.name
+        ).mapNotNull { name -> name }
 
-        override fun to() =
-            object : ISupportMapperHelper<MarketPlaceListingEdge, MarketPlaceEntity> {
-                /**
-                 * Transforms the the [source] to the target type
-                 */
-                override fun transform(source: MarketPlaceListingEdge): MarketPlaceEntity {
-                    val categories = listOf(
-                        source.node.primaryCategory.name,
-                        source.node.secondaryCategory?.name
-                    ).mapNotNull { it }
-
-                    return MarketPlaceEntity(
-                        id = source.node.id,
-                        cursorId = source.cursor,
-                        logoUrl = source.node.logo,
-                        logoBackground = source.node.background,
-                        name = source.node.name,
-                        categories = categories,
-                        slug = source.node.slug,
-                        description = source.node.description,
-                        isPaid = source.node.isPaid,
-                        isVerified = source.node.isVerified
-                    )
-                }
-            }
+        MarketPlaceEntity(
+            id = it.node.id,
+            cursorId = it.cursor,
+            logoUrl = it.node.logo,
+            logoBackground = it.node.background,
+            name = it.node.name,
+            categories = categories,
+            slug = it.node.slug,
+            description = it.node.description,
+            isPaid = it.node.isPaid,
+            isVerified = it.node.isVerified
+        )
     }
-}
+) : SupportConverter<MarketPlaceEntity, MarketPlaceListingEdge>()
 

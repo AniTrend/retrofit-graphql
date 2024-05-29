@@ -8,18 +8,18 @@ import co.anitrend.arch.core.model.IStateLayoutConfig
 import co.anitrend.arch.recycler.action.contract.ISupportSelectionMode
 import co.anitrend.arch.recycler.adapter.SupportListAdapter
 import co.anitrend.arch.recycler.model.contract.IRecyclerItem
-import co.anitrend.arch.theme.animator.contract.ISupportAnimator
+import co.anitrend.arch.theme.animator.contract.AbstractAnimator
 import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
 import co.anitrend.retrofit.graphql.sample.view.content.bucket.ui.controller.helper.DIFFER
 import co.anitrend.retrofit.graphql.sample.view.content.bucket.ui.controller.model.BucketFileItem
 import co.anitrend.retrofit.graphql.sample.view.content.bucket.ui.controller.model.BucketFileItem.Companion.createViewHolder
 
 class BucketAdapter(
-    override val customSupportAnimator: ISupportAnimator? = null,
-    override val mapper: (BucketFile?) -> IRecyclerItem = { BucketFileItem(it) },
     override val resources: Resources,
     override val stateConfiguration: IStateLayoutConfig,
-    override val supportAction: ISupportSelectionMode<Long>? = null
+    override val mapper: (BucketFile) -> IRecyclerItem = { BucketFileItem(it) },
+    override val supportAction: ISupportSelectionMode<Long>? = null,
+    override val customSupportAnimator: AbstractAnimator? = null,
 ) : SupportListAdapter<BucketFile>(DIFFER) {
 
     /**

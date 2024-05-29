@@ -10,5 +10,5 @@ data class FragmentItem<T: Fragment>(
     val parameter: Bundle? = null,
     val fragment: Class<out T>
 ) {
-    fun tag() = fragment.simpleName
+    fun tag(): String = fragment.simpleName
 }

@@ -9,21 +9,21 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="@dimen/activity_vertical_margin">
+        android:padding="@dimen/xl_margin">
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="@dimen/nav_header_vertical_spacing" />
+            android:layout_height="@dimen/lg_margin" />
 
         <co.anitrend.arch.ui.view.image.SupportImageView
             android:id="@+id/navAvatar"
-            android:layout_width="@dimen/avatar_size_lg"
-            android:layout_height="@dimen/avatar_size_lg"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             tools:src="@mipmap/ic_launcher_round" />
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="@dimen/nav_header_vertical_spacing" />
+            android:layout_height="@dimen/lg_margin" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/navUserName"
@@ -31,26 +31,23 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             tools:text="@string/app_name"
-            android:textColor="?titleColor"
             android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/navUserStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="?subtitleColor"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
             tools:text="@string/app_name" />
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="@dimen/nav_header_vertical_spacing" />
+            android:layout_height="@dimen/lg_margin" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/navUserBio"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="?subtitleColor"
             android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
             tools:text="@string/app_name" />
 

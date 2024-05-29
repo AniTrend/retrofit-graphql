@@ -7,11 +7,6 @@ import io.wax911.emojify.EmojiManager
 abstract class SampleApp : Application() {
 
     /**
-     * Emoji manager instance
-     */
-    internal abstract val emojiManager: EmojiManager
-
-    /**
      * Uncaught exception handler
      */
     protected abstract fun createUncaughtExceptionHandler()

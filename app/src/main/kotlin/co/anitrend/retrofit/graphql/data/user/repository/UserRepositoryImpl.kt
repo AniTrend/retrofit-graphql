@@ -1,8 +1,8 @@
 package co.anitrend.retrofit.graphql.data.user.repository
 
-import co.anitrend.arch.data.model.UserInterfaceState
-import co.anitrend.arch.data.model.UserInterfaceState.Companion.create
 import co.anitrend.arch.data.repository.SupportRepository
+import co.anitrend.arch.data.state.DataState
+import co.anitrend.arch.data.state.DataState.Companion.create
 import co.anitrend.retrofit.graphql.data.user.source.contract.UserSource
 import co.anitrend.retrofit.graphql.domain.entities.user.User
 import co.anitrend.retrofit.graphql.domain.repositories.UserRepository
@@ -16,4 +16,4 @@ internal class UserRepositoryImpl(
         )
 }
 
-typealias UserRepositoryContract = UserRepository<UserInterfaceState<User>>
+typealias UserRepositoryContract = UserRepository<DataState<User>>

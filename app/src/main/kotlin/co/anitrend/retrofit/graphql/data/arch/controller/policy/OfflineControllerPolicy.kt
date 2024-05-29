@@ -16,9 +16,8 @@
 
 package co.anitrend.retrofit.graphql.data.arch.controller.policy
 
-import androidx.lifecycle.MutableLiveData
-import androidx.paging.PagingRequestHelper
-import co.anitrend.arch.domain.entities.NetworkState
+import co.anitrend.arch.domain.entities.RequestError
+import co.anitrend.arch.request.callback.RequestCallback
 import co.anitrend.retrofit.graphql.data.arch.controller.strategy.ControllerStrategy
 import timber.log.Timber
 
@@ -30,49 +29,23 @@ import timber.log.Timber
 internal class OfflineControllerPolicy<D> private constructor() : ControllerStrategy<D>() {
 
     /**
-     * Execute a paging task under an implementation strategy
-     *
-     * @param block what will be executed
-     * @param pagingRequestHelper paging event emitter
-     */
-    override suspend fun invoke(
-        block: suspend () -> Unit,
-        pagingRequestHelper: PagingRequestHelper.Request.Callback
-    ) {
-        runCatching {
-            block()
-            pagingRequestHelper.recordSuccess()
-        }.exceptionOrNull()?.also { e ->
-            Timber.e(e)
-            pagingRequestHelper.recordFailure(e)
-        }
-    }
-
-    /**
      * Execute a task under an implementation strategy
      *
+     * @param callback event emitter
      * @param block what will be executed
-     * @param networkState network state event emitter
      */
-    override suspend fun invoke(
-        block: suspend () -> D?,
-        networkState: MutableLiveData<NetworkState>
-    ): D? {
-        return runCatching{
-            networkState.postValue(NetworkState.Loading)
-            val result = block()
-            networkState.postValue(NetworkState.Success)
-            result
-        }.getOrElse {
-            Timber.e(it)
-            networkState.postValue(
-                NetworkState.Error(
-                    heading = it.cause?.message ?: "Unexpected error encountered",
-                    message = it.message
-                )
-            )
-            null
+    override suspend fun invoke(callback: RequestCallback, block: suspend () -> D?): D? {
+        runCatching {
+            block()
+            callback.recordSuccess()
+        }.exceptionOrNull()?.also { e ->
+            Timber.e(e)
+            when (e) {
+                is RequestError -> callback.recordFailure(e)
+                else -> callback.recordFailure(RequestError(e))
+            }
         }
+        return null
     }
 
     companion object {

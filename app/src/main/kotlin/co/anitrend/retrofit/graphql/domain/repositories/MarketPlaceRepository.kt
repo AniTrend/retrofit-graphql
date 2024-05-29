@@ -1,5 +1,7 @@
 package co.anitrend.retrofit.graphql.domain.repositories
 
-interface MarketPlaceRepository<D> {
+import co.anitrend.arch.domain.state.UiState
+
+interface MarketPlaceRepository<D: UiState<*>> {
     fun getMarketPlaceListings(): D
 }

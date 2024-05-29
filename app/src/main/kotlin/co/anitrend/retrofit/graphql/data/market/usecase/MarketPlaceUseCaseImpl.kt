@@ -1,8 +1,8 @@
 package co.anitrend.retrofit.graphql.data.market.usecase
 
 import androidx.paging.PagedList
-import co.anitrend.arch.data.model.UserInterfaceState
 import co.anitrend.arch.data.repository.contract.ISupportRepository
+import co.anitrend.arch.data.state.DataState
 import co.anitrend.retrofit.graphql.data.market.repository.MarketPlaceRepositoryContract
 import co.anitrend.retrofit.graphql.domain.entities.market.MarketPlaceListing
 import co.anitrend.retrofit.graphql.domain.usecases.MarketPlaceUseCase
@@ -20,4 +20,4 @@ internal class MarketPlaceUseCaseImpl(
     }
 }
 
-typealias MarketPlaceUseCaseContract = MarketPlaceUseCase<UserInterfaceState<PagedList<MarketPlaceListing>>>
+typealias MarketPlaceUseCaseContract = MarketPlaceUseCase<DataState<PagedList<MarketPlaceListing>>>

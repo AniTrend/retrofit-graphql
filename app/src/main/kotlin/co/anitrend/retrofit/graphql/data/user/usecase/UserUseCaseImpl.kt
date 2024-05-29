@@ -1,7 +1,7 @@
 package co.anitrend.retrofit.graphql.data.user.usecase
 
-import co.anitrend.arch.data.model.UserInterfaceState
 import co.anitrend.arch.data.repository.contract.ISupportRepository
+import co.anitrend.arch.data.state.DataState
 import co.anitrend.retrofit.graphql.data.user.repository.UserRepositoryContract
 import co.anitrend.retrofit.graphql.domain.entities.user.User
 import co.anitrend.retrofit.graphql.domain.usecases.UserUseCase
@@ -18,4 +18,4 @@ internal class UserUseCaseImpl(
     }
 }
 
-typealias UserUseCaseContract = UserUseCase<UserInterfaceState<User>>
+typealias UserUseCaseContract = UserUseCase<DataState<User>>

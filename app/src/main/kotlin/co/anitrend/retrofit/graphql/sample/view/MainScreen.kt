@@ -6,10 +6,10 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.annotation.IdRes
 import androidx.annotation.StringRes
-import androidx.lifecycle.Observer
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import co.anitrend.arch.domain.entities.NetworkState
-import co.anitrend.arch.extension.ext.LAZY_MODE_UNSAFE
+import androidx.lifecycle.repeatOnLifecycle
+import co.anitrend.arch.extension.ext.UNSAFE
 import co.anitrend.retrofit.graphql.core.extension.commit
 import co.anitrend.retrofit.graphql.core.model.FragmentItem
 import co.anitrend.retrofit.graphql.core.view.SampleActivity
@@ -29,11 +29,11 @@ import timber.log.Timber
 
 class MainScreen : SampleActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    private val binding by lazy(LAZY_MODE_UNSAFE) {
+    private val binding by lazy(UNSAFE) {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
-    private val bottomDrawerBehavior by lazy(LAZY_MODE_UNSAFE) {
+    private val bottomDrawerBehavior by lazy(UNSAFE) {
         BottomSheetBehavior.from(binding.bottomNavigationDrawer)
     }
 
@@ -44,7 +44,7 @@ class MainScreen : SampleActivity(), NavigationView.OnNavigationItemSelectedList
 
     private val presenter by inject<MainPresenter>()
 
-    private val headerBinding by lazy(LAZY_MODE_UNSAFE) {
+    private val headerBinding by lazy(UNSAFE) {
         val headerView = binding.bottomNavigationView.getHeaderView(0)
         NavHeaderMainBinding.bind(headerView)
     }
@@ -64,15 +64,13 @@ class MainScreen : SampleActivity(), NavigationView.OnNavigationItemSelectedList
         binding.bottomNavigationView.apply {
             setCheckedItem(selectedItem)
             setNavigationItemSelectedListener(this@MainScreen)
-            val observer = Observer<NetworkState> {
-                headerBinding.navStateLayout.networkMutableStateFlow.value = it
-            }
             presenter.configureNavigationHeader(headerBinding)
-            viewModel.state.networkState.observe(this@MainScreen, observer)
-            viewModel.state.refreshState.observe(this@MainScreen, observer)
-            viewModel.state.model.observe(this@MainScreen, Observer {
-                presenter.updateNavigationHeaderView(it, headerBinding)
-            })
+        }
+        viewModelState().combinedLoadState.observe(this@MainScreen) {
+            headerBinding.navStateLayout.loadStateFlow.value = it
+        }
+        viewModelState().model.observe(this@MainScreen) {
+            presenter.updateNavigationHeaderView(it, headerBinding)
         }
         updateUserInterface()
     }
@@ -85,15 +83,20 @@ class MainScreen : SampleActivity(), NavigationView.OnNavigationItemSelectedList
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putInt(key_navigation_selected, selectedItem)
-        outState.putInt(key_navigation_title, selectedTitle)
+        outState.putInt(KEY_NAVIGATION_SELECTED, selectedItem)
+        outState.putInt(KEY_NAVIGATION_TITLE, selectedTitle)
         super.onSaveInstanceState(outState)
     }
 
+    /**
+     * Proxy for a view model state if one exists
+     */
+    override fun viewModelState() = viewModel
+
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        selectedItem = savedInstanceState.getInt(key_navigation_selected)
-        selectedTitle = savedInstanceState.getInt(key_navigation_title)
+        selectedItem = savedInstanceState.getInt(KEY_NAVIGATION_SELECTED)
+        selectedTitle = savedInstanceState.getInt(KEY_NAVIGATION_TITLE)
     }
 
     override fun onBackPressed() {
@@ -173,19 +176,22 @@ class MainScreen : SampleActivity(), NavigationView.OnNavigationItemSelectedList
     }
 
     private fun updateUserInterface() {
-        lifecycleScope.launchWhenResumed {
-            val stateLayout = headerBinding.navStateLayout
-            stateLayout.interactionStateFlow.collect { viewModel.state.retry() }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                headerBinding.navStateLayout.interactionFlow.collect { viewModel.retry() }
+            }
         }
-        lifecycleScope.launchWhenResumed {
-            viewModel.state()
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel()
+            }
         }
         if (selectedItem != 0) onNavigateToTarget(selectedItem)
         else onNavigateToTarget(R.id.nav_app_store)
     }
 
     companion object {
-        private const val key_navigation_selected = "key_navigation_selected"
-        private const val key_navigation_title = "key_navigation_title"
+        private const val KEY_NAVIGATION_SELECTED = "key_navigation_selected"
+        private const val KEY_NAVIGATION_TITLE = "key_navigation_title"
     }
 }

@@ -23,7 +23,7 @@ private val sourceModule = module {
             strategy = onlineController(),
             mapper = get(),
             converter = get(),
-            dispatchers = get()
+            dispatcher = get()
         )
     }
 }

@@ -18,7 +18,6 @@ import timber.log.Timber
  */
 internal object RetrofitProvider {
 
-    private val moduleTag = javaClass.simpleName
     private val retrofitCache = LruCache<EndpointType, Retrofit>(3)
 
     private fun provideOkHttpClient(endpointType: EndpointType, scope: Scope) : OkHttpClient {

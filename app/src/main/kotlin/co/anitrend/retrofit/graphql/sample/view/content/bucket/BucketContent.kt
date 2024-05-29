@@ -2,44 +2,60 @@ package co.anitrend.retrofit.graphql.sample.view.content.bucket
 
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.lifecycle.Observer
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import co.anitrend.arch.domain.entities.NetworkState
-import co.anitrend.arch.domain.extensions.isSuccess
-import co.anitrend.arch.extension.dispatchers.SupportDispatchers
-import co.anitrend.arch.recycler.adapter.contract.ISupportAdapter
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import co.anitrend.arch.domain.entities.LoadState
+import co.anitrend.arch.domain.entities.RequestError
+import co.anitrend.arch.extension.dispatchers.contract.ISupportDispatcher
+import co.anitrend.arch.recycler.adapter.SupportAdapter
+import co.anitrend.arch.ui.fragment.list.contract.ISupportFragmentList
+import co.anitrend.arch.ui.fragment.list.presenter.SupportListPresenter
+import co.anitrend.arch.ui.view.widget.contract.ISupportStateLayout
 import co.anitrend.arch.ui.view.widget.model.StateLayoutConfig
 import co.anitrend.retrofit.graphql.core.view.SampleListFragment
 import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
 import co.anitrend.retrofit.graphql.sample.R
 import co.anitrend.retrofit.graphql.sample.databinding.BucketContentBinding
-import co.anitrend.retrofit.graphql.sample.extensions.emojify
 import co.anitrend.retrofit.graphql.sample.presenter.BucketPresenter
 import co.anitrend.retrofit.graphql.sample.view.content.bucket.viewmodel.BucketViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.collect
+import co.anitrend.retrofit.graphql.sample.view.content.bucket.viewmodel.UploadViewModel
+import io.wax911.emojify.EmojiManager
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.koin.androidx.scope.lifecycleScope as koinScope
 
 class BucketContent(
-    override val defaultSpanSize: Int = co.anitrend.arch.ui.R.integer.grid_list_x3,
+    override val defaultSpanSize: Int = co.anitrend.arch.theme.R.integer.grid_list_x3,
     override val stateConfig: StateLayoutConfig,
-    override val supportViewAdapter: ISupportAdapter<BucketFile>,
-    override val inflateLayout: Int = R.layout.bucket_content
+    override val supportViewAdapter: SupportAdapter<BucketFile>,
+    override val inflateLayout: Int = R.layout.bucket_content,
 ) : SampleListFragment<BucketFile>() {
 
+    override val listPresenter = object : SupportListPresenter<BucketFile>() {
+        override val recyclerView: RecyclerView
+            get() = binding.supportRecyclerView
+        override val stateLayout: ISupportStateLayout
+            get() = binding.supportStateLayout
+        override val swipeRefreshLayout: SwipeRefreshLayout
+            get() = binding.supportRefreshLayout
+    }
+
     private lateinit var binding: BucketContentBinding
-    private val viewModel by viewModel<BucketViewModel>()
+    private val bucketViewModel by viewModel<BucketViewModel>()
+    private val uploadViewModel by viewModel<UploadViewModel>()
     private val presenter by inject<BucketPresenter>()
-    private val dispatchers by inject<SupportDispatchers>()
+    private val dispatchers by inject<ISupportDispatcher>()
 
     private val activityResultLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -48,14 +64,11 @@ class BucketContent(
                     val mutation = withContext (dispatchers.io) {
                         presenter.resolve(uri, requireActivity().contentResolver)
                     }
-                    if (mutation != null)
-                        viewModel.uploadState(mutation)
-                    else
-                        Toast.makeText(
-                            context,
-                            "Unable to resolve content",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                    mutation?.also(uploadViewModel::invoke) ?: Toast.makeText(
+                        context,
+                        "Unable to resolve content",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
         }
 
@@ -67,12 +80,43 @@ class BucketContent(
      */
     override fun initializeComponents(savedInstanceState: Bundle?) {
         super.initializeComponents(savedInstanceState)
-        lifecycleScope.launchWhenResumed {
-            binding.uploadStateLayout.interactionStateFlow
-                .debounce(16)
-                .filterNotNull()
-                .collect { viewModel.uploadState.retry() }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                binding.uploadStateLayout.interactionFlow
+                    .debounce(16)
+                    .filterNotNull()
+                    .collect { uploadViewModel.retry() }
+            }
         }
+    }
+
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * This is optional, and non-graphical fragments can return null (which
+     * is the default implementation). This will be called between
+     * [onCreate] and [onActivityCreated].
+     *
+     * If you return a View from here, you will later be called in
+     * [onDestroyView] when the view is being released.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return Return the [View] for the fragment's UI, or null.
+     */
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = BucketContentBinding.inflate(inflater, container, false)
+        listPresenter.onCreateView(this, binding.root)
+        return binding.root
     }
 
     /**
@@ -87,7 +131,6 @@ class BucketContent(
      */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding = BucketContentBinding.bind(view)
         binding.uploadStateLayout.stateConfigFlow.value = stateConfig
         binding.selectUploadFile.setOnClickListener {
             // filter to only allow images to be selected
@@ -104,23 +147,7 @@ class BucketContent(
      * @see initializeComponents
      */
     override fun onFetchDataInitialize() {
-        viewModel.bucketState()
-    }
-
-    /**
-     * Informs the underlying [SupportStateLayout] of changes to the [NetworkState]
-     *
-     * @param networkState New state from the application
-     */
-    @ExperimentalCoroutinesApi
-    override fun changeLayoutState(networkState: NetworkState?) {
-        super.changeLayoutState(networkState)
-        if (networkState?.isSuccess() != true) return
-        val emoji = context?.emojify()?.getForAlias("gallery")
-        binding.supportStateLayout.networkMutableStateFlow.value = NetworkState.Error(
-            heading = "${emoji?.unicode} No images found",
-            message = "Try to upload some pictures and they will show up here"
-        )
+        bucketViewModel()
     }
 
     /**
@@ -128,31 +155,30 @@ class BucketContent(
      * called in [onViewCreated]
      */
     override fun setUpViewModelObserver() {
-        val uploadStateObserver = Observer<NetworkState> {
-            binding.uploadStateLayout.networkMutableStateFlow.value = it
+        uploadViewModel.combinedLoadState.observe(
+            viewLifecycleOwner
+        ) {
+            binding.uploadStateLayout.loadStateFlow.value = it
         }
-        viewModel.uploadState.networkState.observe(
-            viewLifecycleOwner,
-            uploadStateObserver
-        )
-        viewModel.uploadState.refreshState.observe(
-            viewLifecycleOwner,
-            uploadStateObserver
-        )
-        viewModel.uploadState.model.observe(
-            viewLifecycleOwner,
-            Observer { viewModelState().refresh() }
-        )
+        uploadViewModel.model.observe(
+            viewLifecycleOwner
+        ) { viewModelState().invoke() }
+
         viewModelState().model.observe(
-            viewLifecycleOwner,
-            Observer { onPostModelChange(it) }
-        )
+            viewLifecycleOwner
+        ) { onPostModelChange(it) }
+
+        viewModelState().combinedLoadState.observe(viewLifecycleOwner) {
+            if (it is LoadState.Error) {
+                binding.supportStateLayout.loadStateFlow.value = presenter.loadStateFailure()
+            }
+        }
     }
 
     /**
      * Proxy for a view model state if one exists
      */
-    override fun viewModelState() = viewModel.bucketState
+    override fun viewModelState() = bucketViewModel
 
     /**
      * Called when the view previously created by [onCreateView] has

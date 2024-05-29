@@ -24,7 +24,7 @@ private val sourceModule = module {
         BucketSourceImpl(
             remoteSource = api(EndpointType.BUCKET),
             strategy = onlineController(),
-            dispatchers = get(),
+            dispatcher = get(),
             mapper = get()
         )
     }
@@ -32,7 +32,7 @@ private val sourceModule = module {
         BucketUploadSourceImpl(
             remoteSource = api(EndpointType.BUCKET),
             strategy = onlineController(),
-            dispatchers = get(),
+            dispatcher = get(),
             mapper = get()
         )
     }

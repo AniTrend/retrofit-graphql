@@ -8,14 +8,13 @@ import co.anitrend.arch.recycler.action.contract.ISupportSelectionMode
 import co.anitrend.arch.recycler.common.ClickableItem
 import co.anitrend.arch.recycler.holder.SupportViewHolder
 import co.anitrend.arch.recycler.model.RecyclerItem
-import co.anitrend.retrofit.graphql.sample.R
 import co.anitrend.retrofit.graphql.sample.databinding.MarketPlaceCategoryItemBinding
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class MarketPlaceCategoryItem(
-    private val entity: String?
-) : RecyclerItem(entity?.hashCode()?.toLong()) {
+    private val entity: String
+) : RecyclerItem(entity.hashCode().toLong()) {
 
     private var binding: MarketPlaceCategoryItemBinding? = null
 
@@ -29,12 +28,11 @@ class MarketPlaceCategoryItem(
      * @param stateFlow observable to broadcast click events
      * @param selectionMode action mode helper or null if none was provided
      */
-    @ExperimentalCoroutinesApi
     override fun bind(
         view: View,
         position: Int,
         payloads: List<Any>,
-        stateFlow: MutableStateFlow<ClickableItem?>,
+        stateFlow: MutableStateFlow<ClickableItem>,
         selectionMode: ISupportSelectionMode<Long>?
     ) {
         binding = MarketPlaceCategoryItemBinding.bind(view)
@@ -49,7 +47,7 @@ class MarketPlaceCategoryItem(
      * @param resources optionally useful for dynamic size check with different configurations
      */
     override fun getSpanSize(spanCount: Int, position: Int, resources: Resources): Int {
-        return resources.getInteger(co.anitrend.arch.ui.R.integer.single_list_size)
+        return resources.getInteger(co.anitrend.arch.theme.R.integer.single_list_size)
     }
 
     /**
@@ -65,6 +63,6 @@ class MarketPlaceCategoryItem(
             viewGroup: ViewGroup
         ) = MarketPlaceCategoryItemBinding.inflate(
             this, viewGroup, false
-        ).let { SupportViewHolder(it.root) }
+        ).let { SupportViewHolder(it) }
     }
 }
