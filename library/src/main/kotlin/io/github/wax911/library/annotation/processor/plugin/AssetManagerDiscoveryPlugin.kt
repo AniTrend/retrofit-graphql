@@ -32,32 +32,36 @@ import java.io.InputStreamReader
 class AssetManagerDiscoveryPlugin(
     assetManager: AssetManager,
     override val targetPath: String = "graphql",
-    override val targetExtension: String = ".graphql"
+    override val targetExtension: String = ".graphql",
 ) : AbstractDiscoveryPlugin<AssetManager>(assetManager) {
-
     private val temporaryMap = HashMap<String, String>()
 
     private fun AssetManager.findRecursively(
         path: String,
-        logger: AbstractLogger
+        logger: AbstractLogger,
     ) {
         val paths = list(path)
-        if (paths.isNullOrEmpty())
+        if (paths.isNullOrEmpty()) {
             logger.w(TAG, "Assets do not contain any files/folders in the path -> $path")
+        }
 
         for (item in paths!!) {
             val absolute = "$path/$item"
-            if (item.endsWith(targetExtension))
+            if (item.endsWith(targetExtension)) {
                 temporaryMap[item] = resolveContents(open(absolute), logger)
-            else
+            } else {
                 findRecursively(absolute, logger)
+            }
         }
     }
 
     /**
      * Reads the file contents for a given [inputStream]
      */
-    override fun resolveContents(inputStream: InputStream, logger: AbstractLogger): String {
+    override fun resolveContents(
+        inputStream: InputStream,
+        logger: AbstractLogger,
+    ): String {
         val queryBuffer = StringBuilder()
         try {
             InputStreamReader(inputStream).useLines { sequence ->

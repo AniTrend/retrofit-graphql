@@ -24,5 +24,5 @@ package io.github.wax911.library.annotation.processor.fragment
  */
 data class FragmentAnalysis(
     val fragmentReference: String,
-    val isDefined: Boolean
+    val isDefined: Boolean,
 )

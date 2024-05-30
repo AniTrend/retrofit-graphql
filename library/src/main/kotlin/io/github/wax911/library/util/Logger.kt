@@ -30,8 +30,8 @@ import android.util.Log
     "Use ILogger.Level instead",
     ReplaceWith(
         "ILogger.Level",
-        "io.github.wax911.library.logger.contract.ILogger.Level"
-    )
+        "io.github.wax911.library.logger.contract.ILogger.Level",
+    ),
 )
 class LogLevel private constructor(private val value: Int) {
     companion object {
@@ -61,11 +61,10 @@ class LogLevel private constructor(private val value: Int) {
     "Use LibraryLogger instead",
     ReplaceWith(
         "logger",
-        "io.github.wax911.library.logger.core.LibraryLogger"
-    )
+        "io.github.wax911.library.logger.core.LibraryLogger",
+    ),
 )
 internal object Logger {
-
     var level: LogLevel = LogLevel.VERBOSE
 
     /**
@@ -75,9 +74,16 @@ internal object Logger {
      * @param msg The message you would like logged.
      * @param tr An exception to log
      */
-    fun d(tag: String, msg: String, tr: Throwable? = null) {
-        if (level < LogLevel.DEBUG) return
-        else Log.d(tag, msg, tr)
+    fun d(
+        tag: String,
+        msg: String,
+        tr: Throwable? = null,
+    ) {
+        if (level < LogLevel.DEBUG) {
+            return
+        } else {
+            Log.d(tag, msg, tr)
+        }
     }
 
     /**
@@ -87,9 +93,16 @@ internal object Logger {
      * @param msg The message you would like logged.
      * @param tr An exception to log
      */
-    fun e(tag: String, msg: String, tr: Throwable? = null) {
-        if (level < LogLevel.ERROR) return
-        else Log.e(tag, msg, tr)
+    fun e(
+        tag: String,
+        msg: String,
+        tr: Throwable? = null,
+    ) {
+        if (level < LogLevel.ERROR) {
+            return
+        } else {
+            Log.e(tag, msg, tr)
+        }
     }
 
     /**
@@ -99,9 +112,16 @@ internal object Logger {
      * @param msg The message you would like logged.
      * @param tr An exception to log
      */
-    fun i(tag: String, msg: String, tr: Throwable? = null) {
-        if (level < LogLevel.INFO) return
-        else Log.i(tag, msg, tr)
+    fun i(
+        tag: String,
+        msg: String,
+        tr: Throwable? = null,
+    ) {
+        if (level < LogLevel.INFO) {
+            return
+        } else {
+            Log.i(tag, msg, tr)
+        }
     }
 
     /**
@@ -111,9 +131,16 @@ internal object Logger {
      * @param msg The message you would like logged.
      * @param tr An exception to log
      */
-    fun v(tag: String, msg: String, tr: Throwable? = null) {
-        if (level < LogLevel.VERBOSE) return
-        else Log.v(tag, msg, tr)
+    fun v(
+        tag: String,
+        msg: String,
+        tr: Throwable? = null,
+    ) {
+        if (level < LogLevel.VERBOSE) {
+            return
+        } else {
+            Log.v(tag, msg, tr)
+        }
     }
 
     /**
@@ -123,9 +150,16 @@ internal object Logger {
      * @param msg The message you would like logged.
      * @param tr An exception to log
      */
-    fun w(tag: String, msg: String, tr: Throwable? = null) {
-        if (level < LogLevel.WARN) return
-        else Log.w(tag, msg, tr)
+    fun w(
+        tag: String,
+        msg: String,
+        tr: Throwable? = null,
+    ) {
+        if (level < LogLevel.WARN) {
+            return
+        } else {
+            Log.w(tag, msg, tr)
+        }
     }
 
     /**
@@ -135,8 +169,15 @@ internal object Logger {
      * @param msg The message you would like logged.
      * @param tr An exception to log.  May be null.
      */
-    fun wtf(tag: String, msg: String, tr: Throwable? = null) {
-        if (level < LogLevel.ASSERT) return
-        else Log.wtf(tag, msg, tr)
+    fun wtf(
+        tag: String,
+        msg: String,
+        tr: Throwable? = null,
+    ) {
+        if (level < LogLevel.ASSERT) {
+            return
+        } else {
+            Log.wtf(tag, msg, tr)
+        }
     }
 }

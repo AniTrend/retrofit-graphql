@@ -21,7 +21,7 @@ internal class GraphClientInterceptor: Interceptor {
             .method(original.method, original.body)
 
         if (original.header(CONTENT_TYPE).isNullOrEmpty())
-            requestBuilder.header(CONTENT_TYPE, GraphConverter.MimeType)
+            requestBuilder.header(CONTENT_TYPE, GraphConverter.MIME_TYPE)
 
         if (original.url.host == EndpointType.GITHUB.url.host)
             requestBuilder.header("Authorization", "bearer ${BuildConfig.token}")

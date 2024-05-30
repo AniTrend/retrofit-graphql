@@ -37,8 +37,9 @@ fun Response<*>?.getError(): List<GraphError>? {
             val message = responseBody?.string()
             if (responseBody != null && !message.isNullOrBlank()) {
                 val graphErrors = message.getGraphQLError()
-                if (graphErrors != null)
+                if (graphErrors != null) {
                     return graphErrors
+                }
             }
         }
     } catch (ex: Exception) {

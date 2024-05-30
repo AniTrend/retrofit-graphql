@@ -24,9 +24,8 @@ import java.io.InputStream
  * A discovery plugin that defines a contract to handle multiple sources
  */
 abstract class AbstractDiscoveryPlugin<S : Any>(
-    protected val source: S
+    protected val source: S,
 ) {
-
     internal abstract val targetPath: String
     internal abstract val targetExtension: String
 
@@ -34,7 +33,10 @@ abstract class AbstractDiscoveryPlugin<S : Any>(
      * Reads the file contents for a given [inputStream]
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
-    protected abstract fun resolveContents(inputStream: InputStream, logger: AbstractLogger): String
+    protected abstract fun resolveContents(
+        inputStream: InputStream,
+        logger: AbstractLogger,
+    ): String
 
     /**
      * Invokes initial discovery using [source] to produce a map

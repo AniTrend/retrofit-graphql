@@ -25,9 +25,8 @@ import io.github.wax911.library.logger.core.AbstractLogger
  * with a default log [level] level of [Level.INFO]
  */
 class DefaultGraphLogger(
-    level: Level = Level.INFO
+    level: Level = Level.INFO,
 ) : AbstractLogger(level) {
-
     /**
      * Write a log message to its destination.
      *
@@ -36,14 +35,19 @@ class DefaultGraphLogger(
      * @param message Optional log message
      * @param throwable Optional exception
      */
-    override fun log(level: Level, tag: String, message: String, throwable: Throwable?) {
+    override fun log(
+        level: Level,
+        tag: String,
+        message: String,
+        throwable: Throwable?,
+    ) {
         when (level) {
             Level.VERBOSE -> Log.v(tag, message, throwable)
             Level.DEBUG -> Log.d(tag, message, throwable)
             Level.INFO -> Log.i(tag, message, throwable)
             Level.WARNING -> Log.w(tag, message, throwable)
             Level.ERROR -> Log.e(tag, message, throwable)
-            Level.NONE -> { /** no logging at none */ }
+            Level.NONE -> { /* no logging at none */ }
         }
     }
 }

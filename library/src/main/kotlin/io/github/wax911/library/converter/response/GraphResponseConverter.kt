@@ -17,10 +17,10 @@
 package io.github.wax911.library.converter.response
 
 import com.google.gson.Gson
-import java.io.IOException
-import java.lang.reflect.Type
 import okhttp3.ResponseBody
 import retrofit2.Converter
+import java.io.IOException
+import java.lang.reflect.Type
 
 /**
  * GraphQL response body converter to unwrap nested object results,
@@ -28,9 +28,8 @@ import retrofit2.Converter
  */
 open class GraphResponseConverter<T>(
     protected val type: Type?,
-    protected val gson: Gson
+    protected val gson: Gson,
 ) : Converter<ResponseBody, T> {
-
     /**
      * Converter contains logic on how to handle responses, since GraphQL responses follow
      * the JsonAPI spec it makes sense to wrap our base query response data and errors response

@@ -37,10 +37,11 @@ import java.io.IOException
 class GraphProcessor(
     discoveryPlugin: AbstractDiscoveryPlugin<*>,
     override val logger: AbstractLogger = DefaultGraphLogger(),
-    override val fragmentPatcher: FragmentPatcher = FragmentPatcher(
-        defaultExtension = discoveryPlugin.targetExtension,
-        logger = logger
-    )
+    override val fragmentPatcher: FragmentPatcher =
+        FragmentPatcher(
+            defaultExtension = discoveryPlugin.targetExtension,
+            logger = logger,
+        ),
 ) : AbstractGraphProcessor() {
     override val defaultExtension: String = discoveryPlugin.targetExtension
     override val defaultDirectory: String = discoveryPlugin.targetPath
@@ -61,8 +62,9 @@ class GraphProcessor(
                 createGraphQLMap(discoveryPlugin)
                 logger.v(TAG, "$currentThread: has completed initializing all graphql files")
                 logger.v(TAG, "$currentThread: discovered `${_graphFiles.size}` graphql files")
-            } else
+            } else {
                 logger.v(TAG, "$currentThread: skipping discovery | cache is not empty -> size: ${_graphFiles.size}")
+            }
         }
     }
 
@@ -75,15 +77,17 @@ class GraphProcessor(
      * annotated with [GraphQuery] or if the no such file could be found
      */
     @Synchronized override fun getQuery(annotations: Array<out Annotation>): String? {
-        val graphQuery = annotations.filterIsInstance(
-            GraphQuery::class.java
-        ).firstOrNull()
+        val graphQuery =
+            annotations.filterIsInstance(
+                GraphQuery::class.java,
+            ).firstOrNull()
 
         if (graphQuery != null) {
             val fileName = "${graphQuery.value}$defaultExtension"
             logger.d(TAG, "Looking up `$defaultExtension` file matching: $fileName")
-            if (_graphFiles.containsKey(fileName))
+            if (_graphFiles.containsKey(fileName)) {
                 return _graphFiles[fileName]
+            }
             logger.e(TAG, "The requested query annotated with value: ${graphQuery.value} could not be found!")
             logger.e(TAG, "Discovered GraphQL files with the size of -> ${_graphFiles.size}")
         }
@@ -100,11 +104,15 @@ class GraphProcessor(
                 GraphRegexUtil.containsAnOperation(entry.value)
             }
             .forEach { entry ->
-                val patch = fragmentPatcher.includeMissingFragments(
-                    entry.key, entry.value, _graphFiles
-                )
-                if (patch.isNotEmpty())
+                val patch =
+                    fragmentPatcher.includeMissingFragments(
+                        entry.key,
+                        entry.value,
+                        _graphFiles,
+                    )
+                if (patch.isNotEmpty()) {
                     entry.setValue("${entry.value}$patch")
+                }
             }
     }
 
@@ -117,8 +125,9 @@ class GraphProcessor(
     @Synchronized private fun createGraphQLMap(discoveryPlugin: AbstractDiscoveryPlugin<*>) {
         try {
             val graphs = discoveryPlugin.startDiscovery(logger)
-            if (_graphFiles.isNotEmpty())
+            if (_graphFiles.isNotEmpty()) {
                 _graphFiles.clear()
+            }
             _graphFiles.putAll(graphs)
             patchQueries()
         } catch (e: IOException) {
@@ -127,7 +136,6 @@ class GraphProcessor(
     }
 
     companion object {
-
         private val TAG = GraphProcessor::class.java.simpleName
 
         @Volatile
@@ -141,34 +149,39 @@ class GraphProcessor(
          * @param logger Custom logger facade
          */
         @Deprecated(
-            message = "Consider managing the singleton lifecycle of GraphProcessor on your " +
-                "own, with something like Dagger, Hilt or even Koin",
-            replaceWith = ReplaceWith(
-                "GraphProcessor(assetManager)",
-                "io.github.wax911.library.annotation.processor.GraphProcessor"
-            ),
-            level = DeprecationLevel.ERROR
+            message =
+                "Consider managing the singleton lifecycle of GraphProcessor on your " +
+                    "own, with something like Dagger, Hilt or even Koin",
+            replaceWith =
+                ReplaceWith(
+                    "GraphProcessor(assetManager)",
+                    "io.github.wax911.library.annotation.processor.GraphProcessor",
+                ),
+            level = DeprecationLevel.ERROR,
         )
         @JvmOverloads
         fun getInstance(
             assetManager: AssetManager,
-            logger: AbstractLogger = DefaultGraphLogger()
+            logger: AbstractLogger = DefaultGraphLogger(),
         ): GraphProcessor {
             val singleton = instance
-            if (singleton != null)
+            if (singleton != null) {
                 return singleton
+            }
 
             return synchronized(lock) {
                 val init = instance
-                if (init != null)
+                if (init != null) {
                     init
-                else {
-                    val created = GraphProcessor(
-                        discoveryPlugin = AssetManagerDiscoveryPlugin(
-                            assetManager
-                        ),
-                        logger = logger
-                    )
+                } else {
+                    val created =
+                        GraphProcessor(
+                            discoveryPlugin =
+                                AssetManagerDiscoveryPlugin(
+                                    assetManager,
+                                ),
+                            logger = logger,
+                        )
                     instance = created
                     created
                 }

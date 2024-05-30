@@ -32,18 +32,19 @@ import io.github.wax911.library.logger.core.AbstractLogger
 class FragmentPatcher(
     private val defaultExtension: String,
     private val fragmentAnalyzer: FragmentAnalyzer = RegexFragmentAnalyzer(),
-    private val logger: AbstractLogger
+    private val logger: AbstractLogger,
 ) {
     fun includeMissingFragments(
         graphFile: String,
         graphContent: String,
         availableGraphFiles: Map<String, String>,
-        aggregation: StringBuilder = StringBuilder()
+        aggregation: StringBuilder = StringBuilder(),
     ): String {
         // Look for any missing fragment definitions in the current graph content.
-        val missingFragments = fragmentAnalyzer
-            .analyzeFragments(graphContent)
-            .filter { !it.isDefined }
+        val missingFragments =
+            fragmentAnalyzer
+                .analyzeFragments(graphContent)
+                .filter { !it.isDefined }
 
         if (missingFragments.isEmpty()) {
             // Nothing to do. We can short circuit and return early.
@@ -72,7 +73,7 @@ class FragmentPatcher(
                 // This fragment is nowhere to be found.
                 logger.w(
                     TAG,
-                    "$graphFile references $missingFragment, but it could not be located."
+                    "$graphFile references $missingFragment, but it could not be located.",
                 )
             }
         }

@@ -28,11 +28,11 @@ import io.github.wax911.library.logger.DefaultGraphLogger
 import io.github.wax911.library.logger.contract.ILogger
 import io.github.wax911.library.logger.core.AbstractLogger
 import io.github.wax911.library.util.LogLevel
-import java.lang.reflect.Type
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
+import java.lang.reflect.Type
 
 /**
  * Body for GraphQL requests and responses, closed for modification
@@ -43,9 +43,8 @@ import retrofit2.Retrofit
 */
 open class GraphConverter(
     protected val graphProcessor: AbstractGraphProcessor,
-    protected val gson: Gson
+    protected val gson: Gson,
 ) : Converter.Factory() {
-
     /**
      * Response body converter delegates logic processing to a child class that handles
      * wrapping and deserialization of the json response data.
@@ -59,7 +58,7 @@ open class GraphConverter(
     override fun responseBodyConverter(
         type: Type,
         annotations: Array<out Annotation>,
-        retrofit: Retrofit
+        retrofit: Retrofit,
     ): Converter<ResponseBody, *>? {
         return when (type) {
             is ResponseBody -> super.responseBodyConverter(type, annotations, retrofit)
@@ -82,7 +81,7 @@ open class GraphConverter(
         type: Type,
         parameterAnnotations: Array<out Annotation>,
         methodAnnotations: Array<out Annotation>,
-        retrofit: Retrofit
+        retrofit: Retrofit,
     ): Converter<*, RequestBody>? {
         return GraphRequestConverter(methodAnnotations, graphProcessor, gson)
     }
@@ -97,19 +96,20 @@ open class GraphConverter(
         "Use setMinimumLogLevel instead or alternatively setup your on logger on GraphConverter.create",
         ReplaceWith(
             "setMinimumLogLevel(ILogger.Level)",
-            "io.github.wax911.library.logger.contract.ILogger.Level"
+            "io.github.wax911.library.logger.contract.ILogger.Level",
         ),
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.ERROR,
     )
     fun setLogLevel(logLevel: LogLevel) {
-        val level = when (logLevel) {
-            LogLevel.DEBUG -> ILogger.Level.DEBUG
-            LogLevel.ERROR -> ILogger.Level.ERROR
-            LogLevel.INFO -> ILogger.Level.INFO
-            LogLevel.VERBOSE -> ILogger.Level.VERBOSE
-            LogLevel.WARN -> ILogger.Level.WARNING
-            else -> ILogger.Level.NONE
-        }
+        val level =
+            when (logLevel) {
+                LogLevel.DEBUG -> ILogger.Level.DEBUG
+                LogLevel.ERROR -> ILogger.Level.ERROR
+                LogLevel.INFO -> ILogger.Level.INFO
+                LogLevel.VERBOSE -> ILogger.Level.VERBOSE
+                LogLevel.WARN -> ILogger.Level.WARNING
+                else -> ILogger.Level.NONE
+            }
         setMinimumLogLevel(level)
     }
 
@@ -123,8 +123,7 @@ open class GraphConverter(
     }
 
     companion object {
-
-        const val MimeType = "application/graphql"
+        const val MIME_TYPE = "application/graphql"
 
         /**
          * Default creator that uses a predefined gson configuration
@@ -133,17 +132,22 @@ open class GraphConverter(
          * @param level Minimum log level
          */
         @JvmOverloads
-        fun create(context: Context, level: ILogger.Level = ILogger.Level.INFO): GraphConverter =
+        fun create(
+            context: Context,
+            level: ILogger.Level = ILogger.Level.INFO,
+        ): GraphConverter =
             GraphConverter(
-                graphProcessor = GraphProcessor(
-                    AssetManagerDiscoveryPlugin(context.assets),
-                    DefaultGraphLogger(level)
-                ),
-                gson = GsonBuilder()
-                    .enableComplexMapKeySerialization()
-                    .serializeNulls()
-                    .setLenient()
-                    .create()
+                graphProcessor =
+                    GraphProcessor(
+                        AssetManagerDiscoveryPlugin(context.assets),
+                        DefaultGraphLogger(level),
+                    ),
+                gson =
+                    GsonBuilder()
+                        .enableComplexMapKeySerialization()
+                        .serializeNulls()
+                        .setLenient()
+                        .create(),
             )
 
         /**
@@ -155,13 +159,18 @@ open class GraphConverter(
          * @param level Minimum log level
          */
         @JvmOverloads
-        fun create(context: Context, gson: Gson, level: ILogger.Level = ILogger.Level.INFO): GraphConverter =
+        fun create(
+            context: Context,
+            gson: Gson,
+            level: ILogger.Level = ILogger.Level.INFO,
+        ): GraphConverter =
             GraphConverter(
-                graphProcessor = GraphProcessor(
-                    AssetManagerDiscoveryPlugin(context.assets),
-                    DefaultGraphLogger(level)
-                ),
-                gson = gson
+                graphProcessor =
+                    GraphProcessor(
+                        AssetManagerDiscoveryPlugin(context.assets),
+                        DefaultGraphLogger(level),
+                    ),
+                gson = gson,
             )
     }
 }

@@ -24,9 +24,8 @@ import kotlinx.parcelize.Parcelize
  */
 @Parcelize
 open class QueryContainerBuilder(
-    private val queryContainer: QueryContainer = QueryContainer()
+    private val queryContainer: QueryContainer = QueryContainer(),
 ) : Parcelable {
-
     fun setQuery(query: String?): QueryContainerBuilder {
         queryContainer.query = query
         return this
@@ -37,7 +36,10 @@ open class QueryContainerBuilder(
         return this
     }
 
-    fun putVariable(key: String, value: Any?): QueryContainerBuilder {
+    fun putVariable(
+        key: String,
+        value: Any?,
+    ): QueryContainerBuilder {
         queryContainer.putVariable(key, value)
         return this
     }
@@ -47,18 +49,24 @@ open class QueryContainerBuilder(
         return this
     }
 
-    fun putExtension(key: String, value: Any?): QueryContainerBuilder {
+    fun putExtension(
+        key: String,
+        value: Any?,
+    ): QueryContainerBuilder {
         queryContainer.putExtension(key, value)
         return this
     }
 
-    fun putPersistedQueryHash(sha256Hash: String, version: Int = 1): QueryContainerBuilder {
+    fun putPersistedQueryHash(
+        sha256Hash: String,
+        version: Int = 1,
+    ): QueryContainerBuilder {
         putExtension(
-            persistedQueryExtensionName,
+            PERSISTED_QUERY_EXTENSION_NAME,
             PersistedQuery(
                 sha256Hash = sha256Hash,
-                version = version
-            )
+                version = version,
+            ),
         )
         return this
     }
@@ -85,6 +93,6 @@ open class QueryContainerBuilder(
     }
 
     companion object {
-        const val persistedQueryExtensionName = "persistedQuery"
+        const val PERSISTED_QUERY_EXTENSION_NAME = "persistedQuery"
     }
 }

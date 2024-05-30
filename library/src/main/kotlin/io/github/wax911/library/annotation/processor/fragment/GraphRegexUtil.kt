@@ -31,8 +31,10 @@ object GraphRegexUtil {
     private const val REGEX_FRAGMENT_REFERENCE = "\\.\\.\\.(\\s+)?($REGEX_VALID_NAME)"
     private const val REGEX_FRAGMENT_DEFINITION = "fragment\\s{1,}($REGEX_VALID_NAME)\\s{1,}on"
     private const val REGEX_OPERATION_DEFINITION = "(query|mutation|subscription)\\s+($REGEX_VALID_NAME)"
+
     // The fragment name will be found in group 2 of the reference regex match result.
     private const val GROUP_FRAGMENT_REFERENCE = 2
+
     // The fragment name will be found in group 1 of the definition regex match result.
     private const val GROUP_FRAGMENT_DEFINITION = 1
 
@@ -66,10 +68,15 @@ object GraphRegexUtil {
      * Finds all strings defined by "regexStr" in the provided "graphqlContent". The regex will return multiple match
      * groups, so the "groupIndex" indicating the position of the expecting string should be specified.
      */
-    private fun extractFragmentNames(graphqlContent: String, regexStr: String, groupIndex: Int): Set<String> {
-        val regexMatches = regexStr
-            .toRegex(regexOptions)
-            .findAll(graphqlContent)
+    private fun extractFragmentNames(
+        graphqlContent: String,
+        regexStr: String,
+        groupIndex: Int,
+    ): Set<String> {
+        val regexMatches =
+            regexStr
+                .toRegex(regexOptions)
+                .findAll(graphqlContent)
 
         return regexMatches.filter {
             it.groupValues.size >= (groupIndex + 1)

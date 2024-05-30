@@ -29,9 +29,8 @@ import retrofit2.Converter
 open class GraphRequestConverter(
     protected val methodAnnotations: Array<out Annotation>,
     protected val graphProcessor: AbstractGraphProcessor,
-    protected val gson: Gson
+    protected val gson: Gson,
 ) : Converter<QueryContainerBuilder, RequestBody> {
-
     /**
      * Converter for the request body, gets the GraphQL query from the method annotation
      * and constructs a GraphQL request body to send over the network.

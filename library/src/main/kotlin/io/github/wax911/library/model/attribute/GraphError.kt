@@ -33,15 +33,14 @@ data class GraphError(
     val message: String?,
     val path: List<Any>? = null,
     val locations: List<Location>? = null,
-    val extensions: Map<String, Any?>? = null
+    val extensions: Map<String, Any?>? = null,
 ) {
-
     /**
      * Location describing which part of GraphQL document caused an exception.
      */
     data class Location(
         val line: Int,
-        val column: Int
+        val column: Int,
     )
 
     override fun toString(): String {

@@ -30,7 +30,7 @@ class RegexFragmentAnalyzer : FragmentAnalyzer {
         return fragmentReferences.map {
             FragmentAnalysis(
                 fragmentReference = it,
-                isDefined = fragmentDefinitions.contains(it)
+                isDefined = fragmentDefinitions.contains(it),
             )
         }.toSet()
     }

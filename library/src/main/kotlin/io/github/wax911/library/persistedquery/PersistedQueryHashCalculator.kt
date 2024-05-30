@@ -33,11 +33,10 @@ import java.security.MessageDigest
     "Consider migrating to AutomaticPersistedQueryCalculator instead",
     ReplaceWith(
         "AutomaticPersistedQueryCalculator",
-        "io.github.wax911.library.persisted.query.AutomaticPersistedQueryCalculator"
-    )
+        "io.github.wax911.library.persisted.query.AutomaticPersistedQueryCalculator",
+    ),
 )
 class PersistedQueryHashCalculator(context: Context) {
-
     private val apqHashes: MutableMap<String, String> by lazy {
         HashMap<String, String>()
     }
@@ -55,7 +54,10 @@ class PersistedQueryHashCalculator(context: Context) {
         }
     }
 
-    private fun createAndStoreHash(queryName: String, fileKey: String): String? {
+    private fun createAndStoreHash(
+        queryName: String,
+        fileKey: String,
+    ): String? {
         graphProcessor.logger.d(TAG, "Creating hash for $queryName")
         return if (graphProcessor.graphFiles.containsKey(fileKey)) {
             val hashOfQuery = hashOfQuery(graphProcessor.graphFiles.getValue(fileKey))
@@ -70,7 +72,7 @@ class PersistedQueryHashCalculator(context: Context) {
     }
 
     private fun hashOfQuery(query: String): String {
-        val md = MessageDigest.getInstance(sha256Algorithm)
+        val md = MessageDigest.getInstance(ALGORITHM)
         md.update(query.toByteArray())
         val digest = md.digest()
         return String.format("%064x", BigInteger(1, digest))
@@ -78,6 +80,6 @@ class PersistedQueryHashCalculator(context: Context) {
 
     companion object {
         private val TAG = PersistedQueryHashCalculator::class.java.simpleName
-        private const val sha256Algorithm = "SHA-256"
+        private const val ALGORITHM = "SHA-256"
     }
 }

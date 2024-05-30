@@ -31,12 +31,22 @@ interface ILogger {
      * @param message The message you would like logged.
      * @param throwable An exception to log
      */
-    fun log(level: Level, tag: String, message: String, throwable: Throwable? = null)
+    fun log(
+        level: Level,
+        tag: String,
+        message: String,
+        throwable: Throwable? = null,
+    )
 
     /**
      * The levels used to print out and filter log messages
      */
     enum class Level {
-        VERBOSE, DEBUG, INFO, WARNING, ERROR, NONE
+        VERBOSE,
+        DEBUG,
+        INFO,
+        WARNING,
+        ERROR,
+        NONE,
     }
 }

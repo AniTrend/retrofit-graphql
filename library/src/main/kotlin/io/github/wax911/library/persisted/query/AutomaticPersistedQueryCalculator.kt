@@ -32,9 +32,8 @@ import java.security.MessageDigest
  */
 class AutomaticPersistedQueryCalculator(
     private val processor: AbstractGraphProcessor,
-    private val logger: AbstractLogger = processor.logger
+    private val logger: AbstractLogger = processor.logger,
 ) : IAutomaticPersistedQuery {
-
     private val apqHashes: MutableMap<String, String> = HashMap()
 
     private fun hashOfQuery(query: String): String {
@@ -44,7 +43,10 @@ class AutomaticPersistedQueryCalculator(
         return String.format("%064x", BigInteger(1, digest))
     }
 
-    private fun createAndStoreHash(queryName: String, fileKey: String): String? {
+    private fun createAndStoreHash(
+        queryName: String,
+        fileKey: String,
+    ): String? {
         logger.d(TAG, "Creating APQ hash for $queryName")
         return if (processor.graphFiles.containsKey(fileKey)) {
             val hashOfQuery = hashOfQuery(processor.graphFiles.getValue(fileKey))
@@ -55,7 +57,7 @@ class AutomaticPersistedQueryCalculator(
             logger.e(
                 TAG,
                 "Current size of discovered graphql files -> ${processor.graphFiles.size}",
-                Throwable("The request query $fileKey could not be found!")
+                Throwable("The request query $fileKey could not be found!"),
             )
             null
         }
@@ -68,8 +70,11 @@ class AutomaticPersistedQueryCalculator(
      */
     override fun getOrCreateAPQHash(queryName: String): String? {
         val fileKey = "$queryName${processor.defaultExtension}"
-        return if (apqHashes.containsKey(fileKey)) apqHashes[fileKey]
-        else createAndStoreHash(queryName, fileKey)
+        return if (apqHashes.containsKey(fileKey)) {
+            apqHashes[fileKey]
+        } else {
+            createAndStoreHash(queryName, fileKey)
+        }
     }
 
     companion object {

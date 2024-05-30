@@ -32,7 +32,6 @@ import io.github.wax911.library.logger.core.AbstractLogger
  * @see AbstractLogger
  */
 abstract class AbstractGraphProcessor {
-
     internal abstract val defaultExtension: String
     internal abstract val defaultDirectory: String
     internal abstract val logger: AbstractLogger
