@@ -31,7 +31,7 @@ coil = "2.7.0"
 google-material = "1.12.0"
 
 jetbrains-dokka = "1.9.20"
-jetbrains-kotlin = "2.0.10"
+jetbrains-kotlin = "2.0.20"
 jetbrains-kotlinx-coroutines = "1.8.1"
 jetbrains-kotlinx-serialization = "1.7.1"
 
