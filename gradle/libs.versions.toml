@@ -5,7 +5,7 @@ timber = "5.0.1"
 junit = "4.13.2"
 mockk = "1.13.12"
 
-android-tools-build = "8.6.1"
+android-tools-build = "8.7.0"
 
 androidx-activity = "1.9.2"
 androidx-annotation = "1.8.2"
