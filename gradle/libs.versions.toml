@@ -3,7 +3,7 @@ ktlint = "1.0.1"
 threeTenBp = "1.4.7"
 timber = "5.0.1"
 junit = "4.13.2"
-mockk = "1.13.12"
+mockk = "1.13.13"
 
 android-tools-build = "8.7.0"
 
