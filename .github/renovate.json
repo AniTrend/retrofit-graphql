@@ -8,6 +8,9 @@
   "baseBranches": [
     "develop"
   ],
+  "automerge": true,
+  "automergeType": "pr",
+  "automergeStrategy": "rebase",
   "packageRules": [
     {
       "groupName": "Sample Module Dependencies",
