@@ -32,7 +32,7 @@ google-material = "1.12.0"
 
 jetbrains-dokka = "2.0.0"
 jetbrains-kotlin = "2.1.20"
-jetbrains-kotlinx-coroutines = "1.10.1"
+jetbrains-kotlinx-coroutines = "1.10.2"
 jetbrains-kotlinx-serialization = "1.8.1"
 
 koin-core = "4.0.4"
