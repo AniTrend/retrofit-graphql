@@ -1,8 +1,10 @@
 jdk:
-  - openjdk17
+  - openjdk21
+#before_install:
+#   - ./custom_setup.sh
 install:
-  - echo "Running clean, build, publishMavenPublicationToMavenLocal commands"
-  - ./gradlew clean build
+  - echo "Running build commands"
+  - ./gradlew build --stacktrace
   - ./gradlew publishMavenPublicationToMavenLocal
 env:
   CI: "true"
