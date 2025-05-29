@@ -32,4 +32,10 @@ dependencies {
 
     /** Work around to include ../.gradle/LibrariesForLibs generated file for version catalog */
     implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
+
+    testImplementation(kotlin("test"))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
