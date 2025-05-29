@@ -19,7 +19,6 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import java.net.URL
 import java.util.*
 
-@Suppress("UnstableApiUsage")
 private fun Properties.applyToBuildConfigForBuild(project: Project, buildType: ApplicationBuildType) {
     forEach { propEntry ->
         val key = propEntry.key as String
@@ -29,7 +28,6 @@ private fun Properties.applyToBuildConfigForBuild(project: Project, buildType: A
     }
 }
 
-@Suppress("UnstableApiUsage")
 private fun NamedDomainObjectContainer<ApplicationBuildType>.applyConfiguration(project: Project) {
     asMap.forEach { buildTypeEntry ->
         project.logger.lifecycle("Configuring build type -> ${buildTypeEntry.key}")
@@ -53,7 +51,6 @@ private fun NamedDomainObjectContainer<ApplicationBuildType>.applyConfiguration(
     }
 }
 
-@Suppress("UnstableApiUsage")
 private fun ApplicationDefaultConfig.applyRoomCompilerOptions(project: Project) {
     project.logger.lifecycle("Adding java compiler options for room on module-> ${project.path}")
     javaCompileOptions {
@@ -162,7 +159,7 @@ private fun Project.createDokkaTaskProvider() = tasks.named<DokkaTask>("dokkaHtm
             sourceRoot(file("src"))
 
             // Used for linking to JDK documentation
-            jdkVersion.set(17)
+            jdkVersion.set(21)
 
             // Disable linking to online kotlin-stdlib documentation
             noStdlibLink.set(false)
@@ -185,7 +182,7 @@ private fun Project.createDokkaTaskProvider() = tasks.named<DokkaTask>("dokkaHtm
 
             // Allows to customize documentation generation options on a per-package basis
             // Repeat for multiple packageOptions
-            // If multiple packages match the same matchingRegex, the longuest matchingRegex will be used
+            // If multiple packages match the same matchingRegex, the longest matchingRegex will be used
             perPackageOption {
                 matchingRegex.set("kotlin($|\\.).*") // will match kotlin and all sub-packages of it
                 // All options are optional, default values are below:

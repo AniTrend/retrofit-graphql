@@ -41,6 +41,9 @@ koin-android = "4.0.4"
 square-retrofit = "2.12.0"
 square-okhttp = "4.12.0"
 
+[plugins]
+jetbrains-dokka = { id = "org.jetbrains.dokka", version.ref = "jetbrains-dokka" }
+
 [libraries]
 threeTenBp = { module = "com.jakewharton.threetenabp:threetenabp", version.ref = "threeTenBp" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }

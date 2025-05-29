@@ -11,7 +11,8 @@ import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.props
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
-import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
+import org.gradle.api.tasks.testing.Test
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import java.io.File
 
 
@@ -56,10 +57,10 @@ private fun DefaultConfig.applyAdditionalConfiguration(project: Project) {
 }
 
 internal fun Project.configureAndroid(): Unit = baseExtension().run {
-    compileSdkVersion(34)
+    compileSdkVersion(35)
     defaultConfig {
-        minSdk = if (isSampleModule()) 23 else 17
-        targetSdk = 34
+        minSdk = 23
+        targetSdk = 35
         versionCode = props[PropertyTypes.CODE].toInt()
         versionName = props[PropertyTypes.VERSION]
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -103,24 +104,25 @@ internal fun Project.configureAndroid(): Unit = baseExtension().run {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
-    tasks.withType(KotlinCompile::class.java) {
-        kotlinOptions {
-            allWarningsAsErrors = false
-            kotlinOptions {
-                allWarningsAsErrors = false
-                // Filter out modules that won't be using coroutines
-                freeCompilerArgs = if (isSampleModule()) listOf(
-                    "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                ) else emptyList()
+    tasks.withType(KotlinCompilationTask::class.java) {
+        compilerOptions {
+            allWarningsAsErrors.set(false)
+            // Filter out modules that won't be using coroutines
+            if (isSampleModule()) {
+                freeCompilerArgs.add("-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi")
             }
         }
     }
 
+    tasks.withType(Test::class.java) {
+        useJUnitPlatform()
+    }
+
     kotlinAndroidProjectExtension().run {
-        jvmToolchain(17)
+        jvmToolchain(21)
     }
 }
