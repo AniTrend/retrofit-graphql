@@ -20,7 +20,9 @@ import com.google.gson.Gson
 import io.github.wax911.library.annotation.processor.contract.AbstractGraphProcessor
 import io.github.wax911.library.model.request.QueryContainerBuilder
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Converter
 
 /**
@@ -43,10 +45,10 @@ open class GraphRequestConverter(
             containerBuilder.setQuery(rawQuery)
                 .build()
         val queryJson = gson.toJson(queryContainer)
-        return RequestBody.create(MEDIA_TYPE, queryJson)
+        return queryJson.toRequestBody(MEDIA_TYPE)
     }
 
     companion object {
-        private val MEDIA_TYPE = MediaType.parse("application/json")
+        private val MEDIA_TYPE = "application/json".toMediaTypeOrNull()
     }
 }
