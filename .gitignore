@@ -237,11 +237,11 @@ fabric.properties
 # End of https://www.gitignore.io/api/java,kotlin,android,androidstudio
 
 app/.config/secrets.properties
-
 app/schema.graphql
+app/lint-baseline.xml
 
 .idea/deploymentTargetSelector.xml
-
 .idea/appInsightsSettings.xml
-
-app/lint-baseline.xml
+.idea/studiobot.xml
+.idea/runConfigurations.xml
+.idea/AndroidProjectSystem.xml
