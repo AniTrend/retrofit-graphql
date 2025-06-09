@@ -36,7 +36,7 @@ jetbrains-kotlinx-coroutines = "1.10.2"
 jetbrains-kotlinx-serialization = "1.8.1"
 
 koin-core = "4.0.4"
-koin-android = "4.0.4"
+koin-android = "4.1.0"
 
 square-retrofit = "3.0.0"
 square-okhttp = "4.12.0"
