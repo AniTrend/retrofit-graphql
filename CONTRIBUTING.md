@@ -17,3 +17,34 @@ Please ensure your pull request adheres to the following guidelines:
 - Check your spelling and grammar.
 
 See [code of conduct](./CODE_OF_CONDUCT.md)
+
+## GitHub Copilot Customization
+
+This repository includes GitHub Copilot Chat customizations to improve development experience:
+
+### Chat Modes and Prompts
+
+- **Chat modes** are available under `.github/chatmodes/` providing specialized AI personas for different development tasks
+- **Prompts** are located in `.github/prompts/` offering specific templates for common development workflows
+
+### Repository-specific Instructions
+
+Custom instructions under `.github/instructions/` help tailor GitHub Copilot Chat responses to this project's architecture and conventions. These instructions provide context about:
+
+- The retrofit-graphql library's purpose and architecture
+- Project scope and integration patterns  
+- Development guidelines and best practices
+
+### Conventional Commit Support
+
+Use the **conventional-commit** prompt to generate properly formatted commit messages. The prompt supports generic commit scopes appropriate for library development, such as:
+- `feat(api)`: New API features
+- `fix(converter)`: Bug fixes in converter logic  
+- `docs`: Documentation updates
+- `test`: Test improvements
+- `refactor`: Code refactoring
+- `chore`: Maintenance tasks
+
+### Documentation
+
+For comprehensive API documentation and usage examples, visit the [Dokka site](https://anitrend.github.io/retrofit-graphql/).
