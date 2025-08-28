@@ -54,7 +54,7 @@ When contributing to or extending the retrofit-graphql library, follow these est
 ## Testing Guidelines
 
 ### Unit Testing
-- **JUnit 5** is configured for testing framework
+- Use **JUnit 5** as the testing framework (ensure it is configured in your build)
 - **MockK** is available for mocking dependencies
 - Test coverage should focus on:
   - Annotation processing logic
