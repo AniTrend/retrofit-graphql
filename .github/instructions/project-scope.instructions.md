@@ -11,7 +11,7 @@ description: This file describes the project scope and purpose for the retrofit-
 
 The library addresses limitations found in existing GraphQL solutions for Android:
 
-- **Apollo Android** generates classes automatically, which can limit flexibility in terms of generics, abstraction, and inheritance patterns
+- **Apollo Android** (historically, or in certain versions) generates classes automatically, which can limit flexibility in terms of generics, abstraction, and inheritance patterns
 - Generated code often creates duplicate classes for similar data structures used across different queries
 - Android performance best practices suggest using `@StringDef` and `@IntDef` over traditional enums, which generated solutions don't typically support
 - Polymorphic type handling and non-shared types can be challenging with code generation approaches
