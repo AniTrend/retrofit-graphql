@@ -26,7 +26,7 @@ jobs:
         run: ./gradlew dokkaHtml
 
       - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4.7.3
+        uses: JamesIves/github-pages-deploy-action@v4.7.4
         with:
           branch: docs # The branch the action should deploy to.
           folder: library/build/docs/dokka # The folder the action should deploy.
