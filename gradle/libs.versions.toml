@@ -39,7 +39,7 @@ koin-core = "4.1.1"
 koin-android = "4.1.1"
 
 square-retrofit = "3.0.0"
-square-okhttp = "5.3.1"
+square-okhttp = "5.3.2"
 
 [plugins]
 jetbrains-dokka = { id = "org.jetbrains.dokka", version.ref = "jetbrains-dokka" }
