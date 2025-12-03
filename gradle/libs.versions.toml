@@ -19,7 +19,7 @@ androidx-preference = "1.2.1"
 androidx-recycler = "1.4.0"
 androidx-room = "2.8.4"
 androidx-startup = "1.2.0"
-androidx-swiperefresh = "1.1.0"
+androidx-swiperefresh = "1.2.0"
 
 anitrend-arch = "1.7.7"
 anitrend-emojify = "1.9.1"
