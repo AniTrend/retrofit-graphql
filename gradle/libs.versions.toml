@@ -7,7 +7,7 @@ mockk = "1.14.2"
 
 android-tools-build = "8.13.2"
 
-androidx-activity = "1.12.3"
+androidx-activity = "1.12.4"
 androidx-annotation = "1.9.1"
 androidx-core = "1.17.0"
 androidx-constraintLayout = "2.2.1"
