@@ -57,10 +57,10 @@ private fun DefaultConfig.applyAdditionalConfiguration(project: Project) {
 }
 
 internal fun Project.configureAndroid(): Unit = baseExtension().run {
-    compileSdkVersion(35)
+    compileSdkVersion(36)
     defaultConfig {
         minSdk = 23
-        targetSdk = 35
+        targetSdk = 36
         versionCode = props[PropertyTypes.CODE].toInt()
         versionName = props[PropertyTypes.VERSION]
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
