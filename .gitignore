@@ -245,3 +245,5 @@ app/lint-baseline.xml
 .idea/studiobot.xml
 .idea/runConfigurations.xml
 .idea/AndroidProjectSystem.xml
+# Added by code-review-graph
+.code-review-graph/
