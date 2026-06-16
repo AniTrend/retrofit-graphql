@@ -41,6 +41,9 @@ koin-android = "4.2.2"
 square-retrofit = "3.0.0"
 square-okhttp = "5.4.0"
 
+graphql-java = "25.0"
+kotlinpoet = "2.3.0"
+
 [plugins]
 jetbrains-dokka = { id = "org.jetbrains.dokka", version.ref = "jetbrains-dokka" }
 
@@ -130,3 +133,6 @@ mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
 spotless-gradle = { module = "com.diffplug.spotless:spotless-plugin-gradle", version = "8.7.0" }
 
 pintrest-ktlint = { module = "com.pinterest:ktlint", version.ref = "ktlint" }
+
+graphql-java = { module = "com.graphql-java:graphql-java", version.ref = "graphql-java" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }

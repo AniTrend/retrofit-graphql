@@ -27,6 +27,7 @@ import io.github.wax911.library.converter.response.GraphResponseConverter
 import io.github.wax911.library.logger.DefaultGraphLogger
 import io.github.wax911.library.logger.contract.ILogger
 import io.github.wax911.library.logger.core.AbstractLogger
+import io.github.wax911.library.model.GraphQLDocumentRegistry
 import io.github.wax911.library.util.LogLevel
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -40,10 +41,12 @@ import java.lang.reflect.Type
  *
  * @param graphProcessor A singleton reference of [AbstractLogger]
  * @param gson Any valid application context
+ * @param registry Optional [GraphQLDocumentRegistry] for build-time generated operation documents
 */
 open class GraphConverter(
     protected val graphProcessor: AbstractGraphProcessor,
     protected val gson: Gson,
+    protected val registry: GraphQLDocumentRegistry? = null,
 ) : Converter.Factory() {
     /**
      * Response body converter delegates logic processing to a child class that handles
@@ -83,7 +86,7 @@ open class GraphConverter(
         methodAnnotations: Array<out Annotation>,
         retrofit: Retrofit,
     ): Converter<*, RequestBody>? {
-        return GraphRequestConverter(methodAnnotations, graphProcessor, gson)
+        return GraphRequestConverter(methodAnnotations, graphProcessor, gson, registry)
     }
 
     /**
@@ -171,6 +174,63 @@ open class GraphConverter(
                         DefaultGraphLogger(level),
                     ),
                 gson = gson,
+            )
+
+        /**
+         * Creates a [GraphConverter] with a build-time generated [GraphQLDocumentRegistry].
+         *
+         * When a registry is provided, the converter will resolve operation documents
+         * from the registry before falling back to asset-based file discovery.
+         *
+         * @param context A valid application context
+         * @param registry A build-time generated registry of GraphQL operations
+         * @param level Minimum log level
+         */
+        @JvmOverloads
+        fun create(
+            context: Context,
+            registry: GraphQLDocumentRegistry,
+            level: ILogger.Level = ILogger.Level.INFO,
+        ): GraphConverter =
+            GraphConverter(
+                graphProcessor =
+                    GraphProcessor(
+                        AssetManagerDiscoveryPlugin(context.assets),
+                        DefaultGraphLogger(level),
+                    ),
+                gson =
+                    GsonBuilder()
+                        .enableComplexMapKeySerialization()
+                        .serializeNulls()
+                        .setLenient()
+                        .create(),
+                registry = registry,
+            )
+
+        /**
+         * Creates a [GraphConverter] with a custom [Gson] configuration and a build-time
+         * generated [GraphQLDocumentRegistry].
+         *
+         * @param context A valid application context
+         * @param gson Custom gson implementation
+         * @param registry A build-time generated registry of GraphQL operations
+         * @param level Minimum log level
+         */
+        @JvmOverloads
+        fun create(
+            context: Context,
+            gson: Gson,
+            registry: GraphQLDocumentRegistry,
+            level: ILogger.Level = ILogger.Level.INFO,
+        ): GraphConverter =
+            GraphConverter(
+                graphProcessor =
+                    GraphProcessor(
+                        AssetManagerDiscoveryPlugin(context.assets),
+                        DefaultGraphLogger(level),
+                    ),
+                gson = gson,
+                registry = registry,
             )
     }
 }

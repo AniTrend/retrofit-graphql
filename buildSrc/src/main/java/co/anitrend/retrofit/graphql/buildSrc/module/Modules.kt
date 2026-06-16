@@ -18,5 +18,7 @@ internal object Modules {
         Api("api"),
         AndroidAssets("android-assets"),
         Runtime("runtime"),
+        CodegenCore("codegen-core"),
+        GradlePlugin("gradle-plugin"),
     }
 }
