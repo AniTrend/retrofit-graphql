@@ -32,10 +32,10 @@ import io.github.wax911.library.logger.core.AbstractLogger
  * @see AbstractLogger
  */
 abstract class AbstractGraphProcessor {
-    internal abstract val defaultExtension: String
-    internal abstract val defaultDirectory: String
-    internal abstract val logger: AbstractLogger
-    internal abstract val fragmentPatcher: FragmentPatcher
+    abstract val defaultExtension: String
+    abstract val defaultDirectory: String
+    abstract val logger: AbstractLogger
+    abstract val fragmentPatcher: FragmentPatcher
 
     /**
      * Returns a pair of query or mutation name and graphql contents

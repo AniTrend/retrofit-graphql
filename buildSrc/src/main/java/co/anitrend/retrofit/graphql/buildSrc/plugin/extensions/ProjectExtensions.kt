@@ -18,7 +18,18 @@ import org.jetbrains.kotlin.gradle.testing.internal.KotlinTestsRegistry
 import co.anitrend.retrofit.graphql.buildSrc.module.Modules
 
 fun Project.isSampleModule() = name == Modules.Components.App.id
-fun Project.isLibraryModule() = name == Modules.Components.Library.id
+
+fun Project.isLibraryModule() =
+    name in setOf(
+        Modules.Components.Library.id,
+        Modules.Components.Api.id,
+        Modules.Components.AndroidAssets.id,
+        Modules.Components.Runtime.id,
+    )
+
+fun Project.isAnnotationsModule() = name == Modules.Components.Annotations.id
+
+fun Project.isFacadeModule() = name == Modules.Components.Library.id
 
 internal val Project.props: PropertiesReader
     get() = PropertiesReader(this)

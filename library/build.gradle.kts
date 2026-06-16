@@ -1,6 +1,5 @@
 plugins {
     id("co.anitrend.retrofit.graphql")
-    id("kotlin-parcelize")
 }
 
 android {
@@ -8,7 +7,10 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.annotation)
+    api(project(":annotations"))
+    api(project(":api"))
+    api(project(":android-assets"))
+    api(project(":runtime"))
 
     testImplementation(libs.jetbrains.kotlin.reflect)
 }
