@@ -16,12 +16,12 @@
 
 package co.anitrend.retrofit.graphql.converter.request
 
-import com.google.gson.Gson
 import co.anitrend.retrofit.graphql.annotation.GraphQuery
 import co.anitrend.retrofit.graphql.annotation.processor.contract.AbstractGraphProcessor
 import co.anitrend.retrofit.graphql.model.GraphQLDocumentRegistry
 import co.anitrend.retrofit.graphql.model.GraphQLRequest
 import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
+import com.google.gson.Gson
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody

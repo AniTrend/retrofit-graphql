@@ -26,8 +26,9 @@ import java.io.InputStream
 abstract class AbstractDiscoveryPlugin<S : Any>(
     protected val source: S,
 ) {
-    internal abstract val targetPath: String
-    internal abstract val targetExtension: String
+    abstract val targetPath: String
+
+    abstract val targetExtension: String
 
     /**
      * Reads the file contents for a given [inputStream]

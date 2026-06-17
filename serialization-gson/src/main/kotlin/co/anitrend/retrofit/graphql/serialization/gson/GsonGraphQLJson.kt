@@ -16,8 +16,8 @@
 
 package co.anitrend.retrofit.graphql.serialization.gson
 
-import com.google.gson.Gson
 import co.anitrend.retrofit.graphql.model.GraphQLJson
+import com.google.gson.Gson
 import java.lang.reflect.Type
 
 /**

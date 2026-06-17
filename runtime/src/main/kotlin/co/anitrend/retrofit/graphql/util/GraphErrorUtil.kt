@@ -16,11 +16,11 @@
 
 package co.anitrend.retrofit.graphql.util
 
+import co.anitrend.retrofit.graphql.model.attribute.GraphError
+import co.anitrend.retrofit.graphql.model.body.GraphContainer
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
-import co.anitrend.retrofit.graphql.model.attribute.GraphError
-import co.anitrend.retrofit.graphql.model.body.GraphContainer
 import retrofit2.Response
 
 /**

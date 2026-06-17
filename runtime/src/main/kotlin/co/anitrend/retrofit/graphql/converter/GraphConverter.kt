@@ -17,8 +17,6 @@
 package co.anitrend.retrofit.graphql.converter
 
 import android.content.Context
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import co.anitrend.retrofit.graphql.annotation.processor.GraphProcessor
 import co.anitrend.retrofit.graphql.annotation.processor.contract.AbstractGraphProcessor
 import co.anitrend.retrofit.graphql.annotation.processor.plugin.AssetManagerDiscoveryPlugin
@@ -29,6 +27,8 @@ import co.anitrend.retrofit.graphql.logger.contract.ILogger
 import co.anitrend.retrofit.graphql.logger.core.AbstractLogger
 import co.anitrend.retrofit.graphql.model.GraphQLDocumentRegistry
 import co.anitrend.retrofit.graphql.util.LogLevel
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Converter
