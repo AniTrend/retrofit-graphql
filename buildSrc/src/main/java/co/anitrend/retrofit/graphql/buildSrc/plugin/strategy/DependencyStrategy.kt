@@ -41,6 +41,7 @@ internal class DependencyStrategy(
         when (project.name) {
             Modules.Components.Runtime.id,
             Modules.Components.Api.id,
+            Modules.Components.App.id,
             -> handler.applyNetworkingDependencies()
             Modules.Components.AndroidAssets.id,
             Modules.Components.Library.id,

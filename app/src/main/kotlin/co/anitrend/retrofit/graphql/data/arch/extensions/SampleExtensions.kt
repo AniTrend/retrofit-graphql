@@ -67,7 +67,7 @@ internal suspend inline fun <T> Deferred<Response<T>>.fetchBodyWithRetry(
     shouldRetry: (Exception) -> Boolean = ::defaultShouldRetry
 ) = executeWithRetry(dispatcher, firstDelay, maxAttempts, shouldRetry).bodyOrThrow()
 
-private fun defaultShouldRetry(exception: Exception) = when (exception) {
+internal fun defaultShouldRetry(exception: Exception) = when (exception) {
     is HttpException -> exception.code() == 429
     is FileNotFoundException -> true
     is SocketTimeoutException -> true
