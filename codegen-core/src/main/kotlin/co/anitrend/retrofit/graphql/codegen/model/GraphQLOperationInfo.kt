@@ -7,10 +7,12 @@ package co.anitrend.retrofit.graphql.codegen.model
  * @param type Whether this is a query, mutation, or subscription.
  * @param document The full source text of this operation, with fragments inlined.
  * @param sourceFile The file path from which this operation was parsed.
+ * @param variables The variable definitions for this operation, if any.
  */
 data class GraphQLOperationInfo(
     val name: String,
     val type: OperationType,
     val document: String,
     val sourceFile: String,
+    val variables: List<GraphQLVariableInfo> = emptyList(),
 )

@@ -33,10 +33,15 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
         ) {
             packageName.set(extension.packageName)
             operationsDir.setFrom(extension.operations)
+            schemaFile.set(extension.schema)
             outputDir.set(extension.outputDir)
             generateOperationConstants.set(extension.generateOperationConstants)
             generateDocuments.set(extension.generateDocuments)
             generateHashes.set(extension.generateHashes)
+            generateVariables.set(extension.generateVariables)
+            scalarMappings.set(
+                project.provider { extension.scalarMappings.toMap() }
+            )
         }
 
         // Add generated sources to the main Kotlin source set so they are compiled

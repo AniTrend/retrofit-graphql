@@ -2,9 +2,11 @@ package co.anitrend.retrofit.graphql.codegen.parser
 
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLFragmentInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
+import co.anitrend.retrofit.graphql.codegen.model.GraphQLVariableInfo
 import co.anitrend.retrofit.graphql.codegen.model.OperationType
 import graphql.language.FragmentDefinition
 import graphql.language.OperationDefinition
+import graphql.language.VariableDefinition
 import graphql.parser.Parser
 import java.io.File
 
@@ -14,6 +16,7 @@ import java.io.File
 class GraphQLDocumentParser {
 
     private val parser = Parser()
+    private val schemaTypeParser = SchemaParser()
 
     /**
      * Parses all operations from a single .graphql file.
@@ -36,14 +39,29 @@ class GraphQLDocumentParser {
                     )
                 val type = OperationType.fromGraphQLJava(definition.operation.name)
                 val originalDocument = extractDocumentText(source, definition)
+                val variables = definition.variableDefinitions.map { parseVariable(it) }
 
                 GraphQLOperationInfo(
                     name = name,
                     type = type,
                     document = originalDocument,
                     sourceFile = file.name,
+                    variables = variables,
                 )
             }
+    }
+
+    /**
+     * Converts a [VariableDefinition] AST node to [GraphQLVariableInfo].
+     */
+    private fun parseVariable(definition: VariableDefinition): GraphQLVariableInfo {
+        return GraphQLVariableInfo(
+            name = definition.name,
+            type = schemaTypeParser.toGraphQLType(definition.type),
+            defaultValue = definition.defaultValue?.let {
+                graphql.language.AstPrinter.printAst(it)
+            },
+        )
     }
 
     /**

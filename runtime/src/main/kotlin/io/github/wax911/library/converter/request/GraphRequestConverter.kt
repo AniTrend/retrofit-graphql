@@ -20,6 +20,7 @@ import com.google.gson.Gson
 import io.github.wax911.library.annotation.GraphQuery
 import io.github.wax911.library.annotation.processor.contract.AbstractGraphProcessor
 import io.github.wax911.library.model.GraphQLDocumentRegistry
+import io.github.wax911.library.model.GraphQLRequest
 import io.github.wax911.library.model.request.QueryContainerBuilder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
@@ -29,9 +30,9 @@ import retrofit2.Converter
 /**
  * GraphQL request body converter and injector, uses method annotation for a given retrofit method.
  *
- * Supports an optional [GraphQLDocumentRegistry] for build-time generated operation documents.
- * When a registry is provided, it is checked before falling back to the asset-based
- * [AbstractGraphProcessor] lookup.
+ * Supports both the legacy [QueryContainerBuilder] flow and the new [GraphQLRequest] flow.
+ * When a [GraphQLDocumentRegistry] is provided, it is checked before falling back to the asset-based
+ * [AbstractGraphProcessor] lookup (only for [QueryContainerBuilder] flow).
  *
  * @param methodAnnotations Annotations applied to the Retrofit method.
  * @param graphProcessor The processor used for asset-based query resolution.
@@ -43,10 +44,35 @@ open class GraphRequestConverter(
     protected val graphProcessor: AbstractGraphProcessor,
     protected val gson: Gson,
     protected val registry: GraphQLDocumentRegistry? = null,
-) : Converter<QueryContainerBuilder, RequestBody> {
+) : Converter<Any, RequestBody> {
     /**
-     * Converter for the request body, gets the GraphQL query from the method annotation
-     * and constructs a GraphQL request body to send over the network.
+     * Converter for the request body. Dispatches to the appropriate handler
+     * based on the body type.
+     *
+     * @param value The request body object ([QueryContainerBuilder] or [GraphQLRequest]).
+     */
+    override fun convert(value: Any): RequestBody {
+        return when (value) {
+            is GraphQLRequest<*> -> convertGraphQLRequest(value)
+            is QueryContainerBuilder -> convertQueryContainerBuilder(value)
+            else -> throw IllegalArgumentException(
+                "Unsupported request body type: ${value.javaClass.name}. " +
+                    "Expected QueryContainerBuilder or GraphQLRequest."
+            )
+        }
+    }
+
+    /**
+     * Converts a [GraphQLRequest] to a JSON request body.
+     * The request already contains the document, so no lookup is performed.
+     */
+    private fun convertGraphQLRequest(request: GraphQLRequest<*>): RequestBody {
+        val requestJson = gson.toJson(request)
+        return requestJson.toRequestBody(MEDIA_TYPE)
+    }
+
+    /**
+     * Converts a [QueryContainerBuilder] to a JSON request body.
      *
      * Resolution order:
      * 1. Build-time generated registry (if available and operation is registered)
@@ -54,7 +80,7 @@ open class GraphRequestConverter(
      *
      * @param containerBuilder The constructed builder method of your query with variables
      */
-    override fun convert(containerBuilder: QueryContainerBuilder): RequestBody {
+    private fun convertQueryContainerBuilder(containerBuilder: QueryContainerBuilder): RequestBody {
         val rawQuery = resolveQuery()
         val queryContainer =
             containerBuilder.setQuery(rawQuery)
