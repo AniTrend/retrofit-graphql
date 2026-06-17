@@ -108,11 +108,11 @@ object VariableClassGenerator {
         val base = if (nullable) typeStr.dropLast(1) else typeStr
 
         return when (base) {
-            "kotlin.String" -> String::class.asTypeName().copy(nullable = nullable)
-            "kotlin.Int" -> Int::class.asTypeName().copy(nullable = nullable)
-            "kotlin.Double" -> Double::class.asTypeName().copy(nullable = nullable)
-            "kotlin.Boolean" -> Boolean::class.asTypeName().copy(nullable = nullable)
-            "kotlin.Float" -> Float::class.asTypeName().copy(nullable = nullable)
+            "kotlin.String" -> ClassName("kotlin", "String").copy(nullable = nullable)
+            "kotlin.Int" -> ClassName("kotlin", "Int").copy(nullable = nullable)
+            "kotlin.Double" -> ClassName("kotlin", "Double").copy(nullable = nullable)
+            "kotlin.Boolean" -> ClassName("kotlin", "Boolean").copy(nullable = nullable)
+            "kotlin.Float" -> ClassName("kotlin", "Float").copy(nullable = nullable)
             else -> {
                 // Custom type (input object, enum, or mapped scalar) -- use simple class name
                 ClassName("", base).copy(nullable = nullable)

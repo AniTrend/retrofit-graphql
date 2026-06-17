@@ -14,5 +14,6 @@ gradlePlugin {
 
 dependencies {
     implementation(project(":codegen-core"))
+    implementation(libs.kotlinpoet)
     implementation(gradleApi())
 }

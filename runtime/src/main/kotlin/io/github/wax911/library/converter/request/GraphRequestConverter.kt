@@ -57,7 +57,7 @@ open class GraphRequestConverter(
             is QueryContainerBuilder -> convertQueryContainerBuilder(value)
             else -> throw IllegalArgumentException(
                 "Unsupported request body type: ${value.javaClass.name}. " +
-                    "Expected QueryContainerBuilder or GraphQLRequest."
+                    "Expected QueryContainerBuilder or GraphQLRequest.",
             )
         }
     }
@@ -111,11 +111,10 @@ open class GraphRequestConverter(
      * Extracts the operation name from the [GraphQuery] annotation value.
      */
     private fun extractOperationName(): String? {
-        return methodAnnotations
-            .filterIsInstance<GraphQuery>()
-            .firstOrNull()
-            ?.value
-            ?.takeIf { it.isNotEmpty() }
+        val annotation =
+            methodAnnotations.filterIsInstance<GraphQuery>().firstOrNull()
+                ?: return null
+        return annotation.value.takeIf { it.isNotEmpty() }
     }
 
     companion object {

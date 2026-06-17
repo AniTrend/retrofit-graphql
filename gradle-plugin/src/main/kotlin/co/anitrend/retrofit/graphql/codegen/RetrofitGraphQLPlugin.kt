@@ -3,7 +3,6 @@ package co.anitrend.retrofit.graphql.codegen
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.kotlin.dsl.register
 
 /**
  * Gradle plugin that registers a code generation task for .graphql operation files.
@@ -28,33 +27,31 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
             project.layout.buildDirectory.dir("generated/source/graphql")
         )
 
-        val generateTask = project.tasks.register<GenerateGraphQLSourcesTask>(
-            "generateGraphQLSources"
-        ) {
-            packageName.set(extension.packageName)
-            operationsDir.setFrom(extension.operations)
-            schemaFile.set(extension.schema)
-            outputDir.set(extension.outputDir)
-            generateOperationConstants.set(extension.generateOperationConstants)
-            generateDocuments.set(extension.generateDocuments)
-            generateHashes.set(extension.generateHashes)
-            generateVariables.set(extension.generateVariables)
-            scalarMappings.set(
-                project.provider { extension.scalarMappings.toMap() }
-            )
-        }
+        val generateTask = project.tasks.register(
+            "generateGraphQLSources",
+            GenerateGraphQLSourcesTask::class.java,
+        ).get()
+        generateTask.packageName.set(extension.packageName)
+        generateTask.operationsDir.from(extension.operations)
+        generateTask.schemaFile.set(extension.schema)
+        generateTask.outputDir.set(extension.outputDir)
+        generateTask.generateOperationConstants.set(extension.generateOperationConstants)
+        generateTask.generateDocuments.set(extension.generateDocuments)
+        generateTask.generateHashes.set(extension.generateHashes)
+        generateTask.generateVariables.set(extension.generateVariables)
+        generateTask.scalarMappings.set(
+            project.provider { extension.scalarMappings.toMap() }
+        )
 
         // Add generated sources to the main Kotlin source set so they are compiled
         project.afterEvaluate {
             val sourceSets = project.extensions.findByType(SourceSetContainer::class.java)
-            sourceSets?.named("main") { mainSourceSet ->
-                mainSourceSet.java.srcDir(extension.outputDir)
-            }
+            sourceSets?.getByName("main")?.java?.srcDir(extension.outputDir)
 
             // Wire the generate task to run before Kotlin compilation
             project.tasks.matching { it.name.startsWith("compile") && it.name.contains("Kotlin") }
-                .configureEach {
-                    dependsOn(generateTask)
+                .configureEach { task ->
+                    task.dependsOn(generateTask)
                 }
         }
     }

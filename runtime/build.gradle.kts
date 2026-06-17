@@ -9,4 +9,5 @@ android {
 dependencies {
     implementation(project(":api"))
     implementation(project(":android-assets"))
+    implementation(project(":annotations"))
 }

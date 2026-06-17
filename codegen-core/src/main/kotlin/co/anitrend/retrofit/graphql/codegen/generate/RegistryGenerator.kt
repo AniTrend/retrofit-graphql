@@ -64,7 +64,7 @@ object RegistryGenerator {
         return FunSpec.builder("document")
             .addModifiers(KModifier.OVERRIDE, KModifier.PUBLIC)
             .addParameter("operationName", String::class)
-            .returns(String::class.copy(nullable = true))
+            .returns(ClassName("kotlin", "String").copy(nullable = true))
             .beginControlFlow("return when (operationName)")
             .apply {
                 operations.forEach { op ->
@@ -86,7 +86,7 @@ object RegistryGenerator {
         return FunSpec.builder("hash")
             .addModifiers(KModifier.OVERRIDE, KModifier.PUBLIC)
             .addParameter("operationName", String::class)
-            .returns(String::class.copy(nullable = true))
+            .returns(ClassName("kotlin", "String").copy(nullable = true))
             .beginControlFlow("return when (operationName)")
             .apply {
                 operations.forEach { op ->

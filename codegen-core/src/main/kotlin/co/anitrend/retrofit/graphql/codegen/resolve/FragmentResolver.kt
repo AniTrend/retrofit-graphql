@@ -7,9 +7,11 @@ import graphql.language.AstTransformer
 import graphql.language.FragmentDefinition
 import graphql.language.FragmentSpread
 import graphql.language.InlineFragment
+import graphql.language.NodeTraverser
 import graphql.language.NodeVisitorStub
 import graphql.parser.Parser
 import graphql.util.TraversalControl
+import graphql.util.TraverserContext
 import graphql.util.TreeTransformerUtil
 
 /**
@@ -74,7 +76,11 @@ class FragmentResolver {
 
         val transformer = AstTransformer()
         val transformed = transformer.transform(document, object : NodeVisitorStub() {
-            override fun visitFragmentSpread(node: FragmentSpread): TraversalControl {
+            @Suppress("UNCHECKED_CAST")
+            override fun visitFragmentSpread(
+                node: FragmentSpread,
+                context: TraverserContext<graphql.language.Node<*>>,
+            ): TraversalControl {
                 val definition = relevantDefinitions[node.name]
                     ?: return TraversalControl.CONTINUE
 
@@ -87,7 +93,10 @@ class FragmentResolver {
                     .selectionSet(definition.selectionSet)
                     .build()
 
-                return TreeTransformerUtil.changeNode(node, inlineFragment)
+                return TreeTransformerUtil.changeNode(
+                    context as TraverserContext<InlineFragment>,
+                    inlineFragment,
+                )
             }
         })
 
@@ -99,14 +108,15 @@ class FragmentResolver {
         document: graphql.language.Document,
     ): Set<String> {
         val names = mutableSetOf<String>()
-        document.children.forEach { child ->
-            child.accept(object : graphql.language.AstVisitor by object : NodeVisitorStub() {
-                override fun visitFragmentSpread(node: FragmentSpread): TraversalControl {
-                    names.add(node.name)
-                    return TraversalControl.CONTINUE
-                }
-            }) {}
-        }
+        NodeTraverser().depthFirst(object : NodeVisitorStub() {
+            override fun visitFragmentSpread(
+                node: FragmentSpread,
+                context: TraverserContext<graphql.language.Node<*>>,
+            ): TraversalControl {
+                names.add(node.name)
+                return TraversalControl.CONTINUE
+            }
+        }, document)
         return names
     }
 
@@ -142,14 +152,15 @@ class FragmentResolver {
             visited.add(name)
 
             // Find fragment references within this fragment definition
-            definition.children.forEach { child ->
-                child.accept(object : graphql.language.AstVisitor by object : NodeVisitorStub() {
-                    override fun visitFragmentSpread(node: FragmentSpread): TraversalControl {
-                        dfs(node.name)
-                        return TraversalControl.CONTINUE
-                    }
-                }) {}
-            }
+            NodeTraverser().depthFirst(object : NodeVisitorStub() {
+                override fun visitFragmentSpread(
+                    node: FragmentSpread,
+                    context: TraverserContext<graphql.language.Node<*>>,
+                ): TraversalControl {
+                    dfs(node.name)
+                    return TraversalControl.CONTINUE
+                }
+            }, definition)
 
             inStack.remove(name)
         }

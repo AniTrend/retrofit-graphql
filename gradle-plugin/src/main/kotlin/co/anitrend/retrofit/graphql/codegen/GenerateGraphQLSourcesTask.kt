@@ -15,7 +15,7 @@ import co.anitrend.retrofit.graphql.codegen.parser.GraphQLDocumentParser
 import co.anitrend.retrofit.graphql.codegen.parser.SchemaParser
 import co.anitrend.retrofit.graphql.codegen.resolve.FragmentResolver
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
@@ -45,7 +45,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
     abstract val packageName: Property<String>
 
     @get:InputFiles
-    abstract val operationsDir: ConfigurableFileTree
+    abstract val operationsDir: ConfigurableFileCollection
 
     @get:Optional
     @get:InputFile
