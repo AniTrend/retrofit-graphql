@@ -44,6 +44,8 @@ internal class DependencyStrategy(
             -> handler.applyNetworkingDependencies()
             Modules.Components.AndroidAssets.id,
             Modules.Components.Library.id,
+            Modules.Components.SerializationGson.id,
+            Modules.Components.SerializationKotlinx.id,
             -> { /* No networking deps needed */ }
         }
     }

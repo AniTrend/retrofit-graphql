@@ -25,6 +25,8 @@ fun Project.isLibraryModule() =
         Modules.Components.Api.id,
         Modules.Components.AndroidAssets.id,
         Modules.Components.Runtime.id,
+        Modules.Components.SerializationGson.id,
+        Modules.Components.SerializationKotlinx.id,
     )
 
 fun Project.isAnnotationsModule() = name == Modules.Components.Annotations.id

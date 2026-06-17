@@ -20,5 +20,7 @@ internal object Modules {
         Runtime("runtime"),
         CodegenCore("codegen-core"),
         GradlePlugin("gradle-plugin"),
+        SerializationGson("serialization-gson"),
+        SerializationKotlinx("serialization-kotlinx"),
     }
 }
