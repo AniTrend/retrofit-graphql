@@ -13,6 +13,14 @@ internal object Modules {
 
     enum class Components(override val id: String) : Module {
         App("app"),
-        Library("library")
+        Library("library"),
+        Annotations("annotations"),
+        Api("api"),
+        AndroidAssets("android-assets"),
+        Runtime("runtime"),
+        CodegenCore("codegen-core"),
+        GradlePlugin("gradle-plugin"),
+        SerializationGson("serialization-gson"),
+        SerializationKotlinx("serialization-kotlinx"),
     }
 }

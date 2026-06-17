@@ -11,7 +11,7 @@ import co.anitrend.retrofit.graphql.data.user.datasource.remote.UserRemoteSource
 import co.anitrend.retrofit.graphql.data.user.entity.UserEntity
 import co.anitrend.retrofit.graphql.data.user.mapper.UserResponseMapper
 import co.anitrend.retrofit.graphql.data.user.source.contract.UserSource
-import io.github.wax911.library.model.request.QueryContainerBuilder
+import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.emitAll

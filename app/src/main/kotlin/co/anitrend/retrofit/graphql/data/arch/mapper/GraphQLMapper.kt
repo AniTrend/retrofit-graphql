@@ -1,7 +1,7 @@
 package co.anitrend.retrofit.graphql.data.arch.mapper
 
 import co.anitrend.arch.data.mapper.SupportResponseMapper
-import io.github.wax911.library.model.body.GraphContainer
+import co.anitrend.retrofit.graphql.model.body.GraphContainer
 import timber.log.Timber
 
 /**

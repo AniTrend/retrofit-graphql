@@ -1,14 +1,18 @@
 plugins {
     id("co.anitrend.retrofit.graphql")
-    id("kotlin-parcelize")
 }
 
 android {
-    namespace = "io.github.wax911.library"
+    namespace = "co.anitrend.retrofit.graphql"
 }
 
 dependencies {
-    implementation(libs.androidx.annotation)
+    api(project(":annotations"))
+    api(project(":api"))
+    api(project(":android-assets"))
+    api(project(":runtime"))
+    api(project(":serialization-gson"))
+    api(project(":serialization-kotlinx"))
 
     testImplementation(libs.jetbrains.kotlin.reflect)
 }

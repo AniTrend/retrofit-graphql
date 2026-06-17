@@ -5,8 +5,8 @@ import co.anitrend.arch.data.mapper.SupportResponseMapper
 import co.anitrend.arch.request.callback.RequestCallback
 import co.anitrend.retrofit.graphql.data.arch.controller.strategy.ControllerStrategy
 import co.anitrend.retrofit.graphql.data.arch.extensions.fetchBodyWithRetry
-import io.github.wax911.library.model.attribute.GraphError
-import io.github.wax911.library.model.body.GraphContainer
+import co.anitrend.retrofit.graphql.model.attribute.GraphError
+import co.anitrend.retrofit.graphql.model.body.GraphContainer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.withContext

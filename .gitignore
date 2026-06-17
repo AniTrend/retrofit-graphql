@@ -247,3 +247,4 @@ app/lint-baseline.xml
 .idea/AndroidProjectSystem.xml
 # Added by code-review-graph
 .code-review-graph/
+.claude/

@@ -2,6 +2,7 @@ package co.anitrend.retrofit.graphql.buildSrc.plugin.components
 
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.baseAppExtension
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.baseExtension
+import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.isFacadeModule
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.isLibraryModule
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.props
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.publishingExtension
@@ -222,7 +223,10 @@ internal fun Project.configureOptions() {
             add("archives", sourcesJar)
         }
 
-        createMavenPublicationUsing(sourcesJar)
+        // Only publish from the facade :library module
+        if (isFacadeModule()) {
+            createMavenPublicationUsing(sourcesJar)
+        }
     }
     else
         baseAppExtension().run {

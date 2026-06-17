@@ -9,11 +9,11 @@ import co.anitrend.retrofit.graphql.sample.BuildConfig
 import com.chuckerteam.chucker.api.ChuckerCollector
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.chuckerteam.chucker.api.RetentionManager
-import io.github.wax911.library.annotation.processor.GraphProcessor
-import io.github.wax911.library.annotation.processor.contract.AbstractGraphProcessor
-import io.github.wax911.library.annotation.processor.plugin.AssetManagerDiscoveryPlugin
-import io.github.wax911.library.logger.DefaultGraphLogger
-import io.github.wax911.library.logger.contract.ILogger
+import co.anitrend.retrofit.graphql.annotation.processor.GraphProcessor
+import co.anitrend.retrofit.graphql.annotation.processor.contract.AbstractGraphProcessor
+import co.anitrend.retrofit.graphql.annotation.processor.plugin.AssetManagerDiscoveryPlugin
+import co.anitrend.retrofit.graphql.logger.DefaultGraphLogger
+import co.anitrend.retrofit.graphql.logger.contract.ILogger
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor

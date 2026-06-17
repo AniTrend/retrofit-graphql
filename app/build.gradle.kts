@@ -13,6 +13,9 @@ repositories {
 
 android {
     namespace = "co.anitrend.retrofit.graphql.sample"
+    defaultConfig {
+        buildConfigField("String", "token", "\"\"")
+    }
     buildFeatures {
         buildConfig = true
     }
@@ -58,6 +61,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
     kapt(libs.androidx.room.compiler)
+    kapt(libs.jetbrains.kotlin.metadata.jvm)
 
     implementation(libs.anitrend.arch.ui)
     implementation(libs.anitrend.arch.extension)

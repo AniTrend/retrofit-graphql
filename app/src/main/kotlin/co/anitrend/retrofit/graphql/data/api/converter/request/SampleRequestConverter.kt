@@ -4,9 +4,9 @@ import co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper
 import co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper.containsImage
 import co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper.createMultiPartBody
 import com.google.gson.Gson
-import io.github.wax911.library.annotation.processor.contract.AbstractGraphProcessor
-import io.github.wax911.library.converter.request.GraphRequestConverter
-import io.github.wax911.library.model.request.QueryContainerBuilder
+import co.anitrend.retrofit.graphql.annotation.processor.contract.AbstractGraphProcessor
+import co.anitrend.retrofit.graphql.converter.request.GraphRequestConverter
+import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -28,7 +28,8 @@ internal class SampleRequestConverter(
      * @param containerBuilder The constructed builder method of your query with variables
      * @return Request body
      */
-    override fun convert(containerBuilder: QueryContainerBuilder): RequestBody {
+    override fun convert(value: Any): RequestBody {
+        val containerBuilder = value as QueryContainerBuilder
         val miniQuery = graphProcessor.getQuery(methodAnnotations)
         val mediaType = MIME_TYPE.toMediaTypeOrNull()
 
