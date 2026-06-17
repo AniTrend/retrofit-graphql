@@ -142,22 +142,7 @@ object OperationRequestGenerator {
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): com.squareup.kotlinpoet.TypeName {
-        val typeStr = GraphQLTypeMapper.toKotlinType(type, scalarMappings, schemaTypeNames)
-        return parseTypeString(typeStr)
-    }
-
-    private fun parseTypeString(typeStr: String): com.squareup.kotlinpoet.TypeName {
-        val nullable = typeStr.endsWith("?")
-        val base = if (nullable) typeStr.dropLast(1) else typeStr
-
-        return when (base) {
-            "kotlin.String" -> ClassName("kotlin", "String").copy(nullable = nullable)
-            "kotlin.Int" -> ClassName("kotlin", "Int").copy(nullable = nullable)
-            "kotlin.Double" -> ClassName("kotlin", "Double").copy(nullable = nullable)
-            "kotlin.Boolean" -> ClassName("kotlin", "Boolean").copy(nullable = nullable)
-            "kotlin.Float" -> ClassName("kotlin", "Float").copy(nullable = nullable)
-            else -> ClassName("", base).copy(nullable = nullable)
-        }
+        return GraphQLTypeMapper.toKotlinType(type, scalarMappings, schemaTypeNames)
     }
 
     private fun convertGraphQLDefaultToKotlin(defaultValue: String, type: GraphQLType): String {

@@ -1,9 +1,12 @@
 package co.anitrend.retrofit.graphql.codegen.mapping
 
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.TypeName
 
 /**
- * Maps GraphQL types to Kotlin type names, respecting configured scalar mappings
+ * Maps GraphQL types to KotlinPoet TypeName instances, respecting configured scalar mappings
  * and knowledge of schema-defined input/enum types.
  */
 object GraphQLTypeMapper {
@@ -21,58 +24,49 @@ object GraphQLTypeMapper {
     )
 
     /**
-     * Maps a [GraphQLType] to a Kotlin type string suitable for use in code generation.
+     * Maps a [GraphQLType] to a KotlinPoet [TypeName] suitable for use in code generation.
      *
      * @param type The GraphQL type to map.
      * @param scalarMappings Custom scalar type to Kotlin type mappings (e.g. "DateTime" -> "kotlin.String").
      * @param schemaTypeNames The set of type names defined in the schema
      *   (input objects and enums). These are treated as their own type names.
-     * @return A Kotlin type string (e.g. "String?", "List<MyInput>?", "Int").
+     * @return A KotlinPoet [TypeName] (e.g. String?, List<MyInput>?, Int).
      */
     fun toKotlinType(
         type: GraphQLType,
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
-    ): String {
+    ): TypeName {
         return when (type) {
             is GraphQLType.Named -> {
                 val base = resolveNamedType(type.name, scalarMappings, schemaTypeNames)
-                if (type.nullable) "$base?" else base
+                if (type.nullable) base.copy(nullable = true) else base
             }
             is GraphQLType.List -> {
-                val elementType = toKotlinType(type.of, scalarMappings, schemaTypeNames).let {
-                    // Remove outer nullable marker since list element nullability
-                    // is expressed via the nullable flag, not the ? suffix.
-                    if (type.of is GraphQLType.Named && !type.of.nullable) {
-                        // Non-null element inside list stays as non-null
-                        it
-                    } else {
-                        // Element type is already nullable
-                        it
-                    }
-                }
-                val listType = "kotlin.collections.List<$elementType>"
-                if (type.nullable) "$listType?" else listType
+                val elementType = toKotlinType(type.of, scalarMappings, schemaTypeNames)
+                val listType = ClassName("kotlin.collections", "List")
+                    .parameterizedBy(elementType)
+                if (type.nullable) listType.copy(nullable = true) else listType
             }
         }
     }
 
     /**
-     * Resolves a named GraphQL type to its Kotlin equivalent.
+     * Resolves a named GraphQL type to its KotlinPoet TypeName equivalent.
      */
     private fun resolveNamedType(
         name: String,
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
-    ): String {
+    ): TypeName {
         // Check custom scalar mappings first
-        scalarMappings[name]?.let { return it }
+        scalarMappings[name]?.let { return parseFqcnToTypeName(it) }
 
         // Check built-in scalars
-        BUILT_IN_SCALARS[name]?.let { return it }
+        BUILT_IN_SCALARS[name]?.let { return parseFqcnToTypeName(it) }
 
         // If it's a schema-defined type (input object or enum), use the type name directly
-        if (name in schemaTypeNames) return name
+        if (name in schemaTypeNames) return ClassName("", name)
 
         // Unknown scalar -- will be reported as an error by the task
         error(
@@ -80,5 +74,32 @@ object GraphQLTypeMapper {
                 "Add a scalar mapping in the retrofitGraphQL {} extension, e.g.:\n" +
                 "  scalars { map(\"$name\", \"kotlin.String\") }"
         )
+    }
+
+    /**
+     * Parses a fully-qualified Kotlin type name string into a [ClassName].
+     *
+     * Handles nested classes like "okhttp3.MultipartBody.Part" by heuristically
+     * splitting on the first uppercase-starting segment as the class boundary.
+     * All lowercase-starting segments before it form the package name.
+     */
+    private fun parseFqcnToTypeName(fqcn: String): ClassName {
+        val parts = fqcn.split(".")
+        // Find the split point between package (lowercase) and class hierarchy (uppercase)
+        val firstClassIndex = parts.indexOfLast { it.first().isLowerCase() } + 1
+        val packageName = parts.subList(0, firstClassIndex).joinToString(".")
+        val classNames = parts.subList(firstClassIndex, parts.size)
+
+        return when (classNames.size) {
+            0 -> error("Invalid fully-qualified class name: $fqcn")
+            1 -> ClassName(packageName, classNames[0])
+            else -> {
+                var className = ClassName(packageName, classNames[0])
+                for (i in 1 until classNames.size) {
+                    className = className.nestedClass(classNames[i])
+                }
+                className
+            }
+        }
     }
 }

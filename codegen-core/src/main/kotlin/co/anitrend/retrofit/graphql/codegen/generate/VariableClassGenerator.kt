@@ -96,28 +96,7 @@ object VariableClassGenerator {
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): com.squareup.kotlinpoet.TypeName {
-        val typeStr = GraphQLTypeMapper.toKotlinType(type, scalarMappings, schemaTypeNames)
-        return parseTypeString(typeStr)
-    }
-
-    /**
-     * Parses a Kotlin type string like "kotlin.String?" into a KotlinPoet TypeName.
-     */
-    private fun parseTypeString(typeStr: String): com.squareup.kotlinpoet.TypeName {
-        val nullable = typeStr.endsWith("?")
-        val base = if (nullable) typeStr.dropLast(1) else typeStr
-
-        return when (base) {
-            "kotlin.String" -> ClassName("kotlin", "String").copy(nullable = nullable)
-            "kotlin.Int" -> ClassName("kotlin", "Int").copy(nullable = nullable)
-            "kotlin.Double" -> ClassName("kotlin", "Double").copy(nullable = nullable)
-            "kotlin.Boolean" -> ClassName("kotlin", "Boolean").copy(nullable = nullable)
-            "kotlin.Float" -> ClassName("kotlin", "Float").copy(nullable = nullable)
-            else -> {
-                // Custom type (input object, enum, or mapped scalar) -- use simple class name
-                ClassName("", base).copy(nullable = nullable)
-            }
-        }
+        return GraphQLTypeMapper.toKotlinType(type, scalarMappings, schemaTypeNames)
     }
 
     /**

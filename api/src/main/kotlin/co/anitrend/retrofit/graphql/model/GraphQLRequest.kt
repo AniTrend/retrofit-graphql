@@ -27,7 +27,7 @@ import co.anitrend.retrofit.graphql.model.request.PersistedQuery
  * @property variables The operation variables, or null if there are none.
  * @property extensions Optional extensions map (e.g. persistedQuery).
  */
-data class GraphQLRequest<TVariables : Any>(
+data class GraphQLRequest<TVariables : GraphQLVariables>(
     val query: String,
     val operationName: String,
     val variables: TVariables? = null,

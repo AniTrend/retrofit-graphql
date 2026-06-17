@@ -13,7 +13,8 @@ gradlePlugin {
 }
 
 dependencies {
-    implementation(project(":codegen-core"))
+    api(project(":codegen-core"))
     implementation(libs.kotlinpoet)
     implementation(gradleApi())
+    compileOnly(libs.android.gradle.plugin)
 }

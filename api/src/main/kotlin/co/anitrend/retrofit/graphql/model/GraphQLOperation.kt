@@ -21,7 +21,7 @@ package co.anitrend.retrofit.graphql.model
  *
  * @param TVariables The type of variables this operation accepts, or [Unit] if none.
  */
-interface GraphQLOperation<TVariables : Any> {
+interface GraphQLOperation<TVariables : GraphQLVariables> {
     /** The operation name constant (e.g. "GetCurrentUser"). */
     val name: String
 
@@ -35,4 +35,4 @@ interface GraphQLOperation<TVariables : Any> {
 /**
  * Convenience interface for operations that take no variables.
  */
-interface GraphQLNoVarOperation : GraphQLOperation<Unit>
+interface GraphQLNoVarOperation : GraphQLOperation<EmptyGraphQLVariables>

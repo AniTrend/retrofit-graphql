@@ -23,3 +23,10 @@ package co.anitrend.retrofit.graphql.model
  * allowing the runtime to treat them uniformly.
  */
 interface GraphQLVariables
+
+/**
+ * Sentinel type for operations that take no variables.
+ * Generated operation objects for no-variable queries implement
+ * [GraphQLOperation]<EmptyGraphQLVariables> via [GraphQLNoVarOperation].
+ */
+object EmptyGraphQLVariables : GraphQLVariables
