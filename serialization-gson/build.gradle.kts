@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "io.github.wax911.serialization.gson"
+    namespace = "co.anitrend.retrofit.graphql.serialization.gson"
 }
 
 dependencies {

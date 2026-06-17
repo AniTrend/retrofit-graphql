@@ -35,7 +35,7 @@ import com.squareup.kotlinpoet.TypeSpec
 object RegistryGenerator {
 
     private val REGISTRY_INTERFACE = ClassName(
-        "io.github.wax911.library.model",
+        "co.anitrend.retrofit.graphql.model",
         "GraphQLDocumentRegistry"
     )
     private val OPERATIONS_CLASS = ClassName("", "GraphQLOperations")

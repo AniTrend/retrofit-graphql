@@ -25,7 +25,7 @@ import com.squareup.kotlinpoet.TypeSpec
  */
 object VariableClassGenerator {
 
-    private val VARIABLES_INTERFACE = ClassName("io.github.wax911.library.model", "GraphQLVariables")
+    private val VARIABLES_INTERFACE = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLVariables")
 
     /**
      * Generates a variable class for a single operation that has variables.

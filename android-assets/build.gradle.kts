@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "io.github.wax911.androidassets"
+    namespace = "co.anitrend.retrofit.graphql.androidassets"
 }
 
 dependencies {

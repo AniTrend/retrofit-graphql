@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "io.github.wax911.serialization.kotlinx"
+    namespace = "co.anitrend.retrofit.graphql.serialization.kotlinx"
 }
 
 dependencies {

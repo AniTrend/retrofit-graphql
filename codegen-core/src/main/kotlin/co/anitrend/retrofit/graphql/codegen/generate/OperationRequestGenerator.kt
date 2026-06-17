@@ -37,9 +37,9 @@ import com.squareup.kotlinpoet.TypeSpec
  */
 object OperationRequestGenerator {
 
-    private val GRAPHQL_OPERATION = ClassName("io.github.wax911.library.model", "GraphQLOperation")
-    private val GRAPHQL_NO_VAR_OPERATION = ClassName("io.github.wax911.library.model", "GraphQLNoVarOperation")
-    private val GRAPHQL_REQUEST = ClassName("io.github.wax911.library.model", "GraphQLRequest")
+    private val GRAPHQL_OPERATION = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLOperation")
+    private val GRAPHQL_NO_VAR_OPERATION = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLNoVarOperation")
+    private val GRAPHQL_REQUEST = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLRequest")
     private val OPERATIONS_CLASS = ClassName("", "GraphQLOperations")
     private val DOCUMENTS_CLASS = ClassName("", "GraphQLDocuments")
     private val HASHES_CLASS = ClassName("", "GraphQLHashes")

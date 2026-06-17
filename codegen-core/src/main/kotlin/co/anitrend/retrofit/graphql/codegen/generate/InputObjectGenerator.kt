@@ -23,7 +23,7 @@ import com.squareup.kotlinpoet.TypeSpec
  */
 object InputObjectGenerator {
 
-    private val VARIABLES_INTERFACE = ClassName("io.github.wax911.library.model", "GraphQLVariables")
+    private val VARIABLES_INTERFACE = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLVariables")
 
     /**
      * Generates a data class for each input object type in the schema.

@@ -13,7 +13,7 @@ import co.anitrend.retrofit.graphql.data.market.entity.MarketPlaceEntity
 import co.anitrend.retrofit.graphql.data.market.mapper.MarketPlaceResponseMapper
 import co.anitrend.retrofit.graphql.data.market.model.query.MarketPlaceListingQuery
 import co.anitrend.retrofit.graphql.data.market.source.contract.MarketPlaceSource
-import io.github.wax911.library.model.request.QueryContainerBuilder
+import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext

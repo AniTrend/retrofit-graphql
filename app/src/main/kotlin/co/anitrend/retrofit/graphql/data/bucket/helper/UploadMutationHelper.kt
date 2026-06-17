@@ -5,7 +5,7 @@ import co.anitrend.retrofit.graphql.data.arch.GraphMultiPartUpload
 import co.anitrend.retrofit.graphql.data.bucket.datasource.remote.BucketRemoteSource
 import co.anitrend.retrofit.graphql.data.bucket.model.upload.mutation.UploadMutation
 import com.google.gson.Gson
-import io.github.wax911.library.model.request.QueryContainerBuilder
+import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -144,7 +144,7 @@ internal object UploadMutationHelper {
          * Unlike the above example we making use of plain mutation without any variables.
          *
          * This could be a graphql file defined as follows with a keyword you'd replace upon
-         * inspecting what the output of [io.github.wax911.library.annotation.processor.contract.AbstractGraphProcessor.getQuery]
+         * inspecting what the output of [co.anitrend.retrofit.graphql.annotation.processor.contract.AbstractGraphProcessor.getQuery]
          */
         val plainMutation = """
             mutation { uploadFile(fileData: "$PART_FILE_NAME") { contentType filename id url }}

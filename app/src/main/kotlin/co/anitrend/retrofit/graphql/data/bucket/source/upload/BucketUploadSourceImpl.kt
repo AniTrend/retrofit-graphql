@@ -9,7 +9,7 @@ import co.anitrend.retrofit.graphql.data.bucket.mapper.UploadResponseMapper
 import co.anitrend.retrofit.graphql.data.bucket.source.upload.contract.BucketUploadSource
 import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
 import co.anitrend.retrofit.graphql.domain.models.common.IGraphQuery
-import io.github.wax911.library.model.request.QueryContainerBuilder
+import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow

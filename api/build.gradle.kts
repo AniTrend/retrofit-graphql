@@ -4,5 +4,5 @@ plugins {
 }
 
 android {
-    namespace = "io.github.wax911.api"
+    namespace = "co.anitrend.retrofit.graphql.api"
 }
