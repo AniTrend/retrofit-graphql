@@ -43,7 +43,7 @@ koin-android = "4.2.2"
 square-retrofit = "3.0.0"
 square-okhttp = "5.4.0"
 
-graphql-java = "25.0"
+graphql-java = "26.0"
 kotlinpoet = "2.3.0"
 
 [plugins]
