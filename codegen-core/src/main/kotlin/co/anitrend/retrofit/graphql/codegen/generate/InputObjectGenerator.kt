@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package co.anitrend.retrofit.graphql.codegen.generate
 
 import co.anitrend.retrofit.graphql.codegen.mapping.GraphQLTypeMapper
@@ -22,7 +38,6 @@ import com.squareup.kotlinpoet.TypeSpec
  * ```
  */
 object InputObjectGenerator {
-
     private val VARIABLES_INTERFACE = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLVariables")
 
     /**
@@ -45,39 +60,41 @@ object InputObjectGenerator {
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): FileSpec {
-        val typeSpec = TypeSpec.classBuilder(inputObject.name)
-            .addModifiers(KModifier.PUBLIC, KModifier.DATA)
-            .addSuperinterface(VARIABLES_INTERFACE)
-            .apply {
-                val params = inputObject.fields.map { field ->
-                    val kotlinType = parseKotlinTypeString(field.type, scalarMappings, schemaTypeNames)
-                    val paramBuilder = ParameterSpec.builder(field.name, kotlinType)
-                    if (field.defaultValue != null) {
-                        paramBuilder.defaultValue(
-                            convertGraphQLDefaultToKotlin(field.defaultValue, field.type)
+        val typeSpec =
+            TypeSpec.classBuilder(inputObject.name)
+                .addModifiers(KModifier.PUBLIC, KModifier.DATA)
+                .addSuperinterface(VARIABLES_INTERFACE)
+                .apply {
+                    val params =
+                        inputObject.fields.map { field ->
+                            val kotlinType = parseKotlinTypeString(field.type, scalarMappings, schemaTypeNames)
+                            val paramBuilder = ParameterSpec.builder(field.name, kotlinType)
+                            if (field.defaultValue != null) {
+                                paramBuilder.defaultValue(
+                                    convertGraphQLDefaultToKotlin(field.defaultValue, field.type),
+                                )
+                            }
+                            paramBuilder.build()
+                        }
+                    primaryConstructor(
+                        com.squareup.kotlinpoet.FunSpec.constructorBuilder()
+                            .addParameters(params)
+                            .build(),
+                    )
+                    // Properties
+                    inputObject.fields.forEach { field ->
+                        addProperty(
+                            PropertySpec.builder(
+                                field.name,
+                                parseKotlinTypeString(field.type, scalarMappings, schemaTypeNames),
+                            )
+                                .initializer(field.name)
+                                .addModifiers(KModifier.PUBLIC)
+                                .build(),
                         )
                     }
-                    paramBuilder.build()
                 }
-                primaryConstructor(
-                    com.squareup.kotlinpoet.FunSpec.constructorBuilder()
-                        .addParameters(params)
-                        .build()
-                )
-                // Properties
-                inputObject.fields.forEach { field ->
-                    addProperty(
-                        PropertySpec.builder(
-                            field.name,
-                            parseKotlinTypeString(field.type, scalarMappings, schemaTypeNames)
-                        )
-                            .initializer(field.name)
-                            .addModifiers(KModifier.PUBLIC)
-                            .build()
-                    )
-                }
-            }
-            .build()
+                .build()
 
         return FileSpec.builder(packageName, inputObject.name)
             .addType(typeSpec)
@@ -92,7 +109,10 @@ object InputObjectGenerator {
         return GraphQLTypeMapper.toKotlinType(type, scalarMappings, schemaTypeNames)
     }
 
-    private fun convertGraphQLDefaultToKotlin(defaultValue: String, type: GraphQLType): String {
+    private fun convertGraphQLDefaultToKotlin(
+        defaultValue: String,
+        type: GraphQLType,
+    ): String {
         return when {
             defaultValue == "null" -> "null"
             defaultValue.startsWith("\"") -> defaultValue
