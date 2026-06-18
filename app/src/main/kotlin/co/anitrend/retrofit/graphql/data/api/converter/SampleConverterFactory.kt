@@ -4,6 +4,7 @@ import co.anitrend.retrofit.graphql.data.api.converter.request.SampleRequestConv
 import com.google.gson.GsonBuilder
 import co.anitrend.retrofit.graphql.annotation.processor.contract.AbstractGraphProcessor
 import co.anitrend.retrofit.graphql.converter.GraphConverter
+import co.anitrend.retrofit.graphql.model.GraphQLDocumentRegistry
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Converter
@@ -20,12 +21,14 @@ import java.lang.reflect.Type
  * @see co.anitrend.retrofit.graphql.data.arch.koin.coreModule
  */
 internal class SampleConverterFactory(
-    processor: AbstractGraphProcessor
+    processor: AbstractGraphProcessor,
+    registry: GraphQLDocumentRegistry? = null
 ) : GraphConverter(
     processor,
     GsonBuilder()
         .setLenient()
-        .create()
+        .create(),
+    registry
 ) {
 
     /**
@@ -48,7 +51,8 @@ internal class SampleConverterFactory(
         return SampleRequestConverter(
             annotations = methodAnnotations,
             processor = graphProcessor,
-            gson = gson
+            gson = gson,
+            registry = registry
         )
     }
 

@@ -6,6 +6,7 @@ import co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper.crea
 import com.google.gson.Gson
 import co.anitrend.retrofit.graphql.annotation.processor.contract.AbstractGraphProcessor
 import co.anitrend.retrofit.graphql.converter.request.GraphRequestConverter
+import co.anitrend.retrofit.graphql.model.GraphQLDocumentRegistry
 import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
@@ -18,8 +19,9 @@ import okhttp3.RequestBody.Companion.toRequestBody
 internal class SampleRequestConverter(
     annotations: Array<out Annotation>,
     processor: AbstractGraphProcessor,
-    gson: Gson
-) : GraphRequestConverter(annotations, processor, gson) {
+    gson: Gson,
+    registry: GraphQLDocumentRegistry? = null
+) : GraphRequestConverter(annotations, processor, gson, registry) {
 
     /**
      * Converter for the request body, gets the GraphQL query from the method annotation
@@ -29,8 +31,9 @@ internal class SampleRequestConverter(
      * @return Request body
      */
     override fun convert(value: Any): RequestBody {
-        val containerBuilder = value as QueryContainerBuilder
-        val miniQuery = graphProcessor.getQuery(methodAnnotations)
+        val containerBuilder = value as? QueryContainerBuilder
+            ?: return super.convert(value)
+        val miniQuery = resolveQuery()
         val mediaType = MIME_TYPE.toMediaTypeOrNull()
 
         /**

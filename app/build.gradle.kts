@@ -2,6 +2,7 @@ import java.net.URI
 
 plugins {
     id("co.anitrend.retrofit.graphql")
+    id("co.anitrend.retrofit.graphql.codegen")
     id("kotlinx-serialization")
 }
 
@@ -26,7 +27,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":library"))
+    implementation(project(":runtime"))
+    implementation(project(":api"))
+    implementation(project(":android-assets"))
+    implementation(project(":annotations"))
 
     implementation(libs.jetbrains.kotlinx.serialization.json)
 
@@ -91,4 +95,15 @@ dependencies {
 
     releaseImplementation(libs.chuncker.release)
     debugImplementation(libs.chuncker.debug)
+}
+
+retrofitGraphQL {
+    common {
+        generateVariables.set(false)
+    }
+    packageName.set("co.anitrend.retrofit.graphql.sample.generated")
+    schema.set(file("src/main/graphql/schema.graphql"))
+    operations.from(fileTree("src/main/graphql") {
+        include("**/*.graphql")
+    })
 }

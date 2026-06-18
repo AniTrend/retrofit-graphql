@@ -52,27 +52,33 @@ object RegistryGenerator {
             "co.anitrend.retrofit.graphql.model",
             "GraphQLDocumentRegistry",
         )
-    private val OPERATIONS_CLASS = ClassName("", "GraphQLOperations")
-    private val DOCUMENTS_CLASS = ClassName("", "GraphQLDocuments")
-    private val HASHES_CLASS = ClassName("", "GraphQLHashes")
 
     fun generate(
         operations: List<GraphQLOperationInfo>,
         packageName: String,
     ): FileSpec {
+        // Use the actual package name so KotlinPoet recognizes same-package
+        // references and avoids emitting bare imports (which Kotlin 2.4+ rejects).
+        val operationsClass = ClassName(packageName, "GraphQLOperations")
+        val documentsClass = ClassName(packageName, "GraphQLDocuments")
+        val hashesClass = ClassName(packageName, "GraphQLHashes")
         return FileSpec.builder(packageName, "GeneratedGraphQLRegistry")
             .addType(
                 TypeSpec.objectBuilder("GeneratedGraphQLRegistry")
                     .addModifiers(KModifier.PUBLIC)
                     .addSuperinterface(REGISTRY_INTERFACE)
-                    .addFunction(buildDocumentFunction(operations))
-                    .addFunction(buildHashFunction(operations))
+                    .addFunction(buildDocumentFunction(operations, operationsClass, documentsClass))
+                    .addFunction(buildHashFunction(operations, operationsClass, hashesClass))
                     .build(),
             )
             .build()
     }
 
-    private fun buildDocumentFunction(operations: List<GraphQLOperationInfo>): FunSpec {
+    private fun buildDocumentFunction(
+        operations: List<GraphQLOperationInfo>,
+        operationsClass: ClassName,
+        documentsClass: ClassName,
+    ): FunSpec {
         return FunSpec.builder("document")
             .addModifiers(KModifier.OVERRIDE, KModifier.PUBLIC)
             .addParameter("operationName", String::class)
@@ -83,8 +89,8 @@ object RegistryGenerator {
                     val constRef = "${op.type.name.lowercase().replaceFirstChar { it.uppercase() }}.${op.name}"
                     addStatement(
                         "%T.$constRef -> %T.${op.name}",
-                        OPERATIONS_CLASS,
-                        DOCUMENTS_CLASS,
+                        operationsClass,
+                        documentsClass,
                     )
                 }
             }
@@ -93,7 +99,11 @@ object RegistryGenerator {
             .build()
     }
 
-    private fun buildHashFunction(operations: List<GraphQLOperationInfo>): FunSpec {
+    private fun buildHashFunction(
+        operations: List<GraphQLOperationInfo>,
+        operationsClass: ClassName,
+        hashesClass: ClassName,
+    ): FunSpec {
         return FunSpec.builder("hash")
             .addModifiers(KModifier.OVERRIDE, KModifier.PUBLIC)
             .addParameter("operationName", String::class)
@@ -104,8 +114,8 @@ object RegistryGenerator {
                     val constRef = "${op.type.name.lowercase().replaceFirstChar { it.uppercase() }}.${op.name}"
                     addStatement(
                         "%T.$constRef -> %T.${op.name}",
-                        OPERATIONS_CLASS,
-                        HASHES_CLASS,
+                        operationsClass,
+                        hashesClass,
                     )
                 }
             }

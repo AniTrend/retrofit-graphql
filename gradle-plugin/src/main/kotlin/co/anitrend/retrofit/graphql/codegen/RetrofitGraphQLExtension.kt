@@ -21,7 +21,9 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import javax.inject.Inject
 
 //
 // DSL extension for a single GraphQL code-generation target.
@@ -39,7 +41,7 @@ import org.gradle.api.provider.Property
 // }
 // ```
 //
-abstract class GraphQLTargetExtension {
+abstract class GraphQLTargetExtension @Inject constructor(val name: String) {
     //
     // The Kotlin package name for generated source files.
     // Defaults to "co.anitrend.graphql.generated".
@@ -181,30 +183,67 @@ abstract class CommonExtension {
 // }
 // ```
 //
-open class RetrofitGraphQLExtension {
+open class RetrofitGraphQLExtension @Inject constructor(objects: ObjectFactory) {
     //
     // Common settings shared across all targets.
-    // Set by the plugin during apply.
+    // Set by the plugin during apply (overrides constructor default).
     //
-    lateinit var common: CommonExtension
+    var common: CommonExtension = objects.newInstance(CommonExtension::class.java)
         internal set
 
     //
     // Named container of code-generation targets.
-    // Set by the plugin during apply.
+    // Set by the plugin during apply. Left null before that to avoid
+    // triggering domain-object construction during Gradle's decoration phase.
     //
-    lateinit var targets: NamedDomainObjectContainer<GraphQLTargetExtension>
+    var targets: NamedDomainObjectContainer<GraphQLTargetExtension>? = null
         internal set
 
+    // -------------------------------------------------------------------------
+    // Legacy properties — stored directly on the extension so Gradle's
+    // $gradleInitAttach does not walk into the targets container prematurely.
+    // When the plugin creates a default "main" target, it copies values from
+    // these properties into the target.
+    // -------------------------------------------------------------------------
+
+    @get:org.gradle.api.tasks.Input
+    val packageName: Property<String> = objects.property(String::class.java)
+
+    @get:org.gradle.api.tasks.InputFiles
+    val operations: ConfigurableFileCollection = objects.fileCollection()
+
+    @get:org.gradle.api.tasks.InputFile
+    @get:org.gradle.api.tasks.Optional
+    val schema: RegularFileProperty = objects.fileProperty()
+
+    @get:org.gradle.api.tasks.Input
+    val generateOperationConstants: Property<Boolean> = objects.property(Boolean::class.java)
+
+    @get:org.gradle.api.tasks.Input
+    val generateDocuments: Property<Boolean> = objects.property(Boolean::class.java)
+
+    @get:org.gradle.api.tasks.Input
+    val generateHashes: Property<Boolean> = objects.property(Boolean::class.java)
+
+    @get:org.gradle.api.tasks.Input
+    val generateVariables: Property<Boolean> = objects.property(Boolean::class.java)
+
+    @get:org.gradle.api.tasks.OutputDirectory
+    val outputDir: DirectoryProperty = objects.directoryProperty()
+
     //
-    // The default "main" target used for legacy single-target configuration.
-    // Lazily created when legacy properties are accessed.
+    // The default "main" target — lazily created inside the targets container
+    // when a legacy property is accessed, or when the plugin needs it.
     //
     private var mainTargetInternal: GraphQLTargetExtension? = null
 
-    private fun mainTarget(): GraphQLTargetExtension {
+    fun mainTarget(): GraphQLTargetExtension {
         if (mainTargetInternal == null) {
-            mainTargetInternal = targets.maybeCreate("main")
+            mainTargetInternal = targets?.maybeCreate("main")
+                ?: throw IllegalStateException(
+                    "retrofitGraphQL extension has not been fully initialized. " +
+                        "This is a bug in the plugin.",
+                )
         }
         return mainTargetInternal!!
     }
@@ -216,73 +255,30 @@ open class RetrofitGraphQLExtension {
         name: String,
         action: Action<GraphQLTargetExtension>,
     ) {
-        action.execute(targets.maybeCreate(name))
+        action.execute(
+            targets?.maybeCreate(name)
+                ?: throw IllegalStateException(
+                    "retrofitGraphQL extension has not been fully initialized.",
+                ),
+        )
+    }
+
+    //
+    // DSL function for configuring common settings via 'common { ... }' block.
+    //
+    fun common(action: Action<CommonExtension>) {
+        action.execute(common)
     }
 
     // -------------------------------------------------------------------------
-    // Legacy sugar -- delegates to the default "main" target
+    // Scalar mappings support
     // -------------------------------------------------------------------------
 
-    //
-    // The Kotlin package name for generated source files.
-    // Delegates to the "main" target.
-    //
-    val packageName: Property<String> get() = mainTarget().packageName
+    internal val scalarMappings = ScalarMappingExtension()
 
-    //
-    // The source directory or file tree containing *.graphql operation files.
-    // Delegates to the "main" target.
-    //
-    val operations: ConfigurableFileCollection get() = mainTarget().operations
-
-    //
-    // The schema.graphql file containing type definitions.
-    // Delegates to the "main" target.
-    //
-    val schema: RegularFileProperty get() = mainTarget().schema
-
-    //
-    // Whether to generate GraphQLOperations constants.
-    // Delegates to the "main" target.
-    //
-    val generateOperationConstants: Property<Boolean> get() = mainTarget().generateOperationConstants
-
-    //
-    // Whether to generate GraphQLDocuments constants.
-    // Delegates to the "main" target.
-    //
-    val generateDocuments: Property<Boolean> get() = mainTarget().generateDocuments
-
-    //
-    // Whether to generate GraphQLHashes constants.
-    // Delegates to the "main" target.
-    //
-    val generateHashes: Property<Boolean> get() = mainTarget().generateHashes
-
-    //
-    // Whether to generate variable classes, input objects, enum constants, and
-    // operation request helpers.
-    // Delegates to the "main" target.
-    //
-    val generateVariables: Property<Boolean> get() = mainTarget().generateVariables
-
-    //
-    // The output directory for generated sources.
-    // Delegates to the "main" target.
-    //
-    val outputDir: DirectoryProperty get() = mainTarget().outputDir
-
-    //
-    // Configure scalar type mappings on the default "main" target.
-    //
     fun scalars(action: Action<ScalarMappingExtension>) {
-        action.execute(mainTarget().scalarMappings)
+        action.execute(scalarMappings)
     }
-
-    //
-    // Access to scalar mappings on the default "main" target.
-    //
-    internal val scalarMappings: ScalarMappingExtension get() = mainTarget().scalarMappings
 }
 
 //

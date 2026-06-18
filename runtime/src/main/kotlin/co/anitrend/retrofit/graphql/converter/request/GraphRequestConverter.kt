@@ -94,7 +94,7 @@ open class GraphRequestConverter(
      * 1. Build-time generated registry (if available)
      * 2. Asset-based file discovery
      */
-    private fun resolveQuery(): String? {
+    protected open fun resolveQuery(): String? {
         val operationName = extractOperationName()
 
         // Try the generated registry first

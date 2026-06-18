@@ -36,3 +36,123 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 2. Use `detect_changes` for code review.
 3. Use `get_affected_flows` to understand impact.
 4. Use `query_graph` pattern="tests_for" to check coverage.
+
+---
+
+# Retrofit GraphQL — Project Context
+
+## Overview
+
+**Retrofit GraphQL** is a converter library for Retrofit that enables injection of `.graphql` query/mutation files into HTTP request bodies with GraphQL variables. It bridges Retrofit's HTTP capabilities with GraphQL's query-based approach, letting Android developers work with raw `.graphql` files while keeping full control over their model classes.
+
+### Architecture Principles
+
+- **Converter Pattern** — Core functionality is a Retrofit `Converter.Factory` that transforms annotated method calls into GraphQL HTTP requests.
+- **Annotation-Driven** — `@GraphQuery` marks Retrofit methods with operation names. Annotation processor discovers matching `.graphql` files at runtime.
+- **File-Based + Optional Code Generation** — Supports both runtime `.graphql` file loading from assets AND build-time code generation via a Gradle plugin. Developers choose between flexible hand-written models and type-safe generated helpers.
+
+## Module Organization
+
+The project is organized into composable modules under the `co.anitrend.retrofit.graphql` package root:
+
+| Module | Type | Purpose |
+|--------|------|---------|
+| `:annotations` | Kotlin JVM | `@GraphQuery` annotation (runtime retention) |
+| `:api` | Android | Public API interfaces: `GraphQLOperation`, `GraphQLDocumentRegistry`, `QueryContainerBuilder`, `GraphContainer` |
+| `:android-assets` | Android | Runtime asset-based query discovery: `GraphProcessor`, `AssetManagerDiscoveryPlugin`, APQ, logging |
+| `:runtime` | Android | Retrofit `Converter.Factory`: `GraphConverter`, `GraphRequestConverter`, `GraphResponseConverter`. Depends on `:api`, `:android-assets`, `:annotations` |
+| `:codegen-core` | Kotlin JVM | Code generation engine: parses `.graphql` files with graphql-java, generates Kotlin with KotlinPoet |
+| `:gradle-plugin` | Gradle Plugin | Plugin `id("co.anitrend.retrofit.graphql.codegen")`. Registers `GenerateGraphQLSourcesTask`, wires output into source sets. Lives in composite build under `pluginManagement` |
+| `:serialization-gson` | Android | Gson-backed `GraphQLJson` serialization |
+| `:serialization-kotlinx` | Android | kotlinx.serialization-backed `GraphQLJson` |
+| `:library` | Android | **Deprecated** aggregator. Re-exports all modules via `api()`. Contains type aliases from old `io.github.wax911.library` package |
+| `:app` | Android | Sample GitHub API client demonstrating both asset-based and codegen workflows |
+
+### Dependency Graph
+
+```
+:app → :runtime → :api + :android-assets + :annotations
+:app → :serialization-gson/:serialization-kotlinx (optional)
+:app → :gradle-plugin → :codegen-core (build-time only)
+:library (deprecated) → api() aggregates all modules above
+```
+
+## Build Logic & Conventions
+
+- **Shared Gradle plugin**: `co.anitrend.retrofit.graphql` (`buildSrc`) applies Android config, Dokka, Spotless, publishing, and dependency strategies. Avoid duplicating configuration in individual modules.
+- **Version catalog**: `gradle/libs.versions.toml`. Add new deps there first, then reference by alias.
+- **Toolchain**: Java/Kotlin 21 (pinned in `.java-version`). Local dev uses `jenv`; CI uses `actions/setup-java`.
+- **SDK**: `compileSdk=37`, `minSdk=23`, `targetSdk=37`.
+- **Formatting**: Ktlint via Spotless. License header at `spotless/copyright.kt`.
+- **Publishing**: JitPack. JitPack badge/coordinates at top of README.
+- **CI**: Only `:library` is built/tested in CI environments. It serves as the aggregate facade and transitively builds all sub-modules via `api()` deps. `:app` is excluded in CI (see `settings.gradle.kts`).
+- **Dokka**: Generated via `buildSrc` `AndroidOptions.kt`. Published at `https://anitrend.github.io/retrofit-graphql/`. Currently generates from `:library` only; multi-module Dokka is a planned follow-up.
+
+## Code Style & Documentation
+
+### Kotlin conventions
+- Use Ktlint/Spotless for formatting.
+- Prefer immutable `val`, data classes, sealed classes, extension functions.
+- Packages: lowercase, hierarchical. Classes: PascalCase. Constants: SCREAMING_SNAKE_CASE.
+
+### KDoc & Dokka
+- KDoc is **consumer documentation**. The generated Dokka site is the public API reference.
+- Document all new/changed public types: classes, interfaces, objects, enums, annotations, functions, properties.
+- Write for someone outside this repo. Explain what the API does, when to use it, and how it fits.
+- For annotations (`@GraphQuery`): document expected argument format, assets folder path convention, runtime behavior.
+- For converters: document Retrofit integration (how to register, ordering, supported request types).
+- For discovery plugins: document contract (what to return, lifecycle events, threading assumptions).
+- Use `@param`, `@property`, `@return`, `@throws`, `@see`, `@since` tags where they add value.
+- Avoid placeholder KDoc that restates the type name. Explain behavior, not just existence.
+- `internal` packages are suppressed from Dokka. Keep public API in documented packages.
+- Update KDoc in the same patch as behavior changes.
+
+## Testing
+
+- **Unit tests**: JUnit Platform (configured in `buildSrc`), MockK for mocking.
+- **Focus areas**: annotation processing logic, GraphQL file parsing, variable binding, error handling.
+- **Integration tests**: Retrofit integration with sample operations, multipart uploads, error scenarios.
+- **Sample app**: Manual testing for new features. Ensure it demonstrates all major capabilities.
+
+## GraphQL File Management
+
+- Sample `.graphql` files in the `:app` module live at `src/main/graphql/` (codegen input) or `src/main/assets/graphql/` (legacy asset-based).
+- Organize by operation type: `queries/`, `mutations/`, `fragments/`.
+- Schema file at `src/main/graphql/schema.graphql` (used by codegen for input object/enum generation).
+- Generated output from codegen plugin at `build/generated/source/graphql/`.
+
+## Extension Points
+
+- **Discovery plugins**: Implement the plugin interface for custom file sources (assets, external storage, network).
+- **Logger**: Implement logger contracts for custom logging frameworks.
+- **Serialization**: Implement `GraphQLJson` for alternative JSON backends (see `:serialization-gson`, `:serialization-kotlinx`).
+
+## Scope & Limitations
+
+The library does NOT provide:
+- **Schema validation** — No compile-time GraphQL schema validation.
+- **Full code generation** — Optional build-time codegen generates operation constants, a document registry, and optional typed request helpers. It is NOT a full schema-to-Kotlin code generator like Apollo.
+- **Caching** — No built-in response caching (relies on HTTP/OkHttp).
+- **Subscriptions** — HTTP-based only. No WebSocket or subscription support.
+- **Schema introspection** — No runtime schema discovery.
+
+## Context Maintenance
+
+When making changes that alter the repository's reality, update related documentation in the same patch:
+
+- **Module changes** (new modules, renamed modules, changed dependencies): update the Module Organization section above, `.agents/skills/retrofit-graphql-reference-map/references/module-map.md`, and `.agents/skills/retrofit-graphql-build-dependencies/references/build-map.md`.
+- **Build convention changes**: update the Build Logic section above and `build-map.md`.
+- **Public API changes**: update KDoc and relevant skill references.
+- **Consumer-facing changes** (integration patterns, configuration): update `README.md`, `MIGRATION.md`, and wiki pages.
+- **Remove or rewrite contradictory guidance** instead of layering new instructions on top of obsolete ones.
+
+## Agent Skills
+
+Repository-specific skills live under `.agents/skills/`:
+
+| Skill | Purpose |
+|-------|---------|
+| `jenv-gradle-low-ram` | JDK alignment with `.java-version` and low-RAM Gradle invocation |
+| `retrofit-graphql-build-dependencies` | Build map, module dependencies, and CI concerns |
+| `retrofit-graphql-kdoc-dokka` | KDoc checklist and Dokka generation workflow |
+| `retrofit-graphql-reference-map` | Module-to-package map, consumer entry points, placement heuristics |
