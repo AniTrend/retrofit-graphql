@@ -9,6 +9,7 @@ import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.libs
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.props
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
+import org.gradle.api.tasks.testing.Test
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
@@ -158,6 +159,11 @@ internal fun Project.configureAndroid() {
 
     // Note: useJUnitPlatform() removed - requires junit-platform-launcher on test runtime classpath.
     // All tests are currently JUnit 4; re-enable when JUnit 5 migration happens with platform deps.
+    tasks.withType(Test::class.java).configureEach {
+        // Gradle 9 defaults failOnNoDiscoveredTests to true, but modules like
+        // :api and :android-assets have test config/deps without actual test sources.
+        failOnNoDiscoveredTests.set(false)
+    }
 
     kotlinAndroidProjectExtension().run {
         jvmToolchain(21)
