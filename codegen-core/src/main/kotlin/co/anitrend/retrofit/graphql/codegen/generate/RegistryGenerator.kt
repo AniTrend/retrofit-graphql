@@ -1,12 +1,26 @@
+/**
+ * Copyright 2026 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package co.anitrend.retrofit.graphql.codegen.generate
 
-import co.anitrend.retrofit.graphql.codegen.hash.APQHashGenerator
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
 
 /**
@@ -33,11 +47,11 @@ import com.squareup.kotlinpoet.TypeSpec
  * ```
  */
 object RegistryGenerator {
-
-    private val REGISTRY_INTERFACE = ClassName(
-        "co.anitrend.retrofit.graphql.model",
-        "GraphQLDocumentRegistry"
-    )
+    private val REGISTRY_INTERFACE =
+        ClassName(
+            "co.anitrend.retrofit.graphql.model",
+            "GraphQLDocumentRegistry",
+        )
     private val OPERATIONS_CLASS = ClassName("", "GraphQLOperations")
     private val DOCUMENTS_CLASS = ClassName("", "GraphQLDocuments")
     private val HASHES_CLASS = ClassName("", "GraphQLHashes")
@@ -53,14 +67,12 @@ object RegistryGenerator {
                     .addSuperinterface(REGISTRY_INTERFACE)
                     .addFunction(buildDocumentFunction(operations))
                     .addFunction(buildHashFunction(operations))
-                    .build()
+                    .build(),
             )
             .build()
     }
 
-    private fun buildDocumentFunction(
-        operations: List<GraphQLOperationInfo>,
-    ): FunSpec {
+    private fun buildDocumentFunction(operations: List<GraphQLOperationInfo>): FunSpec {
         return FunSpec.builder("document")
             .addModifiers(KModifier.OVERRIDE, KModifier.PUBLIC)
             .addParameter("operationName", String::class)
@@ -71,7 +83,8 @@ object RegistryGenerator {
                     val constRef = "${op.type.name.lowercase().replaceFirstChar { it.uppercase() }}.${op.name}"
                     addStatement(
                         "%T.$constRef -> %T.${op.name}",
-                        OPERATIONS_CLASS, DOCUMENTS_CLASS
+                        OPERATIONS_CLASS,
+                        DOCUMENTS_CLASS,
                     )
                 }
             }
@@ -80,9 +93,7 @@ object RegistryGenerator {
             .build()
     }
 
-    private fun buildHashFunction(
-        operations: List<GraphQLOperationInfo>,
-    ): FunSpec {
+    private fun buildHashFunction(operations: List<GraphQLOperationInfo>): FunSpec {
         return FunSpec.builder("hash")
             .addModifiers(KModifier.OVERRIDE, KModifier.PUBLIC)
             .addParameter("operationName", String::class)
@@ -93,7 +104,8 @@ object RegistryGenerator {
                     val constRef = "${op.type.name.lowercase().replaceFirstChar { it.uppercase() }}.${op.name}"
                     addStatement(
                         "%T.$constRef -> %T.${op.name}",
-                        OPERATIONS_CLASS, HASHES_CLASS
+                        OPERATIONS_CLASS,
+                        HASHES_CLASS,
                     )
                 }
             }

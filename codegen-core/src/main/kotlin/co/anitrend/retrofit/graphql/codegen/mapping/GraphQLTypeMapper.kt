@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package co.anitrend.retrofit.graphql.codegen.mapping
 
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
@@ -10,18 +26,18 @@ import com.squareup.kotlinpoet.TypeName
  * and knowledge of schema-defined input/enum types.
  */
 object GraphQLTypeMapper {
-
     /**
      * Built-in GraphQL scalar types mapped to their Kotlin equivalents.
      * Maps non-null variants; nullable wrapping is handled by [toKotlinType].
      */
-    private val BUILT_IN_SCALARS = mapOf(
-        "String" to "kotlin.String",
-        "Int" to "kotlin.Int",
-        "Float" to "kotlin.Double",
-        "Boolean" to "kotlin.Boolean",
-        "ID" to "kotlin.String",
-    )
+    private val BUILT_IN_SCALARS =
+        mapOf(
+            "String" to "kotlin.String",
+            "Int" to "kotlin.Int",
+            "Float" to "kotlin.Double",
+            "Boolean" to "kotlin.Boolean",
+            "ID" to "kotlin.String",
+        )
 
     /**
      * Maps a [GraphQLType] to a KotlinPoet [TypeName] suitable for use in code generation.
@@ -44,8 +60,9 @@ object GraphQLTypeMapper {
             }
             is GraphQLType.List -> {
                 val elementType = toKotlinType(type.of, scalarMappings, schemaTypeNames)
-                val listType = ClassName("kotlin.collections", "List")
-                    .parameterizedBy(elementType)
+                val listType =
+                    ClassName("kotlin.collections", "List")
+                        .parameterizedBy(elementType)
                 if (type.nullable) listType.copy(nullable = true) else listType
             }
         }
@@ -72,7 +89,7 @@ object GraphQLTypeMapper {
         error(
             "Unknown scalar type '$name'. " +
                 "Add a scalar mapping in the retrofitGraphQL {} extension, e.g.:\n" +
-                "  scalars { map(\"$name\", \"kotlin.String\") }"
+                "  scalars { map(\"$name\", \"kotlin.String\") }",
         )
     }
 

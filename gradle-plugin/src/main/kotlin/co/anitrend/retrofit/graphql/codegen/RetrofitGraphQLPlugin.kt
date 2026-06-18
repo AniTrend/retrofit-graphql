@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package co.anitrend.retrofit.graphql.codegen
 
 import com.android.build.gradle.AppExtension
@@ -45,12 +61,12 @@ import org.gradle.api.tasks.TaskProvider
 // }
 // ```
 class RetrofitGraphQLPlugin : Plugin<Project> {
-
     override fun apply(project: Project) {
-        val extension = project.extensions.create(
-            "retrofitGraphQL",
-            RetrofitGraphQLExtension::class.java,
-        )
+        val extension =
+            project.extensions.create(
+                "retrofitGraphQL",
+                RetrofitGraphQLExtension::class.java,
+            )
 
         // Create common extension
         extension.common = project.objects.newInstance(CommonExtension::class.java)
@@ -65,15 +81,20 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
                 // No targets configured at all -- create a default "main" task
                 val defaultTarget = extension.targets.maybeCreate("main")
                 createTargetTask(
-                    project, extension, "main", defaultTarget, "generateGraphQLSources",
+                    project,
+                    extension,
+                    "main",
+                    defaultTarget,
+                    "generateGraphQLSources",
                 )
             } else {
                 targetMap.forEach { (name, target) ->
-                    val taskName = if (name == "main") {
-                        "generateGraphQLSources"
-                    } else {
-                        "generateGraphQLSources${name.replaceFirstChar { it.uppercase() }}"
-                    }
+                    val taskName =
+                        if (name == "main") {
+                            "generateGraphQLSources"
+                        } else {
+                            "generateGraphQLSources${name.replaceFirstChar { it.uppercase() }}"
+                        }
                     createTargetTask(project, extension, name, target, taskName)
                 }
             }
@@ -87,10 +108,11 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
         target: GraphQLTargetExtension,
         taskName: String,
     ) {
-        val taskProvider = project.tasks.register(
-            taskName,
-            GenerateGraphQLSourcesTask::class.java,
-        )
+        val taskProvider =
+            project.tasks.register(
+                taskName,
+                GenerateGraphQLSourcesTask::class.java,
+            )
 
         taskProvider.configure { task ->
             task.packageName.set(target.packageName)
@@ -99,11 +121,12 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
 
             // Default output directory per target.
             // For the legacy "main" target, use the simpler path for backward compatibility.
-            val defaultOutputDir = if (targetName == "main") {
-                project.layout.buildDirectory.dir("generated/source/graphql")
-            } else {
-                project.layout.buildDirectory.dir("generated/source/graphql/$targetName")
-            }
+            val defaultOutputDir =
+                if (targetName == "main") {
+                    project.layout.buildDirectory.dir("generated/source/graphql")
+                } else {
+                    project.layout.buildDirectory.dir("generated/source/graphql/$targetName")
+                }
             task.outputDir.convention(defaultOutputDir)
             task.outputDir.set(target.outputDir)
 

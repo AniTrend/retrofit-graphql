@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package co.anitrend.retrofit.graphql.codegen.generate
 
 import co.anitrend.retrofit.graphql.codegen.mapping.GraphQLTypeMapper
@@ -36,7 +52,6 @@ import com.squareup.kotlinpoet.TypeSpec
  * ```
  */
 object OperationRequestGenerator {
-
     private val GRAPHQL_OPERATION = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLOperation")
     private val GRAPHQL_NO_VAR_OPERATION = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLNoVarOperation")
     private val GRAPHQL_REQUEST = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLRequest")
@@ -57,24 +72,26 @@ object OperationRequestGenerator {
         val variablesClassName = "${operation.name}Variables"
         val variablesClass = ClassName("", variablesClassName)
 
-        val superInterface = if (hasVariables) {
-            GRAPHQL_OPERATION.parameterizedBy(variablesClass)
-        } else {
-            GRAPHQL_NO_VAR_OPERATION
-        }
-
-        val typeSpec = TypeSpec.objectBuilder(operation.name)
-            .addModifiers(KModifier.PUBLIC)
-            .addSuperinterface(superInterface)
-            .addProperty(nameProperty(operation))
-            .addProperty(documentProperty(operation))
-            .addProperty(sha256HashProperty(operation))
-            .apply {
-                if (hasVariables) {
-                    addFunction(buildRequestFunction(operation, variablesClass, scalarMappings, schemaTypeNames))
-                }
+        val superInterface =
+            if (hasVariables) {
+                GRAPHQL_OPERATION.parameterizedBy(variablesClass)
+            } else {
+                GRAPHQL_NO_VAR_OPERATION
             }
-            .build()
+
+        val typeSpec =
+            TypeSpec.objectBuilder(operation.name)
+                .addModifiers(KModifier.PUBLIC)
+                .addSuperinterface(superInterface)
+                .addProperty(nameProperty(operation))
+                .addProperty(documentProperty(operation))
+                .addProperty(sha256HashProperty(operation))
+                .apply {
+                    if (hasVariables) {
+                        addFunction(buildRequestFunction(operation, variablesClass, scalarMappings, schemaTypeNames))
+                    }
+                }
+                .build()
 
         return FileSpec.builder(packageName, operation.name)
             .addType(typeSpec)
@@ -110,16 +127,17 @@ object OperationRequestGenerator {
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): FunSpec {
-        val params = operation.variables.map { variable ->
-            val kotlinType = parseKotlinTypeString(variable.type, scalarMappings, schemaTypeNames)
-            val paramBuilder = ParameterSpec.builder(variable.name, kotlinType)
-            if (variable.defaultValue != null) {
-                paramBuilder.defaultValue(
-                    convertGraphQLDefaultToKotlin(variable.defaultValue, variable.type)
-                )
+        val params =
+            operation.variables.map { variable ->
+                val kotlinType = parseKotlinTypeString(variable.type, scalarMappings, schemaTypeNames)
+                val paramBuilder = ParameterSpec.builder(variable.name, kotlinType)
+                if (variable.defaultValue != null) {
+                    paramBuilder.defaultValue(
+                        convertGraphQLDefaultToKotlin(variable.defaultValue, variable.type),
+                    )
+                }
+                paramBuilder.build()
             }
-            paramBuilder.build()
-        }
 
         // Build the variables constructor call: GetMarketPlaceAppsVariables(after = after, ...)
         val varArgs = operation.variables.joinToString(", ") { "${it.name} = ${it.name}" }
@@ -145,7 +163,10 @@ object OperationRequestGenerator {
         return GraphQLTypeMapper.toKotlinType(type, scalarMappings, schemaTypeNames)
     }
 
-    private fun convertGraphQLDefaultToKotlin(defaultValue: String, type: GraphQLType): String {
+    private fun convertGraphQLDefaultToKotlin(
+        defaultValue: String,
+        type: GraphQLType,
+    ): String {
         return when {
             defaultValue == "null" -> "null"
             defaultValue.startsWith("\"") -> defaultValue

@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package co.anitrend.retrofit.graphql.codegen.generate
 
 import co.anitrend.retrofit.graphql.codegen.mapping.GraphQLTypeMapper
@@ -24,7 +40,6 @@ import com.squareup.kotlinpoet.TypeSpec
  * ```
  */
 object VariableClassGenerator {
-
     private val VARIABLES_INTERFACE = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLVariables")
 
     /**
@@ -41,33 +56,35 @@ object VariableClassGenerator {
 
         val className = "${operation.name}Variables"
 
-        val typeSpec = TypeSpec.classBuilder(className)
-            .addModifiers(KModifier.PUBLIC, KModifier.DATA)
-            .addSuperinterface(VARIABLES_INTERFACE)
-            .apply {
-                // Constructor parameters
-                val constructorParams = operation.variables.map { variable ->
-                    buildConstructorParam(variable, scalarMappings, schemaTypeNames)
-                }
-                primaryConstructor(
-                    com.squareup.kotlinpoet.FunSpec.constructorBuilder()
-                        .addParameters(constructorParams)
-                        .build()
-                )
-                // Properties
-                operation.variables.forEach { variable ->
-                    addProperty(
-                        PropertySpec.builder(
-                            variable.name,
-                            parseKotlinTypeString(variable.type, scalarMappings, schemaTypeNames)
-                        )
-                            .initializer(variable.name)
-                            .addModifiers(KModifier.PUBLIC)
-                            .build()
+        val typeSpec =
+            TypeSpec.classBuilder(className)
+                .addModifiers(KModifier.PUBLIC, KModifier.DATA)
+                .addSuperinterface(VARIABLES_INTERFACE)
+                .apply {
+                    // Constructor parameters
+                    val constructorParams =
+                        operation.variables.map { variable ->
+                            buildConstructorParam(variable, scalarMappings, schemaTypeNames)
+                        }
+                    primaryConstructor(
+                        com.squareup.kotlinpoet.FunSpec.constructorBuilder()
+                            .addParameters(constructorParams)
+                            .build(),
                     )
+                    // Properties
+                    operation.variables.forEach { variable ->
+                        addProperty(
+                            PropertySpec.builder(
+                                variable.name,
+                                parseKotlinTypeString(variable.type, scalarMappings, schemaTypeNames),
+                            )
+                                .initializer(variable.name)
+                                .addModifiers(KModifier.PUBLIC)
+                                .build(),
+                        )
+                    }
                 }
-            }
-            .build()
+                .build()
 
         return FileSpec.builder(packageName, className)
             .addType(typeSpec)
@@ -102,7 +119,10 @@ object VariableClassGenerator {
     /**
      * Converts a GraphQL default value literal to a Kotlin expression.
      */
-    private fun convertGraphQLDefaultToKotlin(defaultValue: String, type: GraphQLType): String {
+    private fun convertGraphQLDefaultToKotlin(
+        defaultValue: String,
+        type: GraphQLType,
+    ): String {
         return when {
             defaultValue == "null" -> "null"
             defaultValue.startsWith("\"") -> defaultValue // String literal -- keep as-is

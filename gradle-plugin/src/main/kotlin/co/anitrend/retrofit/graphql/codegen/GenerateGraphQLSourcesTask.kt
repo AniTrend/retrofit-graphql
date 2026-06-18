@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package co.anitrend.retrofit.graphql.codegen
 
 import co.anitrend.retrofit.graphql.codegen.generate.DocumentGenerator
@@ -40,7 +56,6 @@ import java.io.File
  * - Per-operation request helper objects
  */
 abstract class GenerateGraphQLSourcesTask : DefaultTask() {
-
     @get:Input
     abstract val packageName: Property<String>
 
@@ -92,7 +107,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                 if (allFragments.containsKey(fragment.name)) {
                     throw IllegalArgumentException(
                         "Duplicate fragment definition '${fragment.name}' " +
-                            "found in ${file.name}. Fragment names must be unique."
+                            "found in ${file.name}. Fragment names must be unique.",
                     )
                 }
                 allFragments[fragment.name] = fragment
@@ -105,7 +120,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         if (duplicates.isNotEmpty()) {
             throw IllegalArgumentException(
                 "Duplicate operation names found: ${duplicates.joinToString(", ")}. " +
-                    "Operation names must be unique across all .graphql files."
+                    "Operation names must be unique across all .graphql files.",
             )
         }
 
@@ -120,19 +135,22 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
             val schemaParser = SchemaParser()
             schemaTypes = schemaParser.parse(schemaFile.get().asFile)
             scalarMap = scalarMappings.orNull ?: emptyMap()
-            schemaTypeNames = schemaTypes.map { it.let { t ->
-                when (t) {
-                    is SchemaType.InputObject -> t.name
-                    is SchemaType.Enum -> t.name
-                    is SchemaType.Scalar -> t.name
-                }
-            } }.toSet()
+            schemaTypeNames =
+                schemaTypes.map {
+                    it.let { t ->
+                        when (t) {
+                            is SchemaType.InputObject -> t.name
+                            is SchemaType.Enum -> t.name
+                            is SchemaType.Scalar -> t.name
+                        }
+                    }
+                }.toSet()
         } else {
             if (generateVariables.get()) {
                 logger.warn(
                     "generateVariables is enabled but no schema file is set. " +
                         "Input object and enum generation will be skipped. " +
-                        "Variable classes will use scalar mappings only."
+                        "Variable classes will use scalar mappings only.",
                 )
             }
             schemaTypes = emptyList()
@@ -174,13 +192,18 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         // Variable / input / enum / request helper generation
         if (generateVariables.get()) {
             generateVariableArtifacts(
-                resolvedOperations, schemaTypes, scalarMap, schemaTypeNames, pkg, outputDirectory
+                resolvedOperations,
+                schemaTypes,
+                scalarMap,
+                schemaTypeNames,
+                pkg,
+                outputDirectory,
             )
         }
 
         logger.lifecycle(
             "Generated GraphQL sources for ${resolvedOperations.size} operation(s) " +
-                "in package '$pkg'"
+                "in package '$pkg'",
         )
     }
 
@@ -197,9 +220,13 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
 
         // Generate per-operation variable classes
         operations.forEach { operation ->
-            val varFile = VariableClassGenerator.generate(
-                operation, pkg, scalarMap, schemaTypeNames
-            )
+            val varFile =
+                VariableClassGenerator.generate(
+                    operation,
+                    pkg,
+                    scalarMap,
+                    schemaTypeNames,
+                )
             if (varFile != null) {
                 writeFile(varFile, outputDirectory)
                 logger.info("Generated ${operation.name}Variables")
@@ -226,9 +253,13 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
 
         // Generate per-operation request helpers
         operations.forEach { operation ->
-            val reqFile = OperationRequestGenerator.generate(
-                operation, pkg, scalarMap, schemaTypeNames
-            )
+            val reqFile =
+                OperationRequestGenerator.generate(
+                    operation,
+                    pkg,
+                    scalarMap,
+                    schemaTypeNames,
+                )
             writeFile(reqFile, outputDirectory)
             logger.info("Generated ${operation.name} request helper")
         }
@@ -256,7 +287,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                         "Unknown type '$typeName' in variable '${variable.name}' " +
                             "of operation '${operation.name}'. " +
                             "Add a scalar mapping in the retrofitGraphQL {} extension, e.g.:\n" +
-                            "  scalars { map(\"$typeName\", \"kotlin.String\") }"
+                            "  scalars { map(\"$typeName\", \"kotlin.String\") }",
                     )
                 }
             }
@@ -270,7 +301,10 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         }
     }
 
-    private fun writeFile(fileSpec: com.squareup.kotlinpoet.FileSpec, outputDirectory: File) {
+    private fun writeFile(
+        fileSpec: com.squareup.kotlinpoet.FileSpec,
+        outputDirectory: File,
+    ) {
         fileSpec.writeTo(outputDirectory)
     }
 }

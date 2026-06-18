@@ -1,6 +1,10 @@
+import co.anitrend.retrofit.graphql.buildSrc.plugin.components.configureSpotlessForJvm
+
 plugins {
     kotlin("jvm")
 }
+
+configureSpotlessForJvm()
 
 dependencies {
     implementation(libs.graphql.java)
@@ -8,3 +12,4 @@ dependencies {
 
     testImplementation(libs.junit)
 }
+

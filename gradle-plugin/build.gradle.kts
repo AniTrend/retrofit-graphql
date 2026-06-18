@@ -1,7 +1,11 @@
+import co.anitrend.retrofit.graphql.buildSrc.plugin.components.configureSpotlessForJvm
+
 plugins {
     kotlin("jvm")
     `java-gradle-plugin`
 }
+
+configureSpotlessForJvm()
 
 gradlePlugin {
     plugins {
@@ -18,3 +22,4 @@ dependencies {
     implementation(gradleApi())
     compileOnly(libs.android.gradle.plugin)
 }
+
