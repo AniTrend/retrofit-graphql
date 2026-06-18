@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package co.anitrend.retrofit.graphql.codegen.parser
 
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
@@ -18,7 +34,6 @@ import java.io.File
  * input object types, enum types, and scalar type definitions for code generation.
  */
 class SchemaParser {
-
     private val parser = Parser()
 
     /**
@@ -68,8 +83,9 @@ class SchemaParser {
                 GraphQLType.List(of = elementType, nullable = true)
             }
             is TypeName -> {
-                val typeName = type.name
-                    ?: throw IllegalArgumentException("TypeName must have a name")
+                val typeName =
+                    type.name
+                        ?: throw IllegalArgumentException("TypeName must have a name")
                 GraphQLType.Named(name = typeName, nullable = true)
             }
             else -> error("Unsupported type node: ${type.javaClass.simpleName}")
@@ -77,9 +93,10 @@ class SchemaParser {
     }
 
     private fun parseInputObject(definition: InputObjectTypeDefinition): SchemaType.InputObject {
-        val fields = definition.inputValueDefinitions.map { field ->
-            parseInputField(field)
-        }
+        val fields =
+            definition.inputValueDefinitions.map { field ->
+                parseInputField(field)
+            }
         return SchemaType.InputObject(
             name = definition.name,
             fields = fields,

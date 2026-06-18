@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package co.anitrend.retrofit.graphql.codegen.generate
 
 import co.anitrend.retrofit.graphql.codegen.model.SchemaType
@@ -22,7 +38,6 @@ import com.squareup.kotlinpoet.TypeSpec
  * Future: Optional Kotlin enum class generation via [EnumGenerator.generateAsEnumClass].
  */
 object EnumGenerator {
-
     /**
      * Generates string constants for a list of enum types.
      * All enums are grouped into a single `GraphQLEnums` file.
@@ -33,14 +48,15 @@ object EnumGenerator {
     ): FileSpec? {
         if (enums.isEmpty()) return null
 
-        val outerSpec = TypeSpec.objectBuilder("GraphQLEnums")
-            .addModifiers(KModifier.PUBLIC)
-            .apply {
-                enums.forEach { enumType ->
-                    addType(buildEnumObject(enumType))
+        val outerSpec =
+            TypeSpec.objectBuilder("GraphQLEnums")
+                .addModifiers(KModifier.PUBLIC)
+                .apply {
+                    enums.forEach { enumType ->
+                        addType(buildEnumObject(enumType))
+                    }
                 }
-            }
-            .build()
+                .build()
 
         return FileSpec.builder(packageName, "GraphQLEnums")
             .addType(outerSpec)
@@ -54,14 +70,15 @@ object EnumGenerator {
         enumType: SchemaType.Enum,
         packageName: String,
     ): FileSpec {
-        val typeSpec = TypeSpec.enumBuilder(enumType.name)
-            .addModifiers(KModifier.PUBLIC)
-            .apply {
-                enumType.values.forEach { value ->
-                    addEnumConstant(value)
+        val typeSpec =
+            TypeSpec.enumBuilder(enumType.name)
+                .addModifiers(KModifier.PUBLIC)
+                .apply {
+                    enumType.values.forEach { value ->
+                        addEnumConstant(value)
+                    }
                 }
-            }
-            .build()
+                .build()
 
         return FileSpec.builder(packageName, enumType.name)
             .addType(typeSpec)
@@ -77,7 +94,7 @@ object EnumGenerator {
                         PropertySpec.builder(value, String::class)
                             .addModifiers(KModifier.PUBLIC, KModifier.CONST)
                             .initializer("%S", value)
-                            .build()
+                            .build(),
                     )
                 }
             }

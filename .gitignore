@@ -248,3 +248,6 @@ app/lint-baseline.xml
 # Added by code-review-graph
 .code-review-graph/
 .claude/
+
+# OpenCode deepwork session files
+.slim/deepwork/

@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package co.anitrend.retrofit.graphql.codegen
 
 import org.gradle.api.Action
@@ -24,7 +40,6 @@ import org.gradle.api.provider.Property
 // ```
 //
 abstract class GraphQLTargetExtension {
-
     //
     // The Kotlin package name for generated source files.
     // Defaults to "co.anitrend.graphql.generated".
@@ -101,7 +116,6 @@ abstract class GraphQLTargetExtension {
 // Each target can override these individually.
 //
 abstract class CommonExtension {
-
     //
     // Whether to generate GraphQLOperations constants. Default true.
     //
@@ -168,7 +182,6 @@ abstract class CommonExtension {
 // ```
 //
 open class RetrofitGraphQLExtension {
-
     //
     // Common settings shared across all targets.
     // Set by the plugin during apply.
@@ -199,7 +212,10 @@ open class RetrofitGraphQLExtension {
     //
     // Register a named code-generation target.
     //
-    fun target(name: String, action: Action<GraphQLTargetExtension>) {
+    fun target(
+        name: String,
+        action: Action<GraphQLTargetExtension>,
+    ) {
         action.execute(targets.maybeCreate(name))
     }
 
@@ -281,7 +297,10 @@ open class ScalarMappingExtension {
     // @param graphqlType The GraphQL scalar name (e.g. "DateTime").
     // @param kotlinType The fully-qualified Kotlin type (e.g. "kotlin.String").
     //
-    fun map(graphqlType: String, kotlinType: String) {
+    fun map(
+        graphqlType: String,
+        kotlinType: String,
+    ) {
         mappings[graphqlType] = kotlinType
     }
 

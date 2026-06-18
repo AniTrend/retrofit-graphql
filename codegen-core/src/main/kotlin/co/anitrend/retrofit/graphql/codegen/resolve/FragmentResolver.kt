@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package co.anitrend.retrofit.graphql.codegen.resolve
 
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLFragmentInfo
@@ -24,7 +40,6 @@ import graphql.util.TreeTransformerUtil
  * Cyclic fragment references are detected and rejected before transformation.
  */
 class FragmentResolver {
-
     private val parser = Parser()
 
     /**
@@ -41,12 +56,13 @@ class FragmentResolver {
         if (fragments.isEmpty()) return operations
 
         // Pre-parse all fragment definitions into FragmentDefinition AST nodes
-        val fragmentDefinitions = fragments.mapValues { (_, info) ->
-            parser.parseDocument(info.document)
-                .definitions
-                .filterIsInstance<FragmentDefinition>()
-                .first()
-        }
+        val fragmentDefinitions =
+            fragments.mapValues { (_, info) ->
+                parser.parseDocument(info.document)
+                    .definitions
+                    .filterIsInstance<FragmentDefinition>()
+                    .first()
+            }
 
         return operations.map { operation ->
             val flattenedDocument = flattenFragments(operation.document, fragmentDefinitions)
@@ -75,48 +91,55 @@ class FragmentResolver {
         val relevantDefinitions = fragmentDefinitions.filterKeys { it in referencedNames }
 
         val transformer = AstTransformer()
-        val transformed = transformer.transform(document, object : NodeVisitorStub() {
-            @Suppress("UNCHECKED_CAST")
-            override fun visitFragmentSpread(
-                node: FragmentSpread,
-                context: TraverserContext<graphql.language.Node<*>>,
-            ): TraversalControl {
-                val definition = relevantDefinitions[node.name]
-                    ?: return TraversalControl.CONTINUE
+        val transformed =
+            transformer.transform(
+                document,
+                object : NodeVisitorStub() {
+                    @Suppress("UNCHECKED_CAST")
+                    override fun visitFragmentSpread(
+                        node: FragmentSpread,
+                        context: TraverserContext<graphql.language.Node<*>>,
+                    ): TraversalControl {
+                        val definition =
+                            relevantDefinitions[node.name]
+                                ?: return TraversalControl.CONTINUE
 
-                // Replace spread with an inline fragment that carries the definition's
-                // selection set and type condition. The AstTransformer will continue
-                // traversing into the children of this new node, resolving any nested
-                // FragmentSpread references automatically.
-                val inlineFragment = InlineFragment.newInlineFragment()
-                    .typeCondition(definition.typeCondition)
-                    .selectionSet(definition.selectionSet)
-                    .build()
+                        // Replace spread with an inline fragment that carries the definition's
+                        // selection set and type condition. The AstTransformer will continue
+                        // traversing into the children of this new node, resolving any nested
+                        // FragmentSpread references automatically.
+                        val inlineFragment =
+                            InlineFragment.newInlineFragment()
+                                .typeCondition(definition.typeCondition)
+                                .selectionSet(definition.selectionSet)
+                                .build()
 
-                return TreeTransformerUtil.changeNode(
-                    context as TraverserContext<InlineFragment>,
-                    inlineFragment,
-                )
-            }
-        })
+                        return TreeTransformerUtil.changeNode(
+                            context as TraverserContext<InlineFragment>,
+                            inlineFragment,
+                        )
+                    }
+                },
+            )
 
         // Re-print with deterministic formatting
         return AstPrinter.printAst(transformed)
     }
 
-    private fun collectReferencedNames(
-        document: graphql.language.Document,
-    ): Set<String> {
+    private fun collectReferencedNames(document: graphql.language.Document): Set<String> {
         val names = mutableSetOf<String>()
-        NodeTraverser().depthFirst(object : NodeVisitorStub() {
-            override fun visitFragmentSpread(
-                node: FragmentSpread,
-                context: TraverserContext<graphql.language.Node<*>>,
-            ): TraversalControl {
-                names.add(node.name)
-                return TraversalControl.CONTINUE
-            }
-        }, document)
+        NodeTraverser().depthFirst(
+            object : NodeVisitorStub() {
+                override fun visitFragmentSpread(
+                    node: FragmentSpread,
+                    context: TraverserContext<graphql.language.Node<*>>,
+                ): TraversalControl {
+                    names.add(node.name)
+                    return TraversalControl.CONTINUE
+                }
+            },
+            document,
+        )
         return names
     }
 
@@ -129,11 +152,12 @@ class FragmentResolver {
         fragmentDefinitions: Map<String, FragmentDefinition>,
     ) {
         for (name in fragmentNames) {
-            val definition = fragmentDefinitions[name]
-                ?: throw IllegalArgumentException(
-                    "Fragment '$name' is referenced but not defined. " +
-                        "Available fragments: ${fragmentDefinitions.keys}"
-                )
+            val definition =
+                fragmentDefinitions[name]
+                    ?: throw IllegalArgumentException(
+                        "Fragment '$name' is referenced but not defined. " +
+                            "Available fragments: ${fragmentDefinitions.keys}",
+                    )
         }
 
         val visited = mutableSetOf<String>()
@@ -142,7 +166,7 @@ class FragmentResolver {
         fun dfs(name: String) {
             if (name in inStack) {
                 throw IllegalArgumentException(
-                    "Cyclic fragment reference detected: $name"
+                    "Cyclic fragment reference detected: $name",
                 )
             }
             if (name in visited) return
@@ -152,15 +176,18 @@ class FragmentResolver {
             visited.add(name)
 
             // Find fragment references within this fragment definition
-            NodeTraverser().depthFirst(object : NodeVisitorStub() {
-                override fun visitFragmentSpread(
-                    node: FragmentSpread,
-                    context: TraverserContext<graphql.language.Node<*>>,
-                ): TraversalControl {
-                    dfs(node.name)
-                    return TraversalControl.CONTINUE
-                }
-            }, definition)
+            NodeTraverser().depthFirst(
+                object : NodeVisitorStub() {
+                    override fun visitFragmentSpread(
+                        node: FragmentSpread,
+                        context: TraverserContext<graphql.language.Node<*>>,
+                    ): TraversalControl {
+                        dfs(node.name)
+                        return TraversalControl.CONTINUE
+                    }
+                },
+                definition,
+            )
 
             inStack.remove(name)
         }
