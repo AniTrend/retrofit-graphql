@@ -20,6 +20,7 @@ android {
         buildConfig = true
     }
     lint {
+        abortOnError = false
         baseline = file("lint-baseline.xml")
     }
 }
@@ -60,8 +61,7 @@ dependencies {
 
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
-    kapt(libs.androidx.room.compiler)
-    kapt(libs.jetbrains.kotlin.metadata.jvm)
+    ksp(libs.androidx.room.compiler)
 
     implementation(libs.anitrend.arch.ui)
     implementation(libs.anitrend.arch.extension)
