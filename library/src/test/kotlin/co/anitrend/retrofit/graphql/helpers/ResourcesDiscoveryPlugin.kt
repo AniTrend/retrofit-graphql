@@ -9,7 +9,7 @@ import java.net.URL
 class ResourcesDiscoveryPlugin(
     self: Class<ResourcesDiscoveryPlugin> = ResourcesDiscoveryPlugin::class.java
 ) : AbstractDiscoveryPlugin<Class<ResourcesDiscoveryPlugin>>(self) {
-    override val targetPath: String = "graphql"
+    override val targetPath: String = "/io/github/wax911/library/helpers/graphql"
     override val targetExtension: String = ".graphql"
 
     private val temporaryMap = HashMap<String, String>()

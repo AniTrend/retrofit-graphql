@@ -11,7 +11,6 @@ import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.props
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
-import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import java.io.File
 
@@ -118,9 +117,8 @@ internal fun Project.configureAndroid(): Unit = baseExtension().run {
         }
     }
 
-    tasks.withType(Test::class.java) {
-        useJUnitPlatform()
-    }
+    // Note: useJUnitPlatform() removed - no TestEngine on classpath.
+    // All tests are JUnit 4 and run fine without the JUnit Platform.
 
     kotlinAndroidProjectExtension().run {
         jvmToolchain(21)
