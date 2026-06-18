@@ -15,9 +15,6 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.invoke
-import org.gradle.kotlin.dsl.named
-import org.jetbrains.dokka.gradle.DokkaExtension
-import java.net.URL
 import java.util.*
 
 private fun Properties.applyToBuildConfigForBuild(project: Project, buildType: ApplicationBuildType) {
@@ -104,15 +101,21 @@ private fun Project.createMavenPublicationUsing(sourcesJar: Jar) {
     }
 }
 
-private fun Project.createDokkaTaskProvider() {
-    // V2 Dokka configuration using project-level dokka {} extension
-    // The dokka extension is provided by org.jetbrains.dokka plugin
+private fun Project.configureDokka() {
+    // V2 Dokka configuration using the project-level dokka extension.
+    // sourceLink, perPackageOption, etc. from V1 are not available in V2's
+    // compatibility source set API; those need follow-up migration to V2 DSL.
     val dokkaExt = extensions.getByName("dokka") as org.jetbrains.dokka.gradle.DokkaExtension
     dokkaExt.apply {
-        moduleName.set(this@createDokkaTaskProvider.name)
-        // Note: V2 default output directory is build/dokka/html which matches the CI deploy path.
-        // Source set configuration (external doc links, internal suppression, etc.) uses V1 API
-        // and needs a follow-up migration to V2 dslSourceSets API.
+        moduleName.set(this@configureDokka.name)
+
+        dokkaSourceSets.configureEach {
+            skipDeprecated.set(false)
+            reportUndocumented.set(true)
+            skipEmptyPackages.set(true)
+            jdkVersion.set(21)
+            sourceRoots.from(file("src"))
+        }
     }
 }
 
@@ -123,7 +126,7 @@ internal fun Project.configureOptions() {
 
         logger.lifecycle("Applying additional tasks options for dokka and javadoc on ${project.path}")
 
-        createDokkaTaskProvider()
+        configureDokka()
 
         val sourcesJar by tasks.register("sourcesJar", Jar::class.java) {
             archiveClassifier.set("sources")
