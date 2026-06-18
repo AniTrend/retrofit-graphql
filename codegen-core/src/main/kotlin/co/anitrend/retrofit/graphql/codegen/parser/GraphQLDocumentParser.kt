@@ -56,7 +56,8 @@ class GraphQLDocumentParser {
      */
     private fun parseVariable(definition: VariableDefinition): GraphQLVariableInfo {
         return GraphQLVariableInfo(
-            name = definition.name,
+            name = definition.name
+                ?: throw IllegalArgumentException("Variable definition must have a name"),
             type = schemaTypeParser.toGraphQLType(definition.type),
             defaultValue = definition.defaultValue?.let {
                 graphql.language.AstPrinter.printAst(it)

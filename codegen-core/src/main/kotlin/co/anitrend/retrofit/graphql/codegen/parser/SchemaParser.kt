@@ -68,7 +68,9 @@ class SchemaParser {
                 GraphQLType.List(of = elementType, nullable = true)
             }
             is TypeName -> {
-                GraphQLType.Named(name = type.name, nullable = true)
+                val typeName = type.name
+                    ?: throw IllegalArgumentException("TypeName must have a name")
+                GraphQLType.Named(name = typeName, nullable = true)
             }
             else -> error("Unsupported type node: ${type.javaClass.simpleName}")
         }
