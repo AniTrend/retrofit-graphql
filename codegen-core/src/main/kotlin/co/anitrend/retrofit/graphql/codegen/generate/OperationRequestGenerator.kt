@@ -55,6 +55,7 @@ object OperationRequestGenerator {
     private val GRAPHQL_OPERATION = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLOperation")
     private val GRAPHQL_NO_VAR_OPERATION = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLNoVarOperation")
     private val GRAPHQL_REQUEST = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLRequest")
+
     /**
      * Generates a request helper object for a single operation.
      */
@@ -64,9 +65,9 @@ object OperationRequestGenerator {
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): FileSpec {
-        val OPERATIONS_CLASS = ClassName(packageName, "GraphQLOperations")
-        val DOCUMENTS_CLASS = ClassName(packageName, "GraphQLDocuments")
-        val HASHES_CLASS = ClassName(packageName, "GraphQLHashes")
+        val operationsClass = ClassName(packageName, "GraphQLOperations")
+        val documentsClass = ClassName(packageName, "GraphQLDocuments")
+        val hashesClass = ClassName(packageName, "GraphQLHashes")
         val hasVariables = operation.variables.isNotEmpty()
         val variablesClassName = "${operation.name}Variables"
         val variablesClass = ClassName(packageName, variablesClassName)
@@ -82,9 +83,9 @@ object OperationRequestGenerator {
             TypeSpec.objectBuilder(operation.name)
                 .addModifiers(KModifier.PUBLIC)
                 .addSuperinterface(superInterface)
-                .addProperty(nameProperty(operation, OPERATIONS_CLASS))
-                .addProperty(documentProperty(operation, DOCUMENTS_CLASS))
-                .addProperty(sha256HashProperty(operation, HASHES_CLASS))
+                .addProperty(nameProperty(operation, operationsClass))
+                .addProperty(documentProperty(operation, documentsClass))
+                .addProperty(sha256HashProperty(operation, hashesClass))
                 .apply {
                     if (hasVariables) {
                         addFunction(buildRequestFunction(operation, variablesClass, packageName, scalarMappings, schemaTypeNames))
