@@ -2,6 +2,8 @@ package co.anitrend.retrofit.graphql.data.arch.koin
 
 import co.anitrend.retrofit.graphql.data.api.converter.SampleConverterFactory
 import co.anitrend.retrofit.graphql.data.arch.database.SampleStore
+import co.anitrend.retrofit.graphql.sample.generated.GeneratedGraphQLRegistry
+import co.anitrend.retrofit.graphql.model.GraphQLDocumentRegistry
 import co.anitrend.retrofit.graphql.data.bucket.koin.bucketModules
 import co.anitrend.retrofit.graphql.data.market.koin.marketPlaceModules
 import co.anitrend.retrofit.graphql.data.user.koin.userModules
@@ -28,6 +30,9 @@ private val coreModule = module {
             applicationContext = androidContext()
         )
     }
+    single<GraphQLDocumentRegistry> {
+        GeneratedGraphQLRegistry
+    }
     factory {
         AssetManagerDiscoveryPlugin(
             assetManager = androidContext().assets
@@ -49,7 +54,8 @@ private val coreModule = module {
 private val networkModule = module {
     factory {
         val converterFactory = SampleConverterFactory(
-            processor = get<GraphProcessor>()
+            processor = get<GraphProcessor>(),
+            registry = get<GraphQLDocumentRegistry>()
         )
         Retrofit.Builder()
             .addConverterFactory(

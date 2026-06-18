@@ -24,6 +24,9 @@ jobs:
         run: chmod +x gradlew
       - name: Generate docs with dokka
         run: ./gradlew :library:dokkaGeneratePublicationHtml
+        # TODO: Switch to multi-module Dokka. Currently only publishes :library facade docs
+        # (type aliases pointing to co.anitrend.retrofit.graphql.* packages).
+        # Future: use dokkaHtmlMultiModule or a composite task to document all library-type modules.
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.8.0

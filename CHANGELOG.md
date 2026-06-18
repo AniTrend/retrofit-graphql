@@ -3,6 +3,15 @@
 Change Log
 ==========
 
+## [Unreleased] — Modular Architecture
+
+- **Breaking (deprecation):** `:library` module is deprecated in favor of direct module dependencies. See [MIGRATION.md](MIGRATION.md).
+- **Added:** Code generation Gradle plugin (`co.anitrend.retrofit.graphql.codegen`) for build-time `.graphql` processing.
+- **Added:** `:annotations`, `:api`, `:codegen-core`, `:gradle-plugin`, `:runtime`, `:android-assets`, `:serialization-gson`, `:serialization-kotlinx` modules.
+- **Added:** `GeneratedGraphQLRegistry` — build-time operation document registry.
+- **Changed:** `GraphRequestConverter.resolveQuery()` visibility changed to `protected open`.
+- **Changed:** Sample app (`:app`) migrated to modular dependencies with code generation.
+
 Version 0.11.0-beta02 *(2021-04-08)*
 ----------------------------
 

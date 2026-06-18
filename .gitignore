@@ -237,7 +237,6 @@ fabric.properties
 # End of https://www.gitignore.io/api/java,kotlin,android,androidstudio
 
 app/.config/secrets.properties
-app/schema.graphql
 app/lint-baseline.xml
 
 .idea/deploymentTargetSelector.xml
@@ -248,6 +247,7 @@ app/lint-baseline.xml
 # Added by code-review-graph
 .code-review-graph/
 .claude/
+
 
 # OpenCode deepwork session files
 .slim/deepwork/

@@ -64,7 +64,7 @@ object VariableClassGenerator {
                     // Constructor parameters
                     val constructorParams =
                         operation.variables.map { variable ->
-                            buildConstructorParam(variable, scalarMappings, schemaTypeNames)
+                            buildConstructorParam(variable, packageName, scalarMappings, schemaTypeNames)
                         }
                     primaryConstructor(
                         com.squareup.kotlinpoet.FunSpec.constructorBuilder()
@@ -76,7 +76,7 @@ object VariableClassGenerator {
                         addProperty(
                             PropertySpec.builder(
                                 variable.name,
-                                parseKotlinTypeString(variable.type, scalarMappings, schemaTypeNames),
+                                parseKotlinTypeString(variable.type, packageName, scalarMappings, schemaTypeNames),
                             )
                                 .initializer(variable.name)
                                 .addModifiers(KModifier.PUBLIC)
@@ -93,10 +93,11 @@ object VariableClassGenerator {
 
     private fun buildConstructorParam(
         variable: GraphQLVariableInfo,
+        packageName: String,
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): ParameterSpec {
-        val kotlinType = parseKotlinTypeString(variable.type, scalarMappings, schemaTypeNames)
+        val kotlinType = parseKotlinTypeString(variable.type, packageName, scalarMappings, schemaTypeNames)
         val paramBuilder = ParameterSpec.builder(variable.name, kotlinType)
 
         // Apply default value if present
@@ -110,10 +111,11 @@ object VariableClassGenerator {
 
     private fun parseKotlinTypeString(
         type: GraphQLType,
+        packageName: String,
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): com.squareup.kotlinpoet.TypeName {
-        return GraphQLTypeMapper.toKotlinType(type, scalarMappings, schemaTypeNames)
+        return GraphQLTypeMapper.toKotlinType(type, packageName, scalarMappings, schemaTypeNames)
     }
 
     /**

@@ -4,7 +4,7 @@ Use this map to choose the right build file before editing.
 
 | Concern | Primary files | Notes |
 | --- | --- | --- |
-| Module includes | `settings.gradle.kts` | Includes `:library` always; includes `:app` only when `CI` env var is not set |
+| Module includes | `settings.gradle.kts` | Includes :library always (aggregates all sub-modules); includes :app only when CI env var is not set |
 | Root build configuration | `build.gradle.kts` | Top-level plugin declarations and repository configuration |
 | Shared plugin entry point | `buildSrc/.../plugin/CorePlugin.kt` | Applies Android plugin, Dokka, Spotless, publishing, sources, and dependencies based on module type |
 | Shared Android defaults | `buildSrc/.../components/AndroidConfiguration.kt` | SDK levels (`compileSdk=35`, `minSdk=23`, `targetSdk=35`), JUnit Platform, Kotlin toolchain 21, packaging exclusions, Spotless |
@@ -19,8 +19,8 @@ Use this map to choose the right build file before editing.
 
 ## Module Dependency Snapshot
 
-- `library`: standalone Android library module with no project-level dependencies.
-- `app`: sample application that depends on `:library` for integration demonstration.
+- library: **deprecated** aggregator module that transitively re-exports all library sub-modules via api() dependencies (annotations, api, android-assets, runtime, serialization-gson, serialization-kotlinx).
+- app: sample application that now depends directly on :runtime, :api, :android-assets, and :annotations (migrated from :library).
 
 ## Edit Strategy
 

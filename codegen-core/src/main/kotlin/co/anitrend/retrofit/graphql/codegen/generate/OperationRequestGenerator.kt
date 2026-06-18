@@ -55,10 +55,6 @@ object OperationRequestGenerator {
     private val GRAPHQL_OPERATION = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLOperation")
     private val GRAPHQL_NO_VAR_OPERATION = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLNoVarOperation")
     private val GRAPHQL_REQUEST = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLRequest")
-    private val OPERATIONS_CLASS = ClassName("", "GraphQLOperations")
-    private val DOCUMENTS_CLASS = ClassName("", "GraphQLDocuments")
-    private val HASHES_CLASS = ClassName("", "GraphQLHashes")
-
     /**
      * Generates a request helper object for a single operation.
      */
@@ -68,9 +64,12 @@ object OperationRequestGenerator {
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): FileSpec {
+        val OPERATIONS_CLASS = ClassName(packageName, "GraphQLOperations")
+        val DOCUMENTS_CLASS = ClassName(packageName, "GraphQLDocuments")
+        val HASHES_CLASS = ClassName(packageName, "GraphQLHashes")
         val hasVariables = operation.variables.isNotEmpty()
         val variablesClassName = "${operation.name}Variables"
-        val variablesClass = ClassName("", variablesClassName)
+        val variablesClass = ClassName(packageName, variablesClassName)
 
         val superInterface =
             if (hasVariables) {
@@ -83,12 +82,12 @@ object OperationRequestGenerator {
             TypeSpec.objectBuilder(operation.name)
                 .addModifiers(KModifier.PUBLIC)
                 .addSuperinterface(superInterface)
-                .addProperty(nameProperty(operation))
-                .addProperty(documentProperty(operation))
-                .addProperty(sha256HashProperty(operation))
+                .addProperty(nameProperty(operation, OPERATIONS_CLASS))
+                .addProperty(documentProperty(operation, DOCUMENTS_CLASS))
+                .addProperty(sha256HashProperty(operation, HASHES_CLASS))
                 .apply {
                     if (hasVariables) {
-                        addFunction(buildRequestFunction(operation, variablesClass, scalarMappings, schemaTypeNames))
+                        addFunction(buildRequestFunction(operation, variablesClass, packageName, scalarMappings, schemaTypeNames))
                     }
                 }
                 .build()
@@ -98,38 +97,39 @@ object OperationRequestGenerator {
             .build()
     }
 
-    private fun nameProperty(operation: GraphQLOperationInfo) =
+    private fun nameProperty(operation: GraphQLOperationInfo, operationsClass: ClassName) =
         com.squareup.kotlinpoet.PropertySpec.builder("name", String::class)
             .addModifiers(KModifier.OVERRIDE, KModifier.PUBLIC)
             .initializer(
                 "%T.%L.%L",
-                OPERATIONS_CLASS,
+                operationsClass,
                 operation.type.name.lowercase().replaceFirstChar { it.uppercase() },
                 operation.name,
             )
             .build()
 
-    private fun documentProperty(operation: GraphQLOperationInfo) =
+    private fun documentProperty(operation: GraphQLOperationInfo, documentsClass: ClassName) =
         com.squareup.kotlinpoet.PropertySpec.builder("document", String::class)
             .addModifiers(KModifier.OVERRIDE, KModifier.PUBLIC)
-            .initializer("%T.%L", DOCUMENTS_CLASS, operation.name)
+            .initializer("%T.%L", documentsClass, operation.name)
             .build()
 
-    private fun sha256HashProperty(operation: GraphQLOperationInfo) =
+    private fun sha256HashProperty(operation: GraphQLOperationInfo, hashesClass: ClassName) =
         com.squareup.kotlinpoet.PropertySpec.builder("sha256Hash", String::class)
             .addModifiers(KModifier.OVERRIDE, KModifier.PUBLIC)
-            .initializer("%T.%L", HASHES_CLASS, operation.name)
+            .initializer("%T.%L", hashesClass, operation.name)
             .build()
 
     private fun buildRequestFunction(
         operation: GraphQLOperationInfo,
         variablesClass: ClassName,
+        packageName: String,
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): FunSpec {
         val params =
             operation.variables.map { variable ->
-                val kotlinType = parseKotlinTypeString(variable.type, scalarMappings, schemaTypeNames)
+                val kotlinType = parseKotlinTypeString(variable.type, packageName, scalarMappings, schemaTypeNames)
                 val paramBuilder = ParameterSpec.builder(variable.name, kotlinType)
                 if (variable.defaultValue != null) {
                     paramBuilder.defaultValue(
@@ -157,10 +157,11 @@ object OperationRequestGenerator {
 
     private fun parseKotlinTypeString(
         type: GraphQLType,
+        packageName: String,
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): com.squareup.kotlinpoet.TypeName {
-        return GraphQLTypeMapper.toKotlinType(type, scalarMappings, schemaTypeNames)
+        return GraphQLTypeMapper.toKotlinType(type, packageName, scalarMappings, schemaTypeNames)
     }
 
     private fun convertGraphQLDefaultToKotlin(

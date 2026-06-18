@@ -67,7 +67,7 @@ object InputObjectGenerator {
                 .apply {
                     val params =
                         inputObject.fields.map { field ->
-                            val kotlinType = parseKotlinTypeString(field.type, scalarMappings, schemaTypeNames)
+                            val kotlinType = parseKotlinTypeString(field.type, packageName, scalarMappings, schemaTypeNames)
                             val paramBuilder = ParameterSpec.builder(field.name, kotlinType)
                             if (field.defaultValue != null) {
                                 paramBuilder.defaultValue(
@@ -86,7 +86,7 @@ object InputObjectGenerator {
                         addProperty(
                             PropertySpec.builder(
                                 field.name,
-                                parseKotlinTypeString(field.type, scalarMappings, schemaTypeNames),
+                                parseKotlinTypeString(field.type, packageName, scalarMappings, schemaTypeNames),
                             )
                                 .initializer(field.name)
                                 .addModifiers(KModifier.PUBLIC)
@@ -103,10 +103,11 @@ object InputObjectGenerator {
 
     private fun parseKotlinTypeString(
         type: GraphQLType,
+        packageName: String,
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): com.squareup.kotlinpoet.TypeName {
-        return GraphQLTypeMapper.toKotlinType(type, scalarMappings, schemaTypeNames)
+        return GraphQLTypeMapper.toKotlinType(type, packageName, scalarMappings, schemaTypeNames)
     }
 
     private fun convertGraphQLDefaultToKotlin(

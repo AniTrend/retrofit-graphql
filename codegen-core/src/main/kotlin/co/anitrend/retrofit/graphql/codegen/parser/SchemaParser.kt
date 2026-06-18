@@ -27,6 +27,7 @@ import graphql.language.ScalarTypeDefinition
 import graphql.language.Type
 import graphql.language.TypeName
 import graphql.parser.Parser
+import graphql.parser.ParserOptions
 import java.io.File
 
 /**
@@ -34,6 +35,13 @@ import java.io.File
  * input object types, enum types, and scalar type definitions for code generation.
  */
 class SchemaParser {
+    init {
+        val options = ParserOptions.newParserOptions()
+            .maxTokens(Int.MAX_VALUE)
+            .build()
+        ParserOptions.setDefaultParserOptions(options)
+    }
+
     private val parser = Parser()
 
     /**

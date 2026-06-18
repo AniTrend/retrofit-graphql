@@ -24,7 +24,7 @@ argument-hint: 'Describe the dependency, Gradle change, or build pipeline task y
 1. Read the [build map](./references/build-map.md) to find the owning file for the convention you want to change.
 2. If the change introduces or upgrades a dependency, add the version and alias in `gradle/libs.versions.toml` first.
 3. If the behavior should apply to both modules, implement it in `buildSrc` instead of duplicating it in both `build.gradle.kts` files.
-4. Remember that `:app` is excluded from the Gradle build when the `CI` environment variable is set; only `:library` is built and tested in CI.
+4. Remember that :app is excluded from the Gradle build when the CI environment variable is set; only :library is built and tested in CI (it serves as the aggregate facade and transitively builds all library sub-modules).
 5. Keep Dokka, Spotless, and test behavior aligned with the shared configuration in `buildSrc`.
 6. When running Gradle locally, use the existing `jenv-gradle-low-ram` skill if Java selection or memory pressure becomes an issue.
 

@@ -18,6 +18,8 @@ Also Android Performance best practice suggests that developers should use Strin
 enums and [here's why](https://stackoverflow.com/questions/29183904/should-i-strictly-avoid-using-enums-on-android), with the exception of kotlin
 especially when using R8.
 
+> **Note:** As of v2.x, retrofit-graphql also offers optional build-time code generation via a Gradle plugin. This combines the flexibility of file-based queries with type-safe request helpers when desired. See [MIGRATION.md](MIGRATION.md) for details.
+
 Strangely there are tons of simple examples all over Medium using apollo graphql for Android,
 but none of them address these issues because most of them just construct a simple single resource
 request demo application. These look just fine at first glance until you start working with multiple data types and apollo starts generating classes for every fragment and query even if the data models are the same, or share similar properties.
@@ -48,11 +50,32 @@ dependencies {
 }
 ```
 
+### Modular Dependencies (Recommended)
+
+As of v2.x, the library is organized into composable modules. Instead of depending on the monolithic aggregator, you can depend only on the modules you need:
+
+```kotlin
+dependencies {
+    // Core converter (asset-based queries)
+    implementation("com.github.anitrend:retrofit-graphql:{latest_version}")
+
+    // Or pick individual modules:
+    // implementation(project(":runtime"))
+    // implementation(project(":api"))
+    // implementation(project(":android-assets"))
+    // implementation(project(":annotations"))
+}
+```
+
+For code generation support, apply the Gradle plugin and add a `retrofitGraphQL { }` config block. See [MIGRATION.md](MIGRATION.md) for the full migration guide.
+
 - __Optional R8 / ProGuard Rules__
 
 If you are using R8 the shrinking and obfuscation rules are included automatically.
 
 ProGuard users must manually copy the options from [this file](https://github.com/anitrend/retrofit-graphql/blob/master/library/proguard-rules.pro).
+
+> Currently shipped from the `:library` module. This path may change in a future release.
 
 > You might also need [retrofit rules](https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/retrofit2.pro) and it's dependencies (OkHttp and Okio)
 

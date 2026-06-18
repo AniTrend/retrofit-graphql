@@ -50,16 +50,17 @@ object GraphQLTypeMapper {
      */
     fun toKotlinType(
         type: GraphQLType,
+        packageName: String,
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): TypeName {
         return when (type) {
             is GraphQLType.Named -> {
-                val base = resolveNamedType(type.name, scalarMappings, schemaTypeNames)
+                val base = resolveNamedType(type.name, packageName, scalarMappings, schemaTypeNames)
                 if (type.nullable) base.copy(nullable = true) else base
             }
             is GraphQLType.List -> {
-                val elementType = toKotlinType(type.of, scalarMappings, schemaTypeNames)
+                val elementType = toKotlinType(type.of, packageName, scalarMappings, schemaTypeNames)
                 val listType =
                     ClassName("kotlin.collections", "List")
                         .parameterizedBy(elementType)
@@ -73,6 +74,7 @@ object GraphQLTypeMapper {
      */
     private fun resolveNamedType(
         name: String,
+        packageName: String,
         scalarMappings: Map<String, String>,
         schemaTypeNames: Set<String>,
     ): TypeName {
@@ -83,7 +85,7 @@ object GraphQLTypeMapper {
         BUILT_IN_SCALARS[name]?.let { return parseFqcnToTypeName(it) }
 
         // If it's a schema-defined type (input object or enum), use the type name directly
-        if (name in schemaTypeNames) return ClassName("", name)
+        if (name in schemaTypeNames) return ClassName(packageName, name)
 
         // Unknown scalar -- will be reported as an error by the task
         error(

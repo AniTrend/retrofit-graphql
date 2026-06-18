@@ -23,7 +23,7 @@ argument-hint: 'Describe the feature, type, or consumer workflow you are trying 
 
 1. Start with the [module reference map](./references/module-map.md) and identify the package that can own the behavior.
 2. Match the task to a package family before picking a file.
-3. Confirm the existing dependency direction: `:app` depends on `:library`, not the reverse.
+3. Confirm the existing dependency direction: :app depends on modular runtime components (`:runtime`, `:api`, `:android-assets`, `:annotations`), not the reverse. The deprecated `:library` aggregator transitively exposes all modules.
 4. Open the Dokka page for the library if you need consumer-facing context or neighboring public types.
 5. If the task changes a public API, also apply the `retrofit-graphql-kdoc-dokka` skill so the published docs stay aligned.
 

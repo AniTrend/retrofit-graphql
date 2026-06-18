@@ -18,22 +18,24 @@ Please ensure your pull request adheres to the following guidelines:
 
 See [code of conduct](./CODE_OF_CONDUCT.md)
 
-## GitHub Copilot Customization
+## AI Agent Customization
 
-This repository includes GitHub Copilot Chat customizations to improve development experience:
+This repository includes agent-agnostic customizations to improve development experience with AI coding assistants:
 
-### Chat Modes and Prompts
+### Repository Context (`AGENTS.md`)
 
-- **Chat modes** are available under `.github/chatmodes/` providing specialized AI personas for different development tasks
-- **Prompts** are located in `.github/prompts/` offering specific templates for common development workflows
+The root `AGENTS.md` file provides comprehensive project context including module organization, build conventions, code style, testing guidelines, and scope/limitations. This is the canonical reference for any AI agent working on this repository.
 
-### Repository-specific Instructions
+### Agent Skills (`.agents/skills/`)
 
-Custom instructions under `.github/instructions/` help tailor GitHub Copilot Chat responses to this project's architecture and conventions. These instructions provide context about:
+Repository-specific skills provide specialized guidance for recurring tasks:
 
-- The retrofit-graphql library's purpose and architecture
-- Project scope and integration patterns  
-- Development guidelines and best practices
+| Skill | Purpose |
+|-------|---------|
+| `jenv-gradle-low-ram` | JDK alignment and low-RAM Gradle invocation |
+| `retrofit-graphql-build-dependencies` | Build map, module dependencies, CI concerns |
+| `retrofit-graphql-kdoc-dokka` | KDoc checklist and Dokka generation workflow |
+| `retrofit-graphql-reference-map` | Module-to-package map and placement heuristics |
 
 ### Conventional Commit Support
 

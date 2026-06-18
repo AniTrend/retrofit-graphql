@@ -16,8 +16,8 @@
 
 package co.anitrend.retrofit.graphql.codegen
 
-import com.android.build.gradle.AppExtension
-import com.android.build.gradle.LibraryExtension
+import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSetContainer
@@ -75,11 +75,14 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
         extension.targets = project.container(GraphQLTargetExtension::class.java)
 
         project.afterEvaluate {
-            val targetMap = extension.targets.asMap
+            val targets = extension.targets!!
+            val targetMap = targets.asMap
 
             if (targetMap.isEmpty()) {
-                // No targets configured at all -- create a default "main" task
-                val defaultTarget = extension.targets.maybeCreate("main")
+                // No targets configured at all -- create a default "main" target
+                // and copy legacy property values from the extension
+                val defaultTarget = targets.create("main")
+                copyLegacyProperties(extension, defaultTarget)
                 createTargetTask(
                     project,
                     extension,
@@ -88,6 +91,11 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
                     "generateGraphQLSources",
                 )
             } else {
+                // Copy legacy properties to the "main" target if present
+                val mainTarget = targetMap["main"]
+                if (mainTarget != null) {
+                    copyLegacyProperties(extension, mainTarget)
+                }
                 targetMap.forEach { (name, target) ->
                     val taskName =
                         if (name == "main") {
@@ -98,6 +106,44 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
                     createTargetTask(project, extension, name, target, taskName)
                 }
             }
+        }
+    }
+
+    /**
+     * Copies legacy-style property values from the extension to a target.
+     * Only copies when the extension property has been explicitly set (not default).
+     */
+    private fun copyLegacyProperties(
+        extension: RetrofitGraphQLExtension,
+        target: GraphQLTargetExtension,
+    ) {
+        if (extension.packageName.isPresent) {
+            target.packageName.set(extension.packageName)
+        }
+        if (!extension.operations.isEmpty) {
+            target.operations.from(extension.operations)
+        }
+        if (extension.schema.isPresent) {
+            target.schema.set(extension.schema)
+        }
+        if (extension.generateOperationConstants.isPresent) {
+            target.generateOperationConstants.set(extension.generateOperationConstants)
+        }
+        if (extension.generateDocuments.isPresent) {
+            target.generateDocuments.set(extension.generateDocuments)
+        }
+        if (extension.generateHashes.isPresent) {
+            target.generateHashes.set(extension.generateHashes)
+        }
+        if (extension.generateVariables.isPresent) {
+            target.generateVariables.set(extension.generateVariables)
+        }
+        if (extension.outputDir.isPresent) {
+            target.outputDir.set(extension.outputDir)
+        }
+        // Copy scalar mappings
+        extension.scalarMappings.toMap().forEach { (k, v) ->
+            target.scalarMappings.map(k, v)
         }
     }
 
@@ -127,21 +173,25 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
                 } else {
                     project.layout.buildDirectory.dir("generated/source/graphql/$targetName")
                 }
-            task.outputDir.convention(defaultOutputDir)
-            task.outputDir.set(target.outputDir)
+            if (target.outputDir.isPresent) {
+                task.outputDir.set(target.outputDir)
+            } else {
+                task.outputDir.set(defaultOutputDir)
+            }
 
             // Generation flags: target value falls back to common value
+            val common = extension.common
             task.generateOperationConstants.set(
-                target.generateOperationConstants.orElse(extension.common.generateOperationConstants),
+                target.generateOperationConstants.orElse(common.generateOperationConstants),
             )
             task.generateDocuments.set(
-                target.generateDocuments.orElse(extension.common.generateDocuments),
+                target.generateDocuments.orElse(common.generateDocuments),
             )
             task.generateHashes.set(
-                target.generateHashes.orElse(extension.common.generateHashes),
+                target.generateHashes.orElse(common.generateHashes),
             )
             task.generateVariables.set(
-                target.generateVariables.orElse(extension.common.generateVariables),
+                target.generateVariables.orElse(common.generateVariables),
             )
 
             task.scalarMappings.set(
@@ -152,39 +202,42 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
         // Wire generated sources into the appropriate source set
         wireSourceSet(project, taskProvider)
 
-        // Wire compile tasks to depend on generation
-        project.tasks.matching { it.name.startsWith("compile") && it.name.contains("Kotlin") }
-            .configureEach { compileTask ->
-                compileTask.dependsOn(taskProvider)
+        // Wire compile and KSP tasks to depend on generation
+        project.tasks.configureEach { task ->
+            if (task.name.startsWith("compile") && task.name.contains("Kotlin") ||
+                task.name.startsWith("ksp") && task.name.contains("Kotlin")
+            ) {
+                task.dependsOn(taskProvider)
             }
+        }
     }
 
     private fun wireSourceSet(
         project: Project,
         taskProvider: TaskProvider<GenerateGraphQLSourcesTask>,
     ) {
+        // Resolve the generated sources directory at configuration time.
+        // AGP 9.x rejects Provider<Directory> in srcDir(), so resolve to a concrete File.
+        val generatedDir = taskProvider.get().outputDir.get().asFile
+
         // Android Library
         project.plugins.withId("com.android.library") {
             val android = project.extensions.getByName("android") as LibraryExtension
-            android.sourceSets.getByName("main").java.srcDir(
-                taskProvider.flatMap { it.outputDir },
-            )
+            android.sourceSets.getByName("main").java.srcDir(generatedDir)
+            android.sourceSets.getByName("main").kotlin.srcDir(generatedDir)
         }
 
         // Android Application
         project.plugins.withId("com.android.application") {
-            val android = project.extensions.getByName("android") as AppExtension
-            android.sourceSets.getByName("main").java.srcDir(
-                taskProvider.flatMap { it.outputDir },
-            )
+            val android = project.extensions.getByName("android") as ApplicationExtension
+            android.sourceSets.getByName("main").java.srcDir(generatedDir)
+            android.sourceSets.getByName("main").kotlin.srcDir(generatedDir)
         }
 
         // Kotlin JVM
         project.plugins.withId("org.jetbrains.kotlin.jvm") {
             val sourceSets = project.extensions.findByType(SourceSetContainer::class.java)
-            sourceSets?.getByName("main")?.java?.srcDir(
-                taskProvider.flatMap { it.outputDir },
-            )
+            sourceSets?.getByName("main")?.java?.srcDir(generatedDir)
         }
     }
 }

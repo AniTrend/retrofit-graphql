@@ -24,12 +24,20 @@ import graphql.language.FragmentDefinition
 import graphql.language.OperationDefinition
 import graphql.language.VariableDefinition
 import graphql.parser.Parser
+import graphql.parser.ParserOptions
 import java.io.File
 
 /**
  * Parses .graphql files into structured [GraphQLOperationInfo] and [GraphQLFragmentInfo] models.
  */
 class GraphQLDocumentParser {
+    init {
+        val options = ParserOptions.newParserOptions()
+            .maxTokens(Int.MAX_VALUE)
+            .build()
+        ParserOptions.setDefaultParserOptions(options)
+    }
+
     private val parser = Parser()
     private val schemaTypeParser = SchemaParser()
 
