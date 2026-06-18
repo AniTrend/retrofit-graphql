@@ -32,6 +32,7 @@ google-material = "1.14.0"
 
 jetbrains-dokka = "2.2.0"
 jetbrains-kotlin = "2.4.0"
+symbol-processing = "2.3.9"
 kotlin-metadata-jvm = "2.4.0"
 jetbrains-kotlinx-coroutines = "1.11.0"
 jetbrains-kotlinx-serialization = "1.11.0"
@@ -112,6 +113,7 @@ jetbrains-dokka-gradle = { module = "org.jetbrains.dokka:dokka-gradle-plugin", v
 jetbrains-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "jetbrains-kotlin" }
 jetbrains-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "jetbrains-kotlin" }
 jetbrains-kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "jetbrains-kotlin" }
+symbol-processing = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "symbol-processing" }
 jetbrains-kotlin-serialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "jetbrains-kotlin" }
 
 jetbrains-kotlin-metadata-jvm = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlin-metadata-jvm" }

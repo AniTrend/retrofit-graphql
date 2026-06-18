@@ -1,5 +1,8 @@
 package co.anitrend.retrofit.graphql.buildSrc.plugin.extensions
 
+import com.android.build.api.dsl.ApplicationExtension as AgpApplicationExtension
+import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.LibraryExtension as AgpLibraryExtension
 import com.android.build.gradle.*
 import org.gradle.api.Project
 import com.android.build.gradle.api.AndroidBasePlugin
@@ -40,13 +43,13 @@ internal val Project.libs: LibrariesForLibs
     get() = extensions.getByType<LibrariesForLibs>()
 
 internal fun Project.baseExtension() =
-    extensions.getByType<BaseExtension>()
+    extensions.getByType<CommonExtension>()
 
 internal fun Project.baseAppExtension() =
-    extensions.getByType<BaseAppModuleExtension>()
+    extensions.getByType<AgpApplicationExtension>()
 
 internal fun Project.libraryExtension() =
-    extensions.getByType<LibraryExtension>()
+    extensions.getByType<AgpLibraryExtension>()
 
 internal fun Project.extraPropertiesExtension() =
     extensions.getByType<ExtraPropertiesExtension>()

@@ -17,7 +17,7 @@ private fun Project.applyModulePlugin() {
 
 internal fun Project.configurePlugins() {
     applyModulePlugin()
-    plugins.apply("kotlin-android")
+    // kotlin-android no longer needed: AGP 9.0+ provides built-in Kotlin support
     if (isSampleModule())
-        plugins.apply("kotlin-kapt")
+        plugins.apply("com.google.devtools.ksp")
 }

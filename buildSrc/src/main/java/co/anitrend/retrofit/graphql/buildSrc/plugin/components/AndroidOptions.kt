@@ -1,9 +1,9 @@
 package co.anitrend.retrofit.graphql.buildSrc.plugin.components
 
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.baseAppExtension
-import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.baseExtension
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.isFacadeModule
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.isLibraryModule
+import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.libraryExtension
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.props
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.publishingExtension
 import com.android.build.api.dsl.ApplicationBuildType
@@ -119,7 +119,7 @@ private fun Project.createDokkaTaskProvider() {
 internal fun Project.configureOptions() {
     logger.lifecycle("Applying extension options for ${project.path}")
     if (isLibraryModule()) {
-        val baseExt = baseExtension()
+        val baseExt = libraryExtension()
 
         logger.lifecycle("Applying additional tasks options for dokka and javadoc on ${project.path}")
 
@@ -127,7 +127,7 @@ internal fun Project.configureOptions() {
 
         val sourcesJar by tasks.register("sourcesJar", Jar::class.java) {
             archiveClassifier.set("sources")
-            from(baseExt.sourceSets["main"].java.srcDirs)
+            from("src/main/java", "src/main/kotlin")
         }
 
         val classesJar by tasks.register("classesJar", Jar::class.java) {
