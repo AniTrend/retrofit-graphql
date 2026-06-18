@@ -1,1 +1,1 @@
-sourceset_dependencies='{":library/main":[],":library/release":[]}'
+sourceset_dependencies='{":library/release":[]}'
