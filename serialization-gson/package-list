@@ -1,0 +1,8 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:co.anitrend.retrofit.graphql.serialization.gson////PointingToDeclaration/serialization-gson/co.anitrend.retrofit.graphql.serialization.gson/index.html
+$dokka.location:co.anitrend.retrofit.graphql.serialization.gson/GsonGraphQLJson///PointingToDeclaration/serialization-gson/co.anitrend.retrofit.graphql.serialization.gson/-gson-graph-q-l-json/index.html
+$dokka.location:co.anitrend.retrofit.graphql.serialization.gson/GsonGraphQLJson/GsonGraphQLJson/#com.google.gson.Gson/PointingToDeclaration/serialization-gson/co.anitrend.retrofit.graphql.serialization.gson/-gson-graph-q-l-json/-gson-graph-q-l-json.html
+$dokka.location:co.anitrend.retrofit.graphql.serialization.gson/GsonGraphQLJson/decode/#kotlin.String#java.lang.reflect.Type/PointingToDeclaration/serialization-gson/co.anitrend.retrofit.graphql.serialization.gson/-gson-graph-q-l-json/decode.html
+$dokka.location:co.anitrend.retrofit.graphql.serialization.gson/GsonGraphQLJson/encode/#TypeParam(bounds=[kotlin.Any])#java.lang.reflect.Type?/PointingToDeclaration/serialization-gson/co.anitrend.retrofit.graphql.serialization.gson/-gson-graph-q-l-json/encode.html
+co.anitrend.retrofit.graphql.serialization.gson
