@@ -23,13 +23,25 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Generate docs with dokka
-        run: ./gradlew :library:dokkaGeneratePublicationHtml
-        # TODO: Switch to multi-module Dokka. Currently only publishes :library facade docs
-        # (type aliases pointing to co.anitrend.retrofit.graphql.* packages).
-        # Future: use dokkaHtmlMultiModule or a composite task to document all library-type modules.
+        run: |
+          ./gradlew :annotations:dokkaGeneratePublicationHtml \
+                    :api:dokkaGeneratePublicationHtml \
+                    :android-assets:dokkaGeneratePublicationHtml \
+                    :runtime:dokkaGeneratePublicationHtml \
+                    :codegen-core:dokkaGeneratePublicationHtml \
+                    :serialization-gson:dokkaGeneratePublicationHtml \
+                    :serialization-kotlinx:dokkaGeneratePublicationHtml \
+                    :library:dokkaGeneratePublicationHtml
+          # Merge all module docs into combined-docs
+          mkdir -p combined-docs
+          for module in annotations api android-assets runtime codegen-core serialization-gson serialization-kotlinx library; do
+            if [ -d "$module/build/dokka/html" ]; then
+              cp -r "$module/build/dokka/html/"* combined-docs/ 2>/dev/null || true
+            fi
+          done
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.8.0
         with:
           branch: docs # The branch the action should deploy to.
-          folder: library/build/dokka/html # The folder the action should deploy.
+          folder: combined-docs

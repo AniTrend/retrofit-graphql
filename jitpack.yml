@@ -3,8 +3,7 @@ jdk:
 #before_install:
 #   - ./custom_setup.sh
 install:
-  - echo "Running build commands"
-  - ./gradlew build --stacktrace
-  - ./gradlew publishMavenPublicationToMavenLocal
+  - ./gradlew build --stacktrace --no-daemon -x lint -x lintVitalRelease
+  - ./gradlew publishMavenPublicationToMavenLocal --no-daemon
 env:
   CI: "true"

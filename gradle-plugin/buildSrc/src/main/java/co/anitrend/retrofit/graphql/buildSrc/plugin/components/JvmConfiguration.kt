@@ -27,3 +27,12 @@ fun Project.configureSpotlessForJvm() {
         }
     }
 }
+
+/**
+ * Stub for the composite build. Dokka is only needed in the root build
+ * where API docs are generated; this avoids adding a Dokka dependency
+ * to the composite build's buildSrc.
+ */
+fun Project.configureDokkaForJvm() {
+    // No-op: composite build does not generate Dokka for codegen-core
+}

@@ -1,3 +1,4 @@
+import co.anitrend.retrofit.graphql.buildSrc.plugin.components.configureDokkaForJvm
 import co.anitrend.retrofit.graphql.buildSrc.plugin.components.configureSpotlessForJvm
 
 plugins {
@@ -5,6 +6,7 @@ plugins {
 }
 
 configureSpotlessForJvm()
+configureDokkaForJvm()
 
 dependencies {
     implementation(libs.graphql.java)
