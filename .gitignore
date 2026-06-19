@@ -251,3 +251,4 @@ app/lint-baseline.xml
 
 # OpenCode deepwork session files
 .slim/deepwork/
+dokka-docs/
