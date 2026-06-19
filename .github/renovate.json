@@ -1,11 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:recommended"
   ],
   "branchPrefix": "dependencies/",
   "reviewers": ["wax911"],
-  "baseBranches": [
+  "baseBranchPatterns": [
     "develop"
   ],
   "automerge": true,
@@ -14,68 +14,68 @@
   "packageRules": [
     {
       "groupName": "Sample Module Dependencies",
-      "packagePatterns": [
-        "^androidx\\.activity",
-        "^androidx\\.fragment",
-        "^androidx\\.core",
-        "^androidx\\.constraintlayout",
-        "^androidx\\.swiperefreshlayout",
-        "^androidx\\.preference",
-        "^androidx\\.recyclerview",
-        "^com\\.google\\.android\\.material",
-        "^io\\.coil-kt",
-        "^com\\.github\\.anitrend\\.support-arch",
-        "^com\\.jakewharton\\.threetenabp",
-        "^com\\.jakewharton\\.timber"
-      ],
-      "matchPaths": [
+      "matchFileNames": [
         "sample/**"
+      ],
+      "matchPackageNames": [
+        "/^androidx\\.activity/",
+        "/^androidx\\.fragment/",
+        "/^androidx\\.core/",
+        "/^androidx\\.constraintlayout/",
+        "/^androidx\\.swiperefreshlayout/",
+        "/^androidx\\.preference/",
+        "/^androidx\\.recyclerview/",
+        "/^com\\.google\\.android\\.material/",
+        "/^io\\.coil-kt/",
+        "/^com\\.github\\.anitrend\\.support-arch/",
+        "/^com\\.jakewharton\\.threetenabp/",
+        "/^com\\.jakewharton\\.timber/"
       ]
     },
     {
       "groupName": "Room Dependencies",
-      "packagePatterns": [
-        "^androidx\\.room"
-      ],
-      "matchPaths": [
+      "matchFileNames": [
         "sample/**"
+      ],
+      "matchPackageNames": [
+        "/^androidx\\.room/"
       ]
     },
     {
       "groupName": "Paging Dependencies",
-      "packagePatterns": [
-        "^androidx\\.paging"
-      ],
-      "matchPaths": [
+      "matchFileNames": [
         "sample/**"
+      ],
+      "matchPackageNames": [
+        "/^androidx\\.paging/"
       ]
     },
     {
       "groupName": "Kotlinx Serialization",
-      "packagePatterns": [
-        "^org\\.jetbrains\\.kotlinx\\.serialization"
-      ],
-      "matchPaths": [
+      "matchFileNames": [
         "sample/**"
+      ],
+      "matchPackageNames": [
+        "/^org\\.jetbrains\\.kotlinx\\.serialization/"
       ]
     },
     {
       "groupName": "Koin Dependencies",
-      "packagePatterns": [
-        "^org\\.koin"
-      ],
-      "matchPaths": [
+      "matchFileNames": [
         "sample/**"
+      ],
+      "matchPackageNames": [
+        "/^org\\.koin/"
       ]
     },
     {
       "groupName": "Testing Dependencies",
-      "packagePatterns": [
-        "^junit",
-        "^io\\.mockk",
-        "^androidx\\.test",
-        "^androidx\\.test\\.espresso",
-        "^androidx\\.test\\.ext"
+      "matchPackageNames": [
+        "/^junit/",
+        "/^io\\.mockk/",
+        "/^androidx\\.test/",
+        "/^androidx\\.test\\.espresso/",
+        "/^androidx\\.test\\.ext/"
       ]
     }
   ]
