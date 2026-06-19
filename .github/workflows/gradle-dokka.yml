@@ -32,13 +32,48 @@ jobs:
                     :serialization-gson:dokkaGeneratePublicationHtml \
                     :serialization-kotlinx:dokkaGeneratePublicationHtml \
                     :library:dokkaGeneratePublicationHtml
-          # Merge all module docs into combined-docs
+          # Merge all module docs into combined-docs with subdirectories
           mkdir -p combined-docs
           for module in annotations api android-assets runtime codegen-core serialization-gson serialization-kotlinx library; do
             if [ -d "$module/build/dokka/html" ]; then
-              cp -r "$module/build/dokka/html/"* combined-docs/ 2>/dev/null || true
+              mkdir -p "combined-docs/$module"
+              cp -r "$module/build/dokka/html/"* "combined-docs/$module/" 2>/dev/null || true
             fi
           done
+          # Generate a root index.html linking to each module's docs
+          cat > combined-docs/index.html << 'HTML'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>retrofit-graphql API Docs</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+            h1 { border-bottom: 2px solid #eee; padding-bottom: 12px; }
+            ul { list-style: none; padding: 0; }
+            li { margin: 8px 0; }
+            a { color: #0366d6; text-decoration: none; font-size: 16px; }
+            a:hover { text-decoration: underline; }
+            code { background: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-size: 14px; }
+          </style>
+          </head>
+          <body>
+          <h1>retrofit-graphql API Documentation</h1>
+          <p>Multi-module Kotlin library for injecting <code>.graphql</code> files into Retrofit HTTP requests.</p>
+          <ul>
+          <li><a href="annotations/">annotations</a> <span style="color:#666">&mdash; @GraphQuery annotation</span></li>
+          <li><a href="api/">api</a> <span style="color:#666">&mdash; Public API interfaces and models</span></li>
+          <li><a href="android-assets/">android-assets</a> <span style="color:#666">&mdash; Asset-based query discovery</span></li>
+          <li><a href="runtime/">runtime</a> <span style="color:#666">&mdash; Retrofit Converter.Factory</span></li>
+          <li><a href="codegen-core/">codegen-core</a> <span style="color:#666">&mdash; Code generation engine</span></li>
+          <li><a href="serialization-gson/">serialization-gson</a> <span style="color:#666">&mdash; Gson backend</span></li>
+          <li><a href="serialization-kotlinx/">serialization-kotlinx</a> <span style="color:#666">&mdash; kotlinx.serialization backend</span></li>
+          <li><a href="library/">library</a> <span style="color:#666">&mdash; Legacy facade (deprecated type aliases)</span></li>
+          </ul>
+          </body>
+          </html>
+          HTML
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.8.0
