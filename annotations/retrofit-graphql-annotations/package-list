@@ -1,6 +1,0 @@
-$dokka.format:html-v1
-$dokka.linkExtension:html
-$dokka.location:co.anitrend.retrofit.graphql.annotation////PointingToDeclaration/retrofit-graphql-annotations/co.anitrend.retrofit.graphql.annotation/index.html
-$dokka.location:co.anitrend.retrofit.graphql.annotation/GraphQuery///PointingToDeclaration/retrofit-graphql-annotations/co.anitrend.retrofit.graphql.annotation/-graph-query/index.html
-$dokka.location:co.anitrend.retrofit.graphql.annotation/GraphQuery/value/#/PointingToDeclaration/retrofit-graphql-annotations/co.anitrend.retrofit.graphql.annotation/-graph-query/value.html
-co.anitrend.retrofit.graphql.annotation

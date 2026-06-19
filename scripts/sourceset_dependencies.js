@@ -1,0 +1,1 @@
+sourceset_dependencies = '{":codegen-core/main":[],":library/release":[],":serialization-kotlinx/release":[],":annotations/main":[],":serialization-gson/release":[],":runtime/release":[],":android-assets/release":[],":api/release":[]}'

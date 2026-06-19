@@ -1,1 +1,0 @@
-sourceset_dependencies='{":android-assets/release":[]}'

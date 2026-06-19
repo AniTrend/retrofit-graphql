@@ -1,8 +1,0 @@
-$dokka.format:html-v1
-$dokka.linkExtension:html
-$dokka.location:co.anitrend.retrofit.graphql.serialization.kotlinx////PointingToDeclaration/serialization-kotlinx/co.anitrend.retrofit.graphql.serialization.kotlinx/index.html
-$dokka.location:co.anitrend.retrofit.graphql.serialization.kotlinx/KotlinxGraphQLJson///PointingToDeclaration/serialization-kotlinx/co.anitrend.retrofit.graphql.serialization.kotlinx/-kotlinx-graph-q-l-json/index.html
-$dokka.location:co.anitrend.retrofit.graphql.serialization.kotlinx/KotlinxGraphQLJson/KotlinxGraphQLJson/#kotlinx.serialization.json.Json/PointingToDeclaration/serialization-kotlinx/co.anitrend.retrofit.graphql.serialization.kotlinx/-kotlinx-graph-q-l-json/-kotlinx-graph-q-l-json.html
-$dokka.location:co.anitrend.retrofit.graphql.serialization.kotlinx/KotlinxGraphQLJson/decode/#kotlin.String#java.lang.reflect.Type/PointingToDeclaration/serialization-kotlinx/co.anitrend.retrofit.graphql.serialization.kotlinx/-kotlinx-graph-q-l-json/decode.html
-$dokka.location:co.anitrend.retrofit.graphql.serialization.kotlinx/KotlinxGraphQLJson/encode/#TypeParam(bounds=[kotlin.Any])#java.lang.reflect.Type?/PointingToDeclaration/serialization-kotlinx/co.anitrend.retrofit.graphql.serialization.kotlinx/-kotlinx-graph-q-l-json/encode.html
-co.anitrend.retrofit.graphql.serialization.kotlinx
