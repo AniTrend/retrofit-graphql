@@ -11,7 +11,7 @@ Use this map to choose the right build file before editing.
 | Shared dependency strategy | `buildSrc/.../strategy/DependencyStrategy.kt` | Default Kotlin, Retrofit, OkHttp, coroutines, and test libraries per module type |
 | Shared Dokka behavior | `buildSrc/.../components/AndroidOptions.kt` | `dokkaHtml` task, `reportUndocumented = true`, internal packages suppressed, Android docs linked |
 | Shared formatting | `buildSrc/.../components/AndroidConfiguration.kt` (Spotless config), `spotless/copyright.kt` | Ktlint and license header configuration |
-| Publishing options | `buildSrc/.../components/AndroidOptions.kt` | Sources jar, classes jar, Maven publication for JitPack |
+| Publishing options | `buildSrc/.../components/AndroidOptions.kt` (Android), per-module `build.gradle.kts` (JVM) | AGP component-backed publications via `singleVariant("release")` + `withSourcesJar()`. JVM modules (`:annotations`, `:codegen-core`) inline publishing. Publication name `"maven"` for all modules. |
 | Dependency versions and aliases | `gradle/libs.versions.toml` | Add or update aliases here first |
 | Library build | `library/build.gradle.kts` | Applies the shared plugin; no module-specific overrides needed for standard changes |
 | Sample app build | `app/build.gradle.kts` | Applies the shared plugin; Room compiler options, build config fields from `.config/` |
