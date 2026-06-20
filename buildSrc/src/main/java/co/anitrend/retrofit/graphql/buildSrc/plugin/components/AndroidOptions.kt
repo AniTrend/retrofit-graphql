@@ -62,6 +62,8 @@ private fun ApplicationDefaultConfig.applyRoomCompilerOptions(project: Project) 
 }
 
 private fun Project.configurePublishing() {
+    logger.lifecycle("Applying publication configuration on ${project.path}")
+
     // Tell AGP to produce a component-backed release variant.
     // The component is created during task graph resolution, *after* project
     // configuration, so the publication itself must be deferred via afterEvaluate.
@@ -76,6 +78,8 @@ private fun Project.configurePublishing() {
     // The "release" software component is the source of truth for the Maven
     // publication, which lets Gradle emit correct variant-aware POM/module metadata.
     afterEvaluate {
+        logger.lifecycle("Configuring maven publication options for ${project.path}:maven with component-> release")
+
         publishingExtension().publications {
             create("maven", MavenPublication::class.java) {
                 groupId = "co.anitrend"

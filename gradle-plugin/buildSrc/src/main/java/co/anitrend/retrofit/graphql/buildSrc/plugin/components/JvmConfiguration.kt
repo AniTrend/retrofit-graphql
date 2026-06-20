@@ -36,3 +36,11 @@ fun Project.configureSpotlessForJvm() {
 fun Project.configureDokkaForJvm() {
     // No-op: composite build does not generate Dokka for codegen-core
 }
+
+/**
+ * Stub for the composite build. Maven publishing is only configured
+ * in the root build where JitPack artifacts are produced.
+ */
+fun Project.configureJvmPublishing() {
+    // No-op: composite build does not publish codegen-core
+}
