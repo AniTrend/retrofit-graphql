@@ -9,5 +9,6 @@ android {
 dependencies {
     // GraphQLJson interface is exposed in public API
     api(project(":api"))
-    implementation(libs.square.retrofit.gson.converter)
+    // Gson is exposed in GsonGraphQLJson public constructor
+    api(libs.gson)
 }

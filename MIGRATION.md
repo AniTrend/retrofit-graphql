@@ -33,22 +33,31 @@ If you use `.graphql` files in `assets/` with `@GraphQuery` annotations and the 
 
 **Before (aggregator):**
 ```kotlin
+// JitPack external:
+dependencies {
+    implementation("com.github.AniTrend:retrofit-graphql:{tag}")
+}
+
+// Internal development:
 dependencies {
     implementation(project(":library"))
 }
 ```
 
-**After (individual modules):**
+**After (individual modules via JitPack -- recommended for consumers):**
 ```kotlin
-// JitPack external coordinates:
-// dependencies {
-//     implementation("com.github.AniTrend.retrofit-graphql:runtime:{tag}")
-//     implementation("com.github.AniTrend.retrofit-graphql:api:{tag}")
-//     implementation("com.github.AniTrend.retrofit-graphql:android-assets:{tag}")
-//     implementation("com.github.AniTrend.retrofit-graphql:annotations:{tag}")
-// }
+dependencies {
+    implementation("com.github.AniTrend.retrofit-graphql:runtime:{tag}")
+    implementation("com.github.AniTrend.retrofit-graphql:api:{tag}")
+    implementation("com.github.AniTrend.retrofit-graphql:android-assets:{tag}")
+    implementation("com.github.AniTrend.retrofit-graphql:annotations:{tag}")
+}
+```
 
-// In this repository (internal development), use project references:
+> **Note:** `:runtime` currently publishes `:android-assets` with `api` scope, so those types are already available transitively. Keep a direct `android-assets` dependency only when you want that module called out explicitly in your build. Even with build-time code generation, `android-assets` is still pulled transitively today because `GraphConverter` exposes `AbstractGraphProcessor` in its public API.
+
+**After (internal development with project references):**
+```kotlin
 dependencies {
     implementation(project(":runtime"))       // GraphConverter, GraphRequestConverter
     implementation(project(":api"))            // QueryContainerBuilder, GraphQLDocumentRegistry
@@ -63,14 +72,13 @@ If you want to replace asset-based discovery with build-time code generation:
 
 ```kotlin
 plugins {
-    id("co.anitrend.retrofit.graphql.codegen")
+    id("co.anitrend.retrofit.graphql.codegen") version "{tag}"
 }
 
 dependencies {
-    implementation(project(":runtime"))
-    implementation(project(":api"))
-    implementation(project(":annotations"))
-    // :android-assets is NOT needed — codegen replaces asset-based discovery
+    implementation("com.github.AniTrend.retrofit-graphql:runtime:{tag}")
+    implementation("com.github.AniTrend.retrofit-graphql:api:{tag}")
+    implementation("com.github.AniTrend.retrofit-graphql:annotations:{tag}")
 }
 
 retrofitGraphQL {
@@ -84,6 +92,8 @@ retrofitGraphQL {
     })
 }
 ```
+
+> **Note:** Code generation removes the need to declare `android-assets` directly. `:runtime` still brings it in transitively today because `GraphConverter` publicly accepts `AbstractGraphProcessor`, but that is a module-boundary detail, not a signal that codegen still relies on asset discovery.
 
 Place your `.graphql` files in `src/main/graphql/` instead of `assets/graphql/`.
 
@@ -111,8 +121,18 @@ See the [sample app](app/) for a complete migration example.
 
 If you currently use `:library` for its bundled serialization modules:
 
+**JitPack external coordinates:**
 ```kotlin
-// Gson users (already provided by Retrofit's own Gson converter — skip if unused)
+// Gson users
+implementation("com.github.AniTrend.retrofit-graphql:serialization-gson:{tag}")
+
+// kotlinx.serialization users
+implementation("com.github.AniTrend.retrofit-graphql:serialization-kotlinx:{tag}")
+```
+
+**Internal development with project references:**
+```kotlin
+// Gson users (already provided by Retrofit's own Gson converter -- skip if unused)
 implementation(project(":serialization-gson"))
 
 // kotlinx.serialization users
@@ -125,25 +145,41 @@ Most consumers do **not** need these. The `:runtime` module uses Gson internally
 
 If you want the absolute minimum:
 
+**JitPack external coordinates:**
+```kotlin
+implementation("com.github.AniTrend.retrofit-graphql:runtime:{tag}")
+implementation("com.github.AniTrend.retrofit-graphql:api:{tag}")
+implementation("com.github.AniTrend.retrofit-graphql:annotations:{tag}")
+```
+
+> **Note:** `:runtime` currently publishes `:android-assets` with `api` scope, so those types are already available transitively. If you want the slimmest direct dependency list, keep only `runtime` and `annotations`. Add `android-assets` explicitly only when you want that module called out in your build file.
+
+**Internal development with project references:**
 ```kotlin
 implementation(project(":runtime"))
 implementation(project(":api"))
 implementation(project(":annotations"))
 ```
 
-Then implement `AbstractGraphProcessor` or provide queries via `GraphQLDocumentRegistry` instead of using asset-based discovery.
-
 ## Backward Compatibility
 
 The `:library` module still exists and can be used as before:
 
 ```kotlin
+// JitPack (monolithic aggregator -- deprecated):
+dependencies {
+    implementation("com.github.AniTrend:retrofit-graphql:{tag}")
+}
+
+// Internal development:
 dependencies {
     implementation(project(":library")) // Still works, but deprecated
 }
 ```
 
 All types under `io.github.wax911.library.*` are now type aliases pointing to their new locations at `co.anitrend.retrofit.graphql.*`. Using `:library` generates deprecation warnings at compile time.
+
+> Root artifact coordinates use `com.github.AniTrend`, while module coordinates use `com.github.AniTrend.retrofit-graphql`.
 
 ## Consumer Code Changes
 

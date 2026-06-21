@@ -40,6 +40,8 @@ jetbrains-kotlinx-serialization = "1.11.0"
 koin-core = "4.2.2"
 koin-android = "4.2.2"
 
+gson = "2.13.1"
+
 square-retrofit = "3.0.0"
 square-okhttp = "5.4.0"
 
@@ -125,6 +127,8 @@ jetbrains-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx
 
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin-core" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin-android" }
+
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 
 square-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "square-retrofit" }
 square-retrofit-gson-converter = { module = "com.squareup.retrofit2:converter-gson", version.ref = "square-retrofit" }
