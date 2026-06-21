@@ -31,15 +31,24 @@ The `:library` module remains available as a backward-compatible facade, but it 
 
 If you use `.graphql` files in `assets/` with `@GraphQuery` annotations and the `GraphProcessor`:
 
-**Before:**
+**Before (aggregator):**
 ```kotlin
 dependencies {
     implementation(project(":library"))
 }
 ```
 
-**After:**
+**After (individual modules):**
 ```kotlin
+// JitPack external coordinates:
+// dependencies {
+//     implementation("com.github.AniTrend.retrofit-graphql:runtime:{tag}")
+//     implementation("com.github.AniTrend.retrofit-graphql:api:{tag}")
+//     implementation("com.github.AniTrend.retrofit-graphql:android-assets:{tag}")
+//     implementation("com.github.AniTrend.retrofit-graphql:annotations:{tag}")
+// }
+
+// In this repository (internal development), use project references:
 dependencies {
     implementation(project(":runtime"))       // GraphConverter, GraphRequestConverter
     implementation(project(":api"))            // QueryContainerBuilder, GraphQLDocumentRegistry

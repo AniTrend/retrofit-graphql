@@ -7,6 +7,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":api"))
+    // GraphQLJson interface is exposed in public API
+    api(project(":api"))
     implementation(libs.jetbrains.kotlinx.serialization.json)
 }

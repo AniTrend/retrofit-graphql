@@ -4,6 +4,7 @@ import org.gradle.api.Project
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.isSampleModule
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.isAnnotationsModule
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.isFacadeModule
+import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.api
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.implementation
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.androidTest
 import co.anitrend.retrofit.graphql.buildSrc.plugin.extensions.libs
@@ -30,8 +31,11 @@ internal class DependencyStrategy(
     }
 
     private fun DependencyHandler.applyNetworkingDependencies() {
-        implementation(project.libs.square.retrofit)
-        implementation(project.libs.square.retrofit.gson.converter)
+        // Retrofit and Gson are exposed in public API signatures
+        // of :runtime (GraphConverter, GraphRequestConverter) and
+        // :api (PersistedQueryUrlParameterBuilder).
+        api(project.libs.square.retrofit)
+        api(project.libs.square.retrofit.gson.converter)
     }
 
     fun applyDependenciesOn(handler: DependencyHandler) {

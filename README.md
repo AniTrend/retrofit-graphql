@@ -55,17 +55,29 @@ dependencies {
 As of v2.x, the library is organized into composable modules. Instead of depending on the monolithic aggregator, you can depend only on the modules you need:
 
 ```kotlin
-dependencies {
-    // Core converter (asset-based queries)
-    implementation("com.github.anitrend:retrofit-graphql:{latest_version}")
+// JitPack external coordinates (for consuming projects):
+// com.github.AniTrend.retrofit-graphql:{module}:{tag}
+//
+// Example with individual modules:
+// dependencies {
+//     implementation("com.github.AniTrend.retrofit-graphql:runtime:{latest_version}")
+//     implementation("com.github.AniTrend.retrofit-graphql:api:{latest_version}")
+//     implementation("com.github.AniTrend.retrofit-graphql:android-assets:{latest_version}")
+//     implementation("com.github.AniTrend.retrofit-graphql:annotations:{latest_version}")
+// }
+//
+// In this repository (internal development), use project references:
+// dependencies {
+//     implementation(project(":runtime"))
+//     implementation(project(":api"))
+//     implementation(project(":android-assets"))
+//     implementation(project(":annotations"))
+// }
 
-    // Or pick individual modules:
-    // implementation(project(":runtime"))
-    // implementation(project(":api"))
-    // implementation(project(":android-assets"))
-    // implementation(project(":annotations"))
+dependencies {
+    // Core converter (asset-based queries) — deprecated aggregator, backward compatible
+    implementation("com.github.anitrend:retrofit-graphql:{latest_version}")
 }
-```
 
 For code generation support, apply the Gradle plugin and add a `retrofitGraphQL { }` config block. See [MIGRATION.md](MIGRATION.md) for the full migration guide.
 

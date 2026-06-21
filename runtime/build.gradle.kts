@@ -7,7 +7,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":api"))
-    implementation(project(":android-assets"))
+    // Exposed in public API: GraphQLDocumentRegistry, QueryContainerBuilder, GraphQLRequest
+    api(project(":api"))
+    // Exposed in public API: AbstractGraphProcessor, ILogger, DefaultGraphLogger
+    api(project(":android-assets"))
+    // @GraphQuery only read via reflection internally, never leaked
     implementation(project(":annotations"))
 }
