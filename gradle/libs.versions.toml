@@ -40,7 +40,7 @@ jetbrains-kotlinx-serialization = "1.11.0"
 koin-core = "4.2.2"
 koin-android = "4.2.2"
 
-gson = "2.13.1"
+gson = "2.14.0"
 
 square-retrofit = "3.0.0"
 square-okhttp = "5.4.0"
