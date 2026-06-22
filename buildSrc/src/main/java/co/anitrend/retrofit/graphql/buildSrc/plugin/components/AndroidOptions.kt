@@ -11,9 +11,6 @@ import com.android.build.api.dsl.ApplicationDefaultConfig
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.api.tasks.bundling.Jar
-import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.invoke
 import java.util.*
 
@@ -64,36 +61,49 @@ private fun ApplicationDefaultConfig.applyRoomCompilerOptions(project: Project) 
     }
 }
 
-private fun Project.createMavenPublicationUsing(sourcesJar: Jar) {
+private fun Project.configurePublishing() {
     logger.lifecycle("Applying publication configuration on ${project.path}")
-    publishingExtension().publications {
-        val component = components.findByName("android")
 
-        logger.lifecycle("Configuring maven publication options for ${project.path}:maven with component-> ${component?.name}")
-        create("maven", MavenPublication::class.java) {
-            groupId = "co.anitrend"
-            artifactId = "retrofit-graphql"
-            version = props[PropertyTypes.NAME]
+    // Tell AGP to produce a component-backed release variant.
+    // The component is created during task graph resolution, *after* project
+    // configuration, so the publication itself must be deferred via afterEvaluate.
+    libraryExtension().run {
+        publishing {
+            singleVariant("release") {
+                withSourcesJar()
+            }
+        }
+    }
 
-            artifact(sourcesJar)
-            artifact("${project.layout.buildDirectory.get()}/outputs/aar/${project.name}-release.aar")
-            from(component)
+    // The "release" software component is the source of truth for the Maven
+    // publication, which lets Gradle emit correct variant-aware POM/module metadata.
+    afterEvaluate {
+        logger.lifecycle("Configuring maven publication options for ${project.path}:maven with component-> release")
 
-            pom {
-                name.set("Retrofit GraphQL")
-                description.set("This is a retrofit converter which uses annotations to inject .graphql query or mutation files into a request body along with any GraphQL variables.")
-                url.set("https://github.com/anitrend/retrofit-graphql")
-                licenses {
-                    license {
-                        name.set("Apache License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+        publishingExtension().publications {
+            create("maven", MavenPublication::class.java) {
+                groupId = "co.anitrend"
+                // Keep backward-compatible artifactId for the deprecated :library facade
+                artifactId = if (isFacadeModule()) "retrofit-graphql" else project.name
+                version = props[PropertyTypes.NAME]
+                from(components.getByName("release"))
+
+                pom {
+                    name.set("Retrofit GraphQL")
+                    description.set("This is a retrofit converter which uses annotations to inject .graphql query or mutation files into a request body along with any GraphQL variables.")
+                    url.set("https://github.com/anitrend/retrofit-graphql")
+                    licenses {
+                        license {
+                            name.set("Apache License, Version 2.0")
+                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                        }
                     }
-                }
-                developers {
-                    developer {
-                        id.set("wax911")
-                        name.set("Maxwell Mapako")
-                        organizationUrl.set("https://github.com/anitrend")
+                    developers {
+                        developer {
+                            id.set("wax911")
+                            name.set("Maxwell Mapako")
+                            organizationUrl.set("https://github.com/anitrend")
+                        }
                     }
                 }
             }
@@ -122,30 +132,10 @@ private fun Project.configureDokka() {
 internal fun Project.configureOptions() {
     logger.lifecycle("Applying extension options for ${project.path}")
     if (isLibraryModule()) {
-        val baseExt = libraryExtension()
-
         logger.lifecycle("Applying additional tasks options for dokka and javadoc on ${project.path}")
 
         configureDokka()
-
-        val sourcesJar by tasks.register("sourcesJar", Jar::class.java) {
-            archiveClassifier.set("sources")
-            from("src/main/java", "src/main/kotlin")
-        }
-
-        val classesJar by tasks.register("classesJar", Jar::class.java) {
-            from("${project.layout.buildDirectory.get()}/intermediates/classes/release")
-        }
-
-        artifacts {
-            add("archives", classesJar)
-            add("archives", sourcesJar)
-        }
-
-        // Only publish from the facade :library module
-        if (isFacadeModule()) {
-            createMavenPublicationUsing(sourcesJar)
-        }
+        configurePublishing()
     }
     else
         baseAppExtension().run {
