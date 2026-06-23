@@ -5,11 +5,12 @@ import co.anitrend.arch.request.callback.RequestCallback
 import co.anitrend.retrofit.graphql.data.arch.controller.strategy.ControllerStrategy
 import co.anitrend.retrofit.graphql.data.arch.extensions.controller
 import co.anitrend.retrofit.graphql.data.bucket.datasource.remote.BucketRemoteSource
+import co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper.createMultiPartBody
 import co.anitrend.retrofit.graphql.data.bucket.mapper.UploadResponseMapper
 import co.anitrend.retrofit.graphql.data.bucket.source.upload.contract.BucketUploadSource
 import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
-import co.anitrend.retrofit.graphql.domain.models.common.IGraphQuery
-import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
+import co.anitrend.retrofit.graphql.sample.generated.UploadToStorageBucket
+import com.google.gson.GsonBuilder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,13 +26,14 @@ internal class BucketUploadSourceImpl(
         MutableStateFlow<BucketFile?>(null)
 
     override suspend fun uploadToStorageBucket(
-        mutation: IGraphQuery,
+        path: String,
         requestCallback: RequestCallback,
     ) {
         val deferred = async {
-            val queryBuilder = QueryContainerBuilder()
-                .putVariables(mutation.toMap())
-            remoteSource.uploadToStorageBucket(queryBuilder)
+            val request = UploadToStorageBucket.request(upload = path)
+            remoteSource.uploadToStorageBucket(
+                request.createMultiPartBody(gson)
+            )
         }
 
         val controller =
@@ -48,5 +50,11 @@ internal class BucketUploadSourceImpl(
      */
     override suspend fun clearDataSource(context: CoroutineDispatcher) {
         observable.value = null
+    }
+
+    private companion object {
+        val gson = GsonBuilder()
+            .setLenient()
+            .create()
     }
 }

@@ -1,12 +1,12 @@
 package co.anitrend.retrofit.graphql.data.bucket.datasource.remote
 
 import co.anitrend.retrofit.graphql.data.api.common.EndpointType
-import co.anitrend.retrofit.graphql.data.arch.GraphMultiPartUpload
 import co.anitrend.retrofit.graphql.data.bucket.model.StorageBucket
 import co.anitrend.retrofit.graphql.data.bucket.model.upload.UploadResult
-import co.anitrend.retrofit.graphql.annotation.GraphQuery
 import co.anitrend.retrofit.graphql.model.body.GraphContainer
-import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
+import co.anitrend.retrofit.graphql.model.EmptyGraphQLVariables
+import co.anitrend.retrofit.graphql.model.GraphQLRequest
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
@@ -14,19 +14,12 @@ import retrofit2.http.POST
 internal interface BucketRemoteSource {
 
     @POST(EndpointType.BASE_ENDPOINT_PATH)
-    @GraphQuery("StorageBucketFiles")
     suspend fun getStorageBucketFiles(
-        @Body builder: QueryContainerBuilder
+        @Body request: GraphQLRequest<EmptyGraphQLVariables>
     ): Response<GraphContainer<StorageBucket>>
 
-    /**
-     * [GraphMultiPartUpload] is just a simple annotation to
-     * indicate the characteristics of this method.
-     */
-    @GraphMultiPartUpload
     @POST(EndpointType.BASE_ENDPOINT_PATH)
-    @GraphQuery("UploadToStorageBucket")
     suspend fun uploadToStorageBucket(
-        @Body builder: QueryContainerBuilder
+        @Body body: MultipartBody
     ): Response<GraphContainer<UploadResult>>
 }

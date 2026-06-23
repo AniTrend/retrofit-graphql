@@ -1,21 +1,18 @@
 package co.anitrend.retrofit.graphql.data.arch.koin
 
-import co.anitrend.retrofit.graphql.data.api.converter.SampleConverterFactory
+import co.anitrend.retrofit.graphql.converter.GraphConverter
+import co.anitrend.retrofit.graphql.data.api.converter.RequestBodyPassThroughConverterFactory
 import co.anitrend.retrofit.graphql.data.arch.database.SampleStore
-import co.anitrend.retrofit.graphql.sample.generated.GeneratedGraphQLRegistry
-import co.anitrend.retrofit.graphql.model.GraphQLDocumentRegistry
 import co.anitrend.retrofit.graphql.data.bucket.koin.bucketModules
 import co.anitrend.retrofit.graphql.data.market.koin.marketPlaceModules
 import co.anitrend.retrofit.graphql.data.user.koin.userModules
+import co.anitrend.retrofit.graphql.model.GraphQLDocumentRegistry
+import co.anitrend.retrofit.graphql.logger.contract.ILogger
 import co.anitrend.retrofit.graphql.sample.BuildConfig
+import co.anitrend.retrofit.graphql.sample.generated.GeneratedGraphQLRegistry
 import com.chuckerteam.chucker.api.ChuckerCollector
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.chuckerteam.chucker.api.RetentionManager
-import co.anitrend.retrofit.graphql.annotation.processor.GraphProcessor
-import co.anitrend.retrofit.graphql.annotation.processor.contract.AbstractGraphProcessor
-import co.anitrend.retrofit.graphql.annotation.processor.plugin.AssetManagerDiscoveryPlugin
-import co.anitrend.retrofit.graphql.logger.DefaultGraphLogger
-import co.anitrend.retrofit.graphql.logger.contract.ILogger
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -33,33 +30,25 @@ private val coreModule = module {
     single<GraphQLDocumentRegistry> {
         GeneratedGraphQLRegistry
     }
+}
+
+private val networkModule = module {
     factory {
-        AssetManagerDiscoveryPlugin(
-            assetManager = androidContext().assets
-        )
-    }
-    single {
         val level = if (BuildConfig.DEBUG)
             ILogger.Level.VERBOSE
         else
             ILogger.Level.ERROR
 
-        GraphProcessor(
-            discoveryPlugin = get<AssetManagerDiscoveryPlugin>(),
-            logger = DefaultGraphLogger(level)
-        )
-    }
-}
-
-private val networkModule = module {
-    factory {
-        val converterFactory = SampleConverterFactory(
-            processor = get<GraphProcessor>(),
-            registry = get<GraphQLDocumentRegistry>()
-        )
         Retrofit.Builder()
             .addConverterFactory(
-                converterFactory
+                RequestBodyPassThroughConverterFactory
+            )
+            .addConverterFactory(
+                GraphConverter.create(
+                    context = androidContext(),
+                    registry = get<GraphQLDocumentRegistry>(),
+                    level = level,
+                )
             )
     }
 }

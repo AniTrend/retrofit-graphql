@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagedList
 import co.anitrend.arch.core.model.ISupportViewModelState
 import co.anitrend.arch.data.state.DataState
-import co.anitrend.retrofit.graphql.data.bucket.model.upload.mutation.UploadMutation
 import co.anitrend.retrofit.graphql.data.market.usecase.MarketPlaceUseCaseContract
 import co.anitrend.retrofit.graphql.domain.entities.market.MarketPlaceListing
 import kotlinx.coroutines.flow.merge

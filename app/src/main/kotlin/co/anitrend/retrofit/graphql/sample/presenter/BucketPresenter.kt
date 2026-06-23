@@ -9,7 +9,7 @@ import co.anitrend.arch.core.presenter.SupportPresenter
 import co.anitrend.arch.domain.entities.LoadState
 import co.anitrend.arch.domain.entities.RequestError
 import co.anitrend.retrofit.graphql.core.settings.Settings
-import co.anitrend.retrofit.graphql.data.bucket.model.upload.mutation.UploadMutation
+
 import io.wax911.emojify.EmojiManager
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
@@ -24,17 +24,14 @@ class BucketPresenter(
 ) : SupportPresenter<Settings>(context, settings) {
 
     /**
-     * Resolves the selected image uri into a [UploadMutation] that contains the absolute
-     * path of the selected file
+     * Resolves the selected image uri into the absolute path of the selected file
      *
-     * @return [UploadMutation] or null
-     *
-     * @see [co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper]
+     * @return The absolute file path or null
      */
-    fun resolve(uri: Uri, contentResolver: ContentResolver): UploadMutation? {
+    fun resolve(uri: Uri, contentResolver: ContentResolver): String? {
         val stream = contentResolver.openInputStream(uri)
         val outputFile = stream?.optimizeImage(context)
-        return outputFile?.let { UploadMutation(it.absolutePath) }
+        return outputFile?.absolutePath
     }
 
     fun loadStateFailure(): LoadState {

@@ -8,7 +8,9 @@ import co.anitrend.retrofit.graphql.data.bucket.datasource.remote.BucketRemoteSo
 import co.anitrend.retrofit.graphql.data.bucket.mapper.BucketResponseMapper
 import co.anitrend.retrofit.graphql.data.bucket.source.browse.contract.BucketSource
 import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
-import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
+import co.anitrend.retrofit.graphql.model.EmptyGraphQLVariables
+import co.anitrend.retrofit.graphql.model.GraphQLRequest
+import co.anitrend.retrofit.graphql.sample.generated.StorageBucketFiles
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,9 +27,11 @@ internal class BucketSourceImpl(
 
     override suspend fun getStorageBucketFiles(requestCallback: RequestCallback) {
         val deferred = async {
-            val queryBuilder = QueryContainerBuilder()
             remoteSource.getStorageBucketFiles(
-                queryBuilder
+                GraphQLRequest<EmptyGraphQLVariables>(
+                    query = StorageBucketFiles.document,
+                    operationName = StorageBucketFiles.name,
+                )
             )
         }
 

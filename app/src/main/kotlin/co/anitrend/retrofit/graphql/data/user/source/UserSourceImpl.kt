@@ -11,7 +11,9 @@ import co.anitrend.retrofit.graphql.data.user.datasource.remote.UserRemoteSource
 import co.anitrend.retrofit.graphql.data.user.entity.UserEntity
 import co.anitrend.retrofit.graphql.data.user.mapper.UserResponseMapper
 import co.anitrend.retrofit.graphql.data.user.source.contract.UserSource
-import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
+import co.anitrend.retrofit.graphql.model.EmptyGraphQLVariables
+import co.anitrend.retrofit.graphql.model.GraphQLRequest
+import co.anitrend.retrofit.graphql.sample.generated.GetCurrentUser
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.emitAll
@@ -46,8 +48,12 @@ internal class UserSourceImpl(
         // simulating some sort of cache refresh policy
         if (authId.isNotEmpty()) return
         val deferred = async {
-            val queryBuilder = QueryContainerBuilder()
-            remoteSource.getCurrentUser(queryBuilder)
+            remoteSource.getCurrentUser(
+                GraphQLRequest<EmptyGraphQLVariables>(
+                    query = GetCurrentUser.document,
+                    operationName = GetCurrentUser.name,
+                )
+            )
         }
 
         val controller =

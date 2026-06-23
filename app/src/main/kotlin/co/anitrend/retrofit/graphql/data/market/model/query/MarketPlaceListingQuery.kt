@@ -1,7 +1,5 @@
 package co.anitrend.retrofit.graphql.data.market.model.query
 
-import co.anitrend.retrofit.graphql.domain.models.common.IGraphQuery
-
 /**
  * Look up Marketplace listings
  *
@@ -13,11 +11,4 @@ data class MarketPlaceListingQuery(
     var after: String? = null,
     var before: String? = null,
     val first: Int
-) : IGraphQuery {
-    override fun toMap() =
-        mapOf(
-            "after" to after,
-            "before" to before,
-            "first" to first
-        )
-}
+)

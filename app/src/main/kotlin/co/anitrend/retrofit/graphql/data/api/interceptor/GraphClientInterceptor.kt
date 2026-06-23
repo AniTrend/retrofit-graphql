@@ -1,7 +1,6 @@
 package co.anitrend.retrofit.graphql.data.api.interceptor
 
 import co.anitrend.retrofit.graphql.data.api.common.EndpointType
-import co.anitrend.retrofit.graphql.data.api.converter.request.SampleRequestConverter
 import co.anitrend.retrofit.graphql.sample.BuildConfig
 import co.anitrend.retrofit.graphql.converter.GraphConverter
 import okhttp3.Interceptor
@@ -16,11 +15,12 @@ internal class GraphClientInterceptor: Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
+        val bodyContentType = original.body?.contentType()
         val requestBuilder = original.newBuilder()
-            .header(ACCEPT, SampleRequestConverter.MIME_TYPE)
+            .header(ACCEPT, APPLICATION_JSON)
             .method(original.method, original.body)
 
-        if (original.header(CONTENT_TYPE).isNullOrEmpty())
+        if (original.header(CONTENT_TYPE).isNullOrEmpty() && bodyContentType == null)
             requestBuilder.header(CONTENT_TYPE, GraphConverter.MIME_TYPE)
 
         if (original.url.host == EndpointType.GITHUB.url.host)
@@ -32,5 +32,6 @@ internal class GraphClientInterceptor: Interceptor {
     companion object {
         const val CONTENT_TYPE = "Content-Type"
         const val ACCEPT = "Accept"
+        private const val APPLICATION_JSON = "application/json"
     }
 }

@@ -7,7 +7,6 @@ import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import co.anitrend.arch.core.model.ISupportViewModelState
 import co.anitrend.arch.data.state.DataState
-import co.anitrend.retrofit.graphql.data.bucket.model.upload.mutation.UploadMutation
 import co.anitrend.retrofit.graphql.data.bucket.usecase.upload.UploadUseCaseContract
 import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
 import kotlinx.coroutines.flow.merge
@@ -35,8 +34,8 @@ class UploadViewModel(
         result.asLiveData(viewModelScope.coroutineContext)
     }
 
-    operator fun invoke(mutation: UploadMutation) {
-        val result = useCase(mutation)
+    operator fun invoke(path: String) {
+        val result = useCase(path)
         state.postValue(result)
     }
 

@@ -61,10 +61,10 @@ class BucketContent(
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             if (uri != null) // when the user has not picked anything
                 lifecycleScope.launch {
-                    val mutation = withContext (dispatchers.io) {
+                    val path = withContext (dispatchers.io) {
                         presenter.resolve(uri, requireActivity().contentResolver)
                     }
-                    mutation?.also(uploadViewModel::invoke) ?: Toast.makeText(
+                    path?.also(uploadViewModel::invoke) ?: Toast.makeText(
                         context,
                         "Unable to resolve content",
                         Toast.LENGTH_SHORT

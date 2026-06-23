@@ -13,7 +13,7 @@ import co.anitrend.retrofit.graphql.data.market.entity.MarketPlaceEntity
 import co.anitrend.retrofit.graphql.data.market.mapper.MarketPlaceResponseMapper
 import co.anitrend.retrofit.graphql.data.market.model.query.MarketPlaceListingQuery
 import co.anitrend.retrofit.graphql.data.market.source.contract.MarketPlaceSource
-import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
+import co.anitrend.retrofit.graphql.sample.generated.GetMarketPlaceApps
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
@@ -45,9 +45,13 @@ internal class MarketPlaceSourceImpl(
         marketPlaceListingQuery: MarketPlaceListingQuery,
     ) {
         val deferred = async {
-            val queryBuilder = QueryContainerBuilder()
-                .putVariables(marketPlaceListingQuery.toMap())
-            remoteSource.getMarketPlaceApps(queryBuilder)
+            remoteSource.getMarketPlaceApps(
+                GetMarketPlaceApps.request(
+                    first = marketPlaceListingQuery.first,
+                    after = marketPlaceListingQuery.after,
+                    before = marketPlaceListingQuery.before,
+                )
+            )
         }
 
         val controller =

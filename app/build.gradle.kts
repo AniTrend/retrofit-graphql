@@ -29,8 +29,6 @@ android {
 dependencies {
     implementation(project(":runtime"))
     implementation(project(":api"))
-    implementation(project(":android-assets"))
-    implementation(project(":annotations"))
 
     implementation(libs.jetbrains.kotlinx.serialization.json)
 
@@ -99,11 +97,17 @@ dependencies {
 
 retrofitGraphQL {
     common {
-        generateVariables.set(false)
+        generateVariables.set(true)
     }
     packageName.set("co.anitrend.retrofit.graphql.sample.generated")
     schema.set(file("src/main/graphql/schema.graphql"))
     operations.from(fileTree("src/main/graphql") {
         include("**/*.graphql")
     })
+    scalars {
+        map("DateTime", "kotlin.String")
+        map("GitObjectID", "kotlin.String")
+        map("URI", "kotlin.String")
+        map("Upload", "kotlin.String")
+    }
 }

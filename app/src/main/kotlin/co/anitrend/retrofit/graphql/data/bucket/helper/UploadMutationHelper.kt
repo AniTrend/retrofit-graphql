@@ -1,11 +1,8 @@
 package co.anitrend.retrofit.graphql.data.bucket.helper
 
-import co.anitrend.retrofit.graphql.data.api.converter.request.SampleRequestConverter
-import co.anitrend.retrofit.graphql.data.arch.GraphMultiPartUpload
-import co.anitrend.retrofit.graphql.data.bucket.datasource.remote.BucketRemoteSource
-import co.anitrend.retrofit.graphql.data.bucket.model.upload.mutation.UploadMutation
+import co.anitrend.retrofit.graphql.model.GraphQLRequest
+import co.anitrend.retrofit.graphql.sample.generated.UploadToStorageBucketVariables
 import com.google.gson.Gson
-import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -18,40 +15,23 @@ import java.io.File
  */
 internal object UploadMutationHelper {
 
-    /** What our example server expects as the mutation key for its multi-part */
-    private const val PART_BODY_NAME = "query"
     private const val PART_BODY_OPERATIONS = "operations"
     private const val PART_BODY_MAP = "map"
 
     private const val PART_FILE_NAME = "upload_file"
     /** The file that is reserved for upload will always be a webp image */
     private val PART_FILE_MIME_TYPE = "image/webp".toMediaTypeOrNull()
-
-    /**
-     * A simple way to check if our [QueryContainerBuilder] contains a file,
-     * by checking the existence of a key
-     *
-     * @see UploadMutation
-     */
-    fun QueryContainerBuilder.containsImage() = containsKey(UploadMutation.KEY)
-
-    /**
-     * Another way to check if we the current request method should handle file uploads,
-     * by checking if is annotated with [GraphMultiPartUpload]
-     */
-    fun Array<out Annotation>.supportsFileUpload(): Boolean {
-        return filterIsInstance<GraphMultiPartUpload>().isNotEmpty()
-    }
+    private val GRAPHQL_MEDIA_TYPE = "application/json".toMediaTypeOrNull()
 
     @Throws(Throwable::class)
     private fun createFileBodyPart(path: String): MultipartBody.Part {
         /**
-         * [UploadMutation] provides a path to a file which needs to be uploaded.
+         * The provided path to a file which needs to be uploaded.
          * we will resolve the path and throw if we cannot find it
          */
         val uploadFile = File(path)
         if (!uploadFile.exists()) throw Throwable(
-            "`UploadMutation#upload` does not point to an existing file -> $path"
+            "Upload file does not exist at -> $path"
         )
         val attachment = uploadFile.asRequestBody(PART_FILE_MIME_TYPE)
         return MultipartBody.Part.createFormData(
@@ -59,21 +39,15 @@ internal object UploadMutationHelper {
         )
     }
 
-    private fun QueryContainerBuilder.createVariablesPart(
+    private fun GraphQLRequest<UploadToStorageBucketVariables>.createOperationsPart(
         gson: Gson,
-        graphQuery: String?,
         graphQueryMediaType: MediaType?
     ): MultipartBody.Part {
-        /**
-         * Overwrite our initial file key corresponding to [UploadMutation.upload]
-         * with [PART_FILE_NAME] which is our multi-part name field for the file.
-         *
-         * Prior to this [UploadMutation.upload] have a file path to where the image is located
-         */
-        putVariable(UploadMutation.KEY, PART_FILE_NAME)
-
-        val queryContainer = setQuery(graphQuery).build()
-        val queryJson = gson.toJson(queryContainer)
+        val variables = requireNotNull(variables) {
+            "Upload mutation variables are required for multipart GraphQL uploads"
+        }
+        val operations = copy(variables = variables.copy(upload = PART_FILE_NAME))
+        val queryJson = gson.toJson(operations)
         val requestBody = queryJson.toRequestBody(graphQueryMediaType)
         return MultipartBody.Part.createFormData(
             PART_BODY_OPERATIONS, null, requestBody
@@ -97,27 +71,20 @@ internal object UploadMutationHelper {
      * [graphql multipart spec](https://github.com/jaydenseric/graphql-multipart-request-spec)
      *
      * @param gson Configured converter, this could be anything from **moshi** to **kotlinx.serializer**
-     * @param graphQuery The mutation query that is annotated on your interface method, e.g. [BucketRemoteSource.uploadToStorageBucket]
-     * @param graphQueryMediaType The mime type for the [graphQuery] in this case `application/json`
      */
-    fun QueryContainerBuilder.createMultiPartBody(
+    fun GraphQLRequest<UploadToStorageBucketVariables>.createMultiPartBody(
         gson: Gson,
-        graphQuery: String?,
-        graphQueryMediaType: MediaType?
     ): MultipartBody {
-        /**
-         * We've already established that the key exists from [containsImage] called
-         * in [SampleRequestConverter.convert] so we cast the type to a non-nullable [String]
-         *
-         * @see [co.anitrend.retrofit.graphql.sample.presenter.BucketPresenter]
-         */
-        val path = getVariable(UploadMutation.KEY) as String
+        val uploadVariables = requireNotNull(variables) {
+            "Upload mutation variables are required for multipart GraphQL uploads"
+        }
+        val path = uploadVariables.upload
         /** get multi-part for file */
         val uploadBodyPart = createFileBodyPart(path)
         /** get multi-part for operations */
-        val queryBodyPart = createVariablesPart(gson, graphQuery, graphQueryMediaType)
+        val queryBodyPart = createOperationsPart(gson, GRAPHQL_MEDIA_TYPE)
         /** get multi-part for map */
-        val mapBodyPart = graphQueryMediaType.createMapPart(gson, UploadMutation.KEY)
+        val mapBodyPart = GRAPHQL_MEDIA_TYPE.createMapPart(gson, "upload")
 
         /**
          * Instead of returning **queryBody** we are going to construct our multi-part body
@@ -128,31 +95,6 @@ internal object UploadMutationHelper {
             .setType(MultipartBody.FORM)
             .addPart(queryBodyPart)
             .addPart(mapBodyPart)
-            .addPart(uploadBodyPart)
-            .build()
-    }
-
-    /**
-     *  Another example that creates a multipart-body of a file and mutation which
-     *  may not support the [graphql multi-part spec](https://github.com/jaydenseric/graphql-multipart-request-spec)
-     */
-    fun QueryContainerBuilder.createMultiPartBody(): MultipartBody {
-        val path = getVariable(UploadMutation.KEY) as String
-        val uploadBodyPart = createFileBodyPart(path)
-
-        /**
-         * Unlike the above example we making use of plain mutation without any variables.
-         *
-         * This could be a graphql file defined as follows with a keyword you'd replace upon
-         * inspecting what the output of [co.anitrend.retrofit.graphql.annotation.processor.contract.AbstractGraphProcessor.getQuery]
-         */
-        val plainMutation = """
-            mutation { uploadFile(fileData: "$PART_FILE_NAME") { contentType filename id url }}
-        """.trimIndent()
-
-        return MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart(PART_BODY_NAME, plainMutation)
             .addPart(uploadBodyPart)
             .build()
     }
