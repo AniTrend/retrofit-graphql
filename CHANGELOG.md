@@ -9,8 +9,17 @@ Change Log
 - **Added:** Code generation Gradle plugin (`co.anitrend.retrofit.graphql.codegen`) for build-time `.graphql` processing.
 - **Added:** `:annotations`, `:api`, `:codegen-core`, `:gradle-plugin`, `:runtime`, `:android-assets`, `:serialization-gson`, `:serialization-kotlinx` modules.
 - **Added:** `GeneratedGraphQLRegistry` — build-time operation document registry.
+- **Added:** Codegen enum class generation — GraphQL enum types now generate as Kotlin enum classes instead of string constants.
+- **Added:** Codegen scalar mappings — custom GraphQL scalars can be mapped to Kotlin types via `scalars { map("DateTime", "kotlin.String") }` in the DSL.
+- **Added:** Codegen variable and input object generation — `generateVariables = true` now produces typed variable classes, input object classes, and request helper extensions (`.request(...)` factory methods on generated operation objects).
+- **Added:** `GraphQLRequest<TVariables>` — typed request payload in `:api` for codegen consumers, supporting persisted query extensions.
+- **Added:** `GraphQLVariables` marker interface and `EmptyGraphQLVariables` sentinel in `:api`.
+- **Added:** `SchemaIndex` — typed schema metadata replacing flat name set in codegen-core, enabling kind-aware type lookups.
+- **Added:** `GraphQLDefaultValueRenderer` — shared default literal renderer in codegen-core, replacing duplicated heuristic converters.
+- **Added:** `GraphQLTypeUsageValidator` — recursive path-aware scalar validation in codegen-core, with clear error messages for unmapped scalars.
 - **Changed:** `GraphRequestConverter.resolveQuery()` visibility changed to `protected open`.
-- **Changed:** Sample app (`:app`) migrated to modular dependencies with code generation.
+- **Changed:** Sample app (`:app`) migrated to generated types — uses `GeneratedGraphQLRegistry`, `GraphQLRequest`, generated variable classes, and `RequestBodyPassThroughConverterFactory` for multipart upload. Removed direct `:android-assets` and `:annotations` dependencies.
+- **Removed:** `SampleConverterFactory` and `SampleRequestConverter` from the sample app — replaced by stock `GraphConverter.create(context, registry = GeneratedGraphQLRegistry)`.
 
 Version 0.11.0-beta02 *(2021-04-08)*
 ----------------------------

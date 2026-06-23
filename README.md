@@ -2,8 +2,9 @@
 
 Seeing how we already have a really powerful type-safe HTTP client for Android and Java
 [Retrofit](http://square.github.io/retrofit/) why not use it and extend it's functionality,
-this project is a retrofit converter which uses annotations to inject .graphql query or mutation
-file contents into a request body along with any GraphQL variables.
+this project is a retrofit converter which injects `.graphql` query or mutation file contents
+into a request body along with any GraphQL variables. Supports both runtime asset-based
+discovery and optional build-time code generation for type-safe request helpers.
 
 ## Why This Project Exists?
 
@@ -69,7 +70,7 @@ dependencies {
     // Asset-based query discovery
     implementation("com.github.AniTrend.retrofit-graphql:android-assets:{latest_version}")
 
-    // @GraphQuery annotation
+    // @GraphQuery annotation (only needed for asset-based queries, not codegen)
     implementation("com.github.AniTrend.retrofit-graphql:annotations:{latest_version}")
 
     // Optional: serialization backends
@@ -78,7 +79,7 @@ dependencies {
 }
 ```
 
-> **Note:** `:runtime` currently publishes `:android-assets` with `api` scope, so those types are already available transitively to consumers. Keep a direct `android-assets` dependency only when you want that module called out explicitly in your build. Even with build-time code generation, `android-assets` is still pulled transitively today because `GraphConverter` exposes `AbstractGraphProcessor` in its public API.
+> **Note:** `:runtime` currently publishes `:android-assets` with `api` scope, so those types are already available transitively to consumers. Codegen-only consumers do not need direct `:android-assets` or `:annotations` dependencies — they are pulled transitively via `:runtime`. Keep direct dependencies only when you use the asset-based `@GraphQuery` workflow alongside codegen.
 
 > **For internal development in this repository**, use project references instead of JitPack coordinates:
 > ```kotlin
@@ -100,7 +101,7 @@ dependencies {
 
 > Root artifact coordinates use `com.github.AniTrend`, while module coordinates use `com.github.AniTrend.retrofit-graphql`.
 
-For code generation support, apply the Gradle plugin and add a `retrofitGraphQL { }` config block. See [MIGRATION.md](MIGRATION.md) for the full migration guide.
+For code generation support, apply the Gradle plugin and add a `retrofitGraphQL { }` config block. The plugin generates operation constants, a document registry, enum classes, variable classes, and typed request helpers. See [MIGRATION.md](MIGRATION.md) for the full migration guide and the [wiki Code Generation page](https://github.com/AniTrend/retrofit-graphql/wiki/Codegen) for the DSL reference.
 
 - __Optional R8 / ProGuard Rules__
 
@@ -124,9 +125,9 @@ simply place the generated content into your assets folder e.g.:
 
 > **N.B.** You might find this too useful too JetBrains [JS GraphQL - Plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql)
 
-For more instructions on how to setup the sample app and other examples with file uploads,
-persisted queries, custom loggers, custom graphql files location (outside assets) please visit
-the [projects wiki page](https://github.com/anitrend/retrofit-graphql/wiki)
+For more instructions on how to setup the sample app and other examples with code generation,
+file uploads, persisted queries, custom loggers, and custom graphql files location please visit
+the [projects wiki page](https://github.com/AniTrend/retrofit-graphql/wiki)
 
 #### Screenshots
 

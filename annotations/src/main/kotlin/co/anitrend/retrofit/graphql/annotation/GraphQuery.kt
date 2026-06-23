@@ -16,6 +16,25 @@
 
 package co.anitrend.retrofit.graphql.annotation
 
+/**
+ * Marks a Retrofit interface method as a GraphQL operation.
+ *
+ * The annotation value must match the name of a `.graphql` file (without extension)
+ * in the configured assets directory (default: `graphql/`). At runtime, the
+ * [GraphProcessor][co.anitrend.retrofit.graphql.annotation.processor.GraphProcessor]
+ * discovers the file and injects its contents into the request body.
+ *
+ * Example:
+ * ```kotlin
+ * @POST("/graphql")
+ * @GraphQuery("GetMarketPlaceApps")
+ * suspend fun getMarketPlaceApps(@Body builder: QueryContainerBuilder): Response<GraphContainer<MarketPlaceListings>>
+ * ```
+ *
+ * @param value The operation name, matching a `.graphql` file in assets (without extension).
+ * @see co.anitrend.retrofit.graphql.model.GraphQLRequest
+ * @see co.anitrend.retrofit.graphql.model.GraphQLDocumentRegistry
+ */
 @MustBeDocumented
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
 @Retention(AnnotationRetention.RUNTIME)

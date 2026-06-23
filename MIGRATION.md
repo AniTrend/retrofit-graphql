@@ -78,44 +78,96 @@ plugins {
 dependencies {
     implementation("com.github.AniTrend.retrofit-graphql:runtime:{tag}")
     implementation("com.github.AniTrend.retrofit-graphql:api:{tag}")
-    implementation("com.github.AniTrend.retrofit-graphql:annotations:{tag}")
+    // :annotations and :android-assets are NOT required for codegen-only consumers
+    // (they are pulled transitively via :runtime)
 }
 
 retrofitGraphQL {
     common {
-        generateVariables.set(false)
+        generateVariables.set(true)
     }
     packageName.set("your.package.generated")
     schema.set(file("src/main/graphql/schema.graphql"))
     operations.from(fileTree("src/main/graphql") {
         include("**/*.graphql")
     })
+    scalars {
+        map("DateTime", "kotlin.String")
+        map("GitObjectID", "kotlin.String")
+        map("URI", "kotlin.String")
+        // Map any custom schema scalars to Kotlin types.
+        // Scalars absent from the schema (e.g. "Upload") can also be
+        // mapped — they are allowed but generate no type.
+    }
 }
 ```
 
 > **Note:** Code generation removes the need to declare `android-assets` directly. `:runtime` still brings it in transitively today because `GraphConverter` publicly accepts `AbstractGraphProcessor`, but that is a module-boundary detail, not a signal that codegen still relies on asset discovery.
+> **Note:** The `:annotations` dependency (for `@GraphQuery`) is also not required for codegen-only consumers. It remains useful for projects that use a mix of asset-based and codegen workflows.
 
 Place your `.graphql` files in `src/main/graphql/` instead of `assets/graphql/`.
 
 Generated output (under `build/generated/source/graphql/`) includes:
-- `GeneratedGraphQLRegistry` — build-time operation registry
+- `GeneratedGraphQLRegistry` — build-time operation registry implementing `GraphQLDocumentRegistry`
 - `GraphQLOperations`, `GraphQLDocuments`, `GraphQLHashes` — operation constants
-- Variable classes and typed request helpers (when `generateVariables = true`)
+- Enum classes — GraphQL enum types generated as Kotlin enum classes
+- Variable classes — typed data classes implementing `GraphQLVariables` (when `generateVariables = true`)
+- Input object classes — typed data classes for GraphQL input types (when `generateVariables = true`)
+- Request helpers — `.request(...)` factory methods on operation objects returning `GraphQLRequest<VariableType>` (when `generateVariables = true`)
 
 Wire the registry into your converter via Koin or manual construction:
 ```kotlin
 // Koin
 single<GraphQLDocumentRegistry> { GeneratedGraphQLRegistry }
-factory { SampleConverterFactory(processor = get(), registry = get()) }
+factory { GraphConverter.create(context = get(), registry = get()) }
 
 // Manual
-val factory = SampleConverterFactory(
-    processor = GraphProcessor(AssetManagerDiscoveryPlugin(context.assets)),
+val factory = GraphConverter.create(
+    context = context,
     registry = GeneratedGraphQLRegistry,
 )
 ```
 
+> **Note:** `GraphConverter.create(context, registry)` is the recommended factory for codegen consumers. It wires the generated registry while keeping asset-based discovery as a fallback.
+
+### Multipart Uploads
+
+For file uploads, register a `RequestBodyPassThroughConverterFactory` before the `GraphConverter` so that `MultipartBody` and `RequestBody` instances bypass GraphQL conversion:
+
+```kotlin
+val retrofit = Retrofit.Builder()
+    .addConverterFactory(RequestBodyPassThroughConverterFactory())
+    .addConverterFactory(GraphConverter.create(context, registry = GeneratedGraphQLRegistry))
+    .baseUrl(baseUrl)
+    .build()
+```
+
+Use generated operation metadata for the upload mutation:
+```kotlin
+val request = UploadToStorageBucket.request(upload = filePath)
+// Build MultipartBody from the GraphQLRequest fields
+```
+
 See the [sample app](app/) for a complete migration example.
+
+### Scalar Mappings
+
+Custom GraphQL scalar types used in generated code must be mapped to Kotlin types. Add a `scalars` block to the `retrofitGraphQL` DSL:
+
+```kotlin
+retrofitGraphQL {
+    packageName.set("your.package.generated")
+    schema.set(file("src/main/graphql/schema.graphql"))
+    scalars {
+        map("DateTime", "kotlin.String")
+        map("GitObjectID", "kotlin.String")
+        map("URI", "kotlin.String")
+    }
+    // ...
+}
+```
+
+Scalars that appear in the schema but are not mapped will cause a build error with a path-aware message indicating where the unmapped scalar was encountered. Scalars that are mapped but absent from the schema (e.g. `"Upload"`) are allowed — they generate no type but do not fail the build.
 
 ### Custom Serialization Backend
 

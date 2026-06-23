@@ -48,8 +48,7 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 ### Architecture Principles
 
 - **Converter Pattern** — Core functionality is a Retrofit `Converter.Factory` that transforms annotated method calls into GraphQL HTTP requests.
-- **Annotation-Driven** — `@GraphQuery` marks Retrofit methods with operation names. Annotation processor discovers matching `.graphql` files at runtime.
-- **File-Based + Optional Code Generation** — Supports both runtime `.graphql` file loading from assets AND build-time code generation via a Gradle plugin. Developers choose between flexible hand-written models and type-safe generated helpers.
+- **File-Based + Optional Code Generation** — Supports both runtime `.graphql` file loading from assets (via `@GraphQuery` annotation) AND build-time code generation via a Gradle plugin. Developers choose between flexible hand-written models and type-safe generated helpers.
 
 ## Module Organization
 
@@ -58,22 +57,22 @@ The project is organized into composable modules under the `co.anitrend.retrofit
 | Module | Type | Purpose |
 |--------|------|---------|
 | `:annotations` | Kotlin JVM | `@GraphQuery` annotation (runtime retention) |
-| `:api` | Android | Public API interfaces: `GraphQLOperation`, `GraphQLDocumentRegistry`, `QueryContainerBuilder`, `GraphContainer` |
+| `:api` | Android | Public API interfaces: `GraphQLOperation`, `GraphQLDocumentRegistry`, `QueryContainerBuilder`, `GraphQLRequest`, `GraphQLVariables`, `GraphContainer` |
 | `:android-assets` | Android | Runtime asset-based query discovery: `GraphProcessor`, `AssetManagerDiscoveryPlugin`, APQ, logging |
 | `:runtime` | Android | Retrofit `Converter.Factory`: `GraphConverter`, `GraphRequestConverter`, `GraphResponseConverter`. Depends on `:api`, `:android-assets`, `:annotations` |
-| `:codegen-core` | Kotlin JVM | Code generation engine: parses `.graphql` files with graphql-java, generates Kotlin with KotlinPoet |
+| `:codegen-core` | Kotlin JVM | Code generation engine: parses `.graphql` files with graphql-java, generates Kotlin with KotlinPoet. Uses `SchemaIndex` for typed schema metadata, `GraphQLTypeMapper` for kind-aware mapping, `GraphQLDefaultValueRenderer` for default literals, and `GraphQLTypeUsageValidator` for recursive scalar validation. |
 | `:gradle-plugin` | Gradle Plugin | Plugin `id("co.anitrend.retrofit.graphql.codegen")`. Registers `GenerateGraphQLSourcesTask`, wires output into source sets. Lives in composite build under `pluginManagement` |
 | `:serialization-gson` | Android | Gson-backed `GraphQLJson` serialization |
 | `:serialization-kotlinx` | Android | kotlinx.serialization-backed `GraphQLJson` |
 | `:library` | Android | **Deprecated** aggregator. Re-exports all modules via `api()`. Contains type aliases from old `io.github.wax911.library` package |
-| `:app` | Android | Sample GitHub API client demonstrating both asset-based and codegen workflows |
+| `:app` | Android | Sample GitHub API client demonstrating both asset-based and codegen workflows. Uses generated registry, typed request helpers, and explicit multipart upload. |
 
 ### Dependency Graph
 
 ```
-:app → :runtime → :api + :android-assets + :annotations
+:app → :runtime → :api + :android-assets + :annotations (android-assets and annotations pulled transitively via :runtime)
 :app → :serialization-gson/:serialization-kotlinx (optional)
-:app → :gradle-plugin → :codegen-core (build-time only)
+:app → :gradle-plugin → :codegen-core (build-time only, generates typed operation helpers)
 :library (deprecated) → api() aggregates all modules above
 ```
 
@@ -131,7 +130,7 @@ The project is organized into composable modules under the `co.anitrend.retrofit
 
 The library does NOT provide:
 - **Schema validation** — No compile-time GraphQL schema validation.
-- **Full code generation** — Optional build-time codegen generates operation constants, a document registry, and optional typed request helpers. It is NOT a full schema-to-Kotlin code generator like Apollo.
+- **Full code generation** — Optional build-time codegen generates operation constants, a document registry, enum classes, variable classes, input object classes, and typed request helpers. It is NOT a full schema-to-Kotlin code generator like Apollo.
 - **Caching** — No built-in response caching (relies on HTTP/OkHttp).
 - **Subscriptions** — HTTP-based only. No WebSocket or subscription support.
 - **Schema introspection** — No runtime schema discovery.

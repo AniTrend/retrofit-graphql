@@ -7,7 +7,7 @@ Use this map to choose the right build file before editing.
 | Module includes | `settings.gradle.kts` | Includes :library always (aggregates all sub-modules); includes :app only when CI env var is not set |
 | Root build configuration | `build.gradle.kts` | Top-level plugin declarations and repository configuration |
 | Shared plugin entry point | `buildSrc/.../plugin/CorePlugin.kt` | Applies Android plugin, Dokka, Spotless, publishing, sources, and dependencies based on module type |
-| Shared Android defaults | `buildSrc/.../components/AndroidConfiguration.kt` | SDK levels (`compileSdk=35`, `minSdk=23`, `targetSdk=35`), JUnit Platform, Kotlin toolchain 21, packaging exclusions, Spotless |
+| Shared Android defaults | `buildSrc/.../components/AndroidConfiguration.kt` | SDK levels (`compileSdk=37`, `minSdk=23`, `targetSdk=37`), JUnit Platform, Kotlin toolchain 21, packaging exclusions, Spotless |
 | Shared dependency strategy | `buildSrc/.../strategy/DependencyStrategy.kt` | Default Kotlin, Retrofit, OkHttp, coroutines, and test libraries per module type |
 | Shared Dokka behavior | `buildSrc/.../components/AndroidOptions.kt` | `dokkaHtml` task, `reportUndocumented = true`, internal packages suppressed, Android docs linked |
 | Shared formatting | `buildSrc/.../components/AndroidConfiguration.kt` (Spotless config), `spotless/copyright.kt` | Ktlint and license header configuration |
@@ -20,7 +20,7 @@ Use this map to choose the right build file before editing.
 ## Module Dependency Snapshot
 
 - library: **deprecated** aggregator module that transitively re-exports all library sub-modules via api() dependencies (annotations, api, android-assets, runtime, serialization-gson, serialization-kotlinx).
-- app: sample application that now depends directly on :runtime, :api, :android-assets, and :annotations (migrated from :library).
+- app: sample application that depends on :runtime and :api only (no direct :android-assets or :annotations deps). Uses the codegen Gradle plugin for build-time generated types. :android-assets and :annotations are pulled transitively via :runtime.
 
 ## Edit Strategy
 

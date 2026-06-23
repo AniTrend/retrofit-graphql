@@ -20,7 +20,11 @@ package co.anitrend.retrofit.graphql.model
  * Marker interface for generated GraphQL variable classes.
  *
  * All generated operation variable classes implement this interface,
- * allowing the runtime to treat them uniformly.
+ * allowing the runtime to treat them uniformly. Generated variable classes
+ * are produced when `generateVariables = true` is set in the codegen DSL.
+ *
+ * @see GraphQLRequest
+ * @see EmptyGraphQLVariables
  */
 interface GraphQLVariables
 

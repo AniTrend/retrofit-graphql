@@ -21,11 +21,31 @@ import co.anitrend.retrofit.graphql.model.request.PersistedQuery
 /**
  * A typed GraphQL request payload.
  *
- * @param TVariables The type of variables, or [Unit] for operations without variables.
+ * When using the codegen Gradle plugin, generated operation objects provide
+ * `.request(...)` factory methods that construct [GraphQLRequest] instances
+ * with type-safe variable classes. For asset-based workflows, construct
+ * [GraphQLRequest] manually or use [QueryContainerBuilder].
+ *
+ * Example (codegen):
+ * ```kotlin
+ * val request = GetMarketPlaceApps.request(first = 15, after = null)
+ * ```
+ *
+ * Example (manual):
+ * ```kotlin
+ * val request = GraphQLRequest(
+ *     query = "query GetCurrentUser { viewer { login } }",
+ *     operationName = "GetCurrentUser",
+ * )
+ * ```
+ *
+ * @param TVariables The type of variables, or [EmptyGraphQLVariables] for operations without variables.
  * @property query The full GraphQL document string.
  * @property operationName The operation name.
  * @property variables The operation variables, or null if there are none.
  * @property extensions Optional extensions map (e.g. persistedQuery).
+ * @see GraphQLVariables
+ * @see GraphQLDocumentRegistry
  */
 data class GraphQLRequest<TVariables : GraphQLVariables>(
     val query: String,

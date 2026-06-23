@@ -10,12 +10,12 @@ Use this map to place code before searching for a specific file.
 | `api` | Public API interfaces and models (`GraphQLOperation`, `GraphQLDocumentRegistry`, `QueryContainerBuilder`, `GraphContainer`) | `https://anitrend.github.io/retrofit-graphql/` |
 | `runtime` | Retrofit converter (`GraphConverter`, `GraphRequestConverter`, `GraphResponseConverter`) | `https://anitrend.github.io/retrofit-graphql/` |
 | `android-assets` | Android asset-based query discovery (`GraphProcessor`, `AssetManagerDiscoveryPlugin`, APQ, logging) | `https://anitrend.github.io/retrofit-graphql/` |
-| `codegen-core` | Build-time code generation engine (graphql-java parsing + KotlinPoet generation) | — |
+| `codegen-core` | Build-time code generation engine (graphql-java parsing + KotlinPoet generation; uses SchemaIndex, GraphQLTypeMapper, GraphQLDefaultValueRenderer, GraphQLTypeUsageValidator) | — |
 | `gradle-plugin` | Gradle plugin for code generation (`id("co.anitrend.retrofit.graphql.codegen")`) | — |
 | `serialization-gson` | Gson-backed `GraphQLJson` implementation | `https://anitrend.github.io/retrofit-graphql/` |
 | `serialization-kotlinx` | kotlinx.serialization-backed `GraphQLJson` implementation | `https://anitrend.github.io/retrofit-graphql/` |
 | `library` | **Deprecated** backward-compatible aggregator (type aliases, `api()` re-exports) | `https://anitrend.github.io/retrofit-graphql/` |
-| `app` | Sample application demonstrating GitHub GraphQL API integration; excluded from CI (requires `CI` env var to be unset) | — |
+| `app` | Sample application demonstrating GitHub GraphQL API integration using generated types; excluded from CI (requires `CI` env var to be unset) | — |
 
 ## Module Package Roots (`co.anitrend.retrofit.graphql`)
 
@@ -46,9 +46,12 @@ Use this map to place code before searching for a specific file.
 Consumers typically interact with:
 
 1. `GraphConverter` — registered as a Retrofit converter factory (from `:runtime`).
-2. `@GraphQuery` — placed on Retrofit interface methods (from `:annotations`).
-3. `GraphContainer<T>` — generic response wrapper (from `:api`).
-4. `QueryContainerBuilder` — manually constructing request bodies (from `:api`).
-5. `GraphQLDocumentRegistry` — providing build-time generated operation documents (from `:api`, used with `:codegen-core` / `:gradle-plugin`).
-6. `AbstractDiscoveryPlugin` — custom file discovery (from `:android-assets`).
-7. `AbstractLogger` — custom logging backend (from `:android-assets`).
+2. `@GraphQuery` — placed on Retrofit interface methods (from `:annotations`); alternative to generated types for asset-based workflows.
+3. `GraphQLRequest<TVariables>` — typed request payload for codegen consumers (from `:api`). Generated operation objects provide `.request(...)` factory methods.
+4. `GraphQLVariables` — marker interface for generated variable classes (from `:api`).
+5. `GraphContainer<T>` — generic response wrapper (from `:api`).
+6. `GeneratedGraphQLRegistry` — build-time generated `GraphQLDocumentRegistry` implementation (from codegen output).
+7. `QueryContainerBuilder` — manually constructing request bodies (from `:api`).
+8. `GraphQLDocumentRegistry` — providing build-time generated operation documents (from `:api`, implemented by `GeneratedGraphQLRegistry` from codegen output).
+9. `AbstractDiscoveryPlugin` — custom file discovery (from `:android-assets`).
+10. `AbstractLogger` — custom logging backend (from `:android-assets`).
