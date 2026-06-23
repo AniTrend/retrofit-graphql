@@ -21,10 +21,15 @@ import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLVariableInfo
 import co.anitrend.retrofit.graphql.codegen.model.OperationType
 import graphql.language.FragmentDefinition
+import graphql.language.NodeTraverser
+import graphql.language.NodeVisitorStub
 import graphql.language.OperationDefinition
 import graphql.language.VariableDefinition
+import graphql.language.VariableReference
 import graphql.parser.Parser
 import graphql.parser.ParserOptions
+import graphql.util.TraversalControl
+import graphql.util.TraverserContext
 import java.io.File
 
 /**
@@ -105,12 +110,38 @@ class GraphQLDocumentParser {
             .filterIsInstance<FragmentDefinition>()
             .map { definition ->
                 val fragmentText = extractDocumentText(source, definition)
+                val variableUsages = collectVariableUsages(definition)
 
                 GraphQLFragmentInfo(
                     name = definition.name,
                     document = fragmentText,
+                    variableUsages = variableUsages,
                 )
             }
+    }
+
+    /**
+     * Collects all variable names referenced within a fragment's selection set.
+     * These are variables the fragment *uses* (e.g. `$format` in `age(format: $format)`)
+     * that must be declared by the consuming operation.
+     */
+    private fun collectVariableUsages(definition: FragmentDefinition): List<String> {
+        val names = mutableSetOf<String>()
+
+        NodeTraverser().depthFirst(
+            object : NodeVisitorStub() {
+                override fun visitVariableReference(
+                    node: VariableReference,
+                    context: TraverserContext<graphql.language.Node<*>>,
+                ): TraversalControl {
+                    names.add(node.name)
+                    return TraversalControl.CONTINUE
+                }
+            },
+            definition,
+        )
+
+        return names.toList()
     }
 
     /**

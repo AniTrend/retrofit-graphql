@@ -21,8 +21,14 @@ package co.anitrend.retrofit.graphql.codegen.model
  *
  * @param name The fragment name, e.g. "UserFields".
  * @param document The source text of the fragment definition.
+ * @param variableUsages Names of variables referenced within the fragment's
+ *  selection set (e.g. `["format"]` if the fragment contains `age(format: $format)`).
+ *  These are not variable *definitions* — fragments cannot define variables per
+ *  the GraphQL spec — but rather variables the fragment *uses* that must be
+ *  declared by the consuming operation.
  */
 data class GraphQLFragmentInfo(
     val name: String,
     val document: String,
+    val variableUsages: List<String> = emptyList(),
 )
