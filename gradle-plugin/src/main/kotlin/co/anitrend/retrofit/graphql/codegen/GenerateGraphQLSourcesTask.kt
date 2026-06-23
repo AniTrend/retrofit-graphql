@@ -26,10 +26,11 @@ import co.anitrend.retrofit.graphql.codegen.generate.RegistryGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.VariableClassGenerator
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLFragmentInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
-import co.anitrend.retrofit.graphql.codegen.model.SchemaType
+import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import co.anitrend.retrofit.graphql.codegen.parser.GraphQLDocumentParser
 import co.anitrend.retrofit.graphql.codegen.parser.SchemaParser
 import co.anitrend.retrofit.graphql.codegen.resolve.FragmentResolver
+import co.anitrend.retrofit.graphql.codegen.validate.GraphQLTypeUsageValidator
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -52,7 +53,7 @@ import java.io.File
  * - GeneratedGraphQLRegistry (registry implementing GraphQLDocumentRegistry)
  * - Per-operation variable classes (XxxVariables)
  * - Input object classes from schema
- * - Enum constants from schema
+ * - Enum classes from schema
  * - Per-operation request helper objects
  */
 abstract class GenerateGraphQLSourcesTask : DefaultTask() {
@@ -128,35 +129,21 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         val resolvedOperations = resolver.resolve(allOperations, allFragments)
 
         // Parse schema if available
-        val schemaTypes: List<SchemaType>
-        val scalarMap: Map<String, String>
-        val schemaTypeNames: Set<String>
-        if (schemaFile.isPresent && schemaFile.get().asFile.exists()) {
-            val schemaParser = SchemaParser()
-            schemaTypes = schemaParser.parse(schemaFile.get().asFile)
-            scalarMap = scalarMappings.orNull ?: emptyMap()
-            schemaTypeNames =
-                schemaTypes.map {
-                    it.let { t ->
-                        when (t) {
-                            is SchemaType.InputObject -> t.name
-                            is SchemaType.Enum -> t.name
-                            is SchemaType.Scalar -> t.name
-                        }
-                    }
-                }.toSet()
-        } else {
-            if (generateVariables.get()) {
-                logger.warn(
-                    "generateVariables is enabled but no schema file is set. " +
-                        "Input object and enum generation will be skipped. " +
-                        "Variable classes will use scalar mappings only.",
-                )
+        val scalarMap = scalarMappings.orNull ?: emptyMap()
+        val schemaIndex =
+            if (schemaFile.isPresent && schemaFile.get().asFile.exists()) {
+                val schemaParser = SchemaParser()
+                SchemaIndex.from(schemaParser.parse(schemaFile.get().asFile))
+            } else {
+                if (generateVariables.get()) {
+                    logger.warn(
+                        "generateVariables is enabled but no schema file is set. " +
+                            "Input object and enum generation will be skipped. " +
+                            "Variable classes will use scalar mappings only.",
+                    )
+                }
+                SchemaIndex.EMPTY
             }
-            schemaTypes = emptyList()
-            scalarMap = scalarMappings.orNull ?: emptyMap()
-            schemaTypeNames = emptySet()
-        }
 
         // Generate source files
         val pkg = packageName.get()
@@ -193,9 +180,8 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         if (generateVariables.get()) {
             generateVariableArtifacts(
                 resolvedOperations,
-                schemaTypes,
+                schemaIndex,
                 scalarMap,
-                schemaTypeNames,
                 pkg,
                 outputDirectory,
             )
@@ -209,14 +195,13 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
 
     private fun generateVariableArtifacts(
         operations: List<GraphQLOperationInfo>,
-        schemaTypes: List<SchemaType>,
+        schemaIndex: SchemaIndex,
         scalarMap: Map<String, String>,
-        schemaTypeNames: Set<String>,
         pkg: String,
         outputDirectory: File,
     ) {
         // Validate unknown scalars in variables
-        validateScalars(operations, scalarMap, schemaTypeNames)
+        GraphQLTypeUsageValidator.validate(operations, schemaIndex, scalarMap)
 
         // Generate per-operation variable classes
         operations.forEach { operation ->
@@ -225,7 +210,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                     operation,
                     pkg,
                     scalarMap,
-                    schemaTypeNames,
+                    schemaIndex,
                 )
             if (varFile != null) {
                 writeFile(varFile, outputDirectory)
@@ -234,21 +219,18 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         }
 
         // Generate input object classes from schema
-        val inputObjects = schemaTypes.filterIsInstance<SchemaType.InputObject>()
+        val inputObjects = schemaIndex.inputObjects
         if (inputObjects.isNotEmpty()) {
-            InputObjectGenerator.generate(inputObjects, pkg, scalarMap, schemaTypeNames)
+            InputObjectGenerator.generate(inputObjects, pkg, scalarMap, schemaIndex)
                 .forEach { writeFile(it, outputDirectory) }
             logger.info("Generated ${inputObjects.size} input object class(es)")
         }
 
-        // Generate enum constants from schema
-        val enums = schemaTypes.filterIsInstance<SchemaType.Enum>()
+        // Generate enum classes from schema
+        val enums = schemaIndex.enums
         if (enums.isNotEmpty()) {
-            val enumFile = EnumGenerator.generateAsStringConstants(enums, pkg)
-            if (enumFile != null) {
-                writeFile(enumFile, outputDirectory)
-                logger.info("Generated enum constants for ${enums.size} enum type(s)")
-            }
+            EnumGenerator.generate(enums, pkg).forEach { writeFile(it, outputDirectory) }
+            logger.info("Generated ${enums.size} enum class(es)")
         }
 
         // Generate per-operation request helpers
@@ -258,46 +240,10 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                     operation,
                     pkg,
                     scalarMap,
-                    schemaTypeNames,
+                    schemaIndex,
                 )
             writeFile(reqFile, outputDirectory)
             logger.info("Generated ${operation.name} request helper")
-        }
-    }
-
-    /**
-     * Validates that all variable types reference known scalars or schema types.
-     * Throws if an unknown scalar is found without a mapping.
-     */
-    private fun validateScalars(
-        operations: List<GraphQLOperationInfo>,
-        scalarMap: Map<String, String>,
-        schemaTypeNames: Set<String>,
-    ) {
-        val builtInScalars = setOf("String", "Int", "Float", "Boolean", "ID")
-
-        for (operation in operations) {
-            for (variable in operation.variables) {
-                val typeNames = collectTypeNames(variable.type)
-                for (typeName in typeNames) {
-                    if (typeName in builtInScalars) continue
-                    if (typeName in schemaTypeNames) continue
-                    if (typeName in scalarMap) continue
-                    throw IllegalArgumentException(
-                        "Unknown type '$typeName' in variable '${variable.name}' " +
-                            "of operation '${operation.name}'. " +
-                            "Add a scalar mapping in the retrofitGraphQL {} extension, e.g.:\n" +
-                            "  scalars { map(\"$typeName\", \"kotlin.String\") }",
-                    )
-                }
-            }
-        }
-    }
-
-    private fun collectTypeNames(type: co.anitrend.retrofit.graphql.codegen.model.GraphQLType): Set<String> {
-        return when (type) {
-            is co.anitrend.retrofit.graphql.codegen.model.GraphQLType.Named -> setOf(type.name)
-            is co.anitrend.retrofit.graphql.codegen.model.GraphQLType.List -> collectTypeNames(type.of)
         }
     }
 

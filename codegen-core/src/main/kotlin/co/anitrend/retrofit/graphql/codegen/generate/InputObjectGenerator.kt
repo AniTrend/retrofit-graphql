@@ -18,8 +18,10 @@ package co.anitrend.retrofit.graphql.codegen.generate
 
 import co.anitrend.retrofit.graphql.codegen.mapping.GraphQLTypeMapper
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
+import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import co.anitrend.retrofit.graphql.codegen.model.SchemaType
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
@@ -47,10 +49,10 @@ object InputObjectGenerator {
         inputObjects: List<SchemaType.InputObject>,
         packageName: String,
         scalarMappings: Map<String, String>,
-        schemaTypeNames: Set<String>,
+        schemaIndex: SchemaIndex,
     ): List<FileSpec> {
         return inputObjects.map { inputObject ->
-            generateSingle(inputObject, packageName, scalarMappings, schemaTypeNames)
+            generateSingle(inputObject, packageName, scalarMappings, schemaIndex)
         }
     }
 
@@ -58,7 +60,7 @@ object InputObjectGenerator {
         inputObject: SchemaType.InputObject,
         packageName: String,
         scalarMappings: Map<String, String>,
-        schemaTypeNames: Set<String>,
+        schemaIndex: SchemaIndex,
     ): FileSpec {
         val typeSpec =
             TypeSpec.classBuilder(inputObject.name)
@@ -67,12 +69,19 @@ object InputObjectGenerator {
                 .apply {
                     val params =
                         inputObject.fields.map { field ->
-                            val kotlinType = parseKotlinTypeString(field.type, packageName, scalarMappings, schemaTypeNames)
+                            val kotlinType = parseKotlinTypeString(field.type, packageName, scalarMappings, schemaIndex)
                             val paramBuilder = ParameterSpec.builder(field.name, kotlinType)
                             if (field.defaultValue != null) {
                                 paramBuilder.defaultValue(
-                                    convertGraphQLDefaultToKotlin(field.defaultValue, field.type),
+                                    GraphQLDefaultValueRenderer.render(
+                                        defaultValue = field.defaultValue,
+                                        type = field.type,
+                                        scalarMappings = scalarMappings,
+                                        schemaIndex = schemaIndex,
+                                    ),
                                 )
+                            } else if (kotlinType.isNullable) {
+                                paramBuilder.defaultValue(CodeBlock.of("null"))
                             }
                             paramBuilder.build()
                         }
@@ -86,7 +95,7 @@ object InputObjectGenerator {
                         addProperty(
                             PropertySpec.builder(
                                 field.name,
-                                parseKotlinTypeString(field.type, packageName, scalarMappings, schemaTypeNames),
+                                parseKotlinTypeString(field.type, packageName, scalarMappings, schemaIndex),
                             )
                                 .initializer(field.name)
                                 .addModifiers(KModifier.PUBLIC)
@@ -105,21 +114,8 @@ object InputObjectGenerator {
         type: GraphQLType,
         packageName: String,
         scalarMappings: Map<String, String>,
-        schemaTypeNames: Set<String>,
+        schemaIndex: SchemaIndex,
     ): com.squareup.kotlinpoet.TypeName {
-        return GraphQLTypeMapper.toKotlinType(type, packageName, scalarMappings, schemaTypeNames)
-    }
-
-    private fun convertGraphQLDefaultToKotlin(
-        defaultValue: String,
-        type: GraphQLType,
-    ): String {
-        return when {
-            defaultValue == "null" -> "null"
-            defaultValue.startsWith("\"") -> defaultValue
-            defaultValue == "true" || defaultValue == "false" -> defaultValue
-            defaultValue.toDoubleOrNull() != null -> defaultValue
-            else -> "\"$defaultValue\""
-        }
+        return GraphQLTypeMapper.toKotlinType(type, packageName, scalarMappings, schemaIndex)
     }
 }

@@ -17,6 +17,8 @@
 package co.anitrend.retrofit.graphql.codegen.mapping
 
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
+import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
+import co.anitrend.retrofit.graphql.codegen.model.SchemaType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
@@ -44,23 +46,23 @@ object GraphQLTypeMapper {
      *
      * @param type The GraphQL type to map.
      * @param scalarMappings Custom scalar type to Kotlin type mappings (e.g. "DateTime" -> "kotlin.String").
-     * @param schemaTypeNames The set of type names defined in the schema
-     *   (input objects and enums). These are treated as their own type names.
+     * @param schemaIndex Indexed schema metadata used to distinguish input objects,
+     *   enums, and schema-defined scalars.
      * @return A KotlinPoet [TypeName] (e.g. String?, List<MyInput>?, Int).
      */
     fun toKotlinType(
         type: GraphQLType,
         packageName: String,
         scalarMappings: Map<String, String>,
-        schemaTypeNames: Set<String>,
+        schemaIndex: SchemaIndex,
     ): TypeName {
         return when (type) {
             is GraphQLType.Named -> {
-                val base = resolveNamedType(type.name, packageName, scalarMappings, schemaTypeNames)
+                val base = resolveNamedType(type.name, packageName, scalarMappings, schemaIndex)
                 if (type.nullable) base.copy(nullable = true) else base
             }
             is GraphQLType.List -> {
-                val elementType = toKotlinType(type.of, packageName, scalarMappings, schemaTypeNames)
+                val elementType = toKotlinType(type.of, packageName, scalarMappings, schemaIndex)
                 val listType =
                     ClassName("kotlin.collections", "List")
                         .parameterizedBy(elementType)
@@ -76,7 +78,7 @@ object GraphQLTypeMapper {
         name: String,
         packageName: String,
         scalarMappings: Map<String, String>,
-        schemaTypeNames: Set<String>,
+        schemaIndex: SchemaIndex,
     ): TypeName {
         // Check custom scalar mappings first
         scalarMappings[name]?.let { return parseFqcnToTypeName(it) }
@@ -84,15 +86,25 @@ object GraphQLTypeMapper {
         // Check built-in scalars
         BUILT_IN_SCALARS[name]?.let { return parseFqcnToTypeName(it) }
 
-        // If it's a schema-defined type (input object or enum), use the type name directly
-        if (name in schemaTypeNames) return ClassName(packageName, name)
-
-        // Unknown scalar -- will be reported as an error by the task
-        error(
-            "Unknown scalar type '$name'. " +
-                "Add a scalar mapping in the retrofitGraphQL {} extension, e.g.:\n" +
-                "  scalars { map(\"$name\", \"kotlin.String\") }",
-        )
+        when (schemaIndex.definition(name)) {
+            is SchemaType.InputObject,
+            is SchemaType.Enum,
+            -> return ClassName(packageName, name)
+            is SchemaType.Scalar -> {
+                error(
+                    "Unknown scalar type '$name'. " +
+                        "Add a scalar mapping in the retrofitGraphQL {} extension, e.g.:\n" +
+                        "  scalars { map(\"$name\", \"kotlin.String\") }",
+                )
+            }
+            null -> {
+                error(
+                    "Unknown scalar type '$name'. " +
+                        "Add a scalar mapping in the retrofitGraphQL {} extension, e.g.:\n" +
+                        "  scalars { map(\"$name\", \"kotlin.String\") }",
+                )
+            }
+        }
     }
 
     /**

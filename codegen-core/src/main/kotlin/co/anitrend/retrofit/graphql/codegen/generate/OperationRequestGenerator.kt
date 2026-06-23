@@ -19,7 +19,9 @@ package co.anitrend.retrofit.graphql.codegen.generate
 import co.anitrend.retrofit.graphql.codegen.mapping.GraphQLTypeMapper
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
+import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -63,7 +65,7 @@ object OperationRequestGenerator {
         operation: GraphQLOperationInfo,
         packageName: String,
         scalarMappings: Map<String, String>,
-        schemaTypeNames: Set<String>,
+        schemaIndex: SchemaIndex,
     ): FileSpec {
         val operationsClass = ClassName(packageName, "GraphQLOperations")
         val documentsClass = ClassName(packageName, "GraphQLDocuments")
@@ -88,7 +90,7 @@ object OperationRequestGenerator {
                 .addProperty(sha256HashProperty(operation, hashesClass))
                 .apply {
                     if (hasVariables) {
-                        addFunction(buildRequestFunction(operation, variablesClass, packageName, scalarMappings, schemaTypeNames))
+                        addFunction(buildRequestFunction(operation, variablesClass, packageName, scalarMappings, schemaIndex))
                     }
                 }
                 .build()
@@ -126,16 +128,23 @@ object OperationRequestGenerator {
         variablesClass: ClassName,
         packageName: String,
         scalarMappings: Map<String, String>,
-        schemaTypeNames: Set<String>,
+        schemaIndex: SchemaIndex,
     ): FunSpec {
         val params =
             operation.variables.map { variable ->
-                val kotlinType = parseKotlinTypeString(variable.type, packageName, scalarMappings, schemaTypeNames)
+                val kotlinType = parseKotlinTypeString(variable.type, packageName, scalarMappings, schemaIndex)
                 val paramBuilder = ParameterSpec.builder(variable.name, kotlinType)
                 if (variable.defaultValue != null) {
                     paramBuilder.defaultValue(
-                        convertGraphQLDefaultToKotlin(variable.defaultValue, variable.type),
+                        GraphQLDefaultValueRenderer.render(
+                            defaultValue = variable.defaultValue,
+                            type = variable.type,
+                            scalarMappings = scalarMappings,
+                            schemaIndex = schemaIndex,
+                        ),
                     )
+                } else if (kotlinType.isNullable) {
+                    paramBuilder.defaultValue(CodeBlock.of("null"))
                 }
                 paramBuilder.build()
             }
@@ -160,21 +169,8 @@ object OperationRequestGenerator {
         type: GraphQLType,
         packageName: String,
         scalarMappings: Map<String, String>,
-        schemaTypeNames: Set<String>,
+        schemaIndex: SchemaIndex,
     ): com.squareup.kotlinpoet.TypeName {
-        return GraphQLTypeMapper.toKotlinType(type, packageName, scalarMappings, schemaTypeNames)
-    }
-
-    private fun convertGraphQLDefaultToKotlin(
-        defaultValue: String,
-        type: GraphQLType,
-    ): String {
-        return when {
-            defaultValue == "null" -> "null"
-            defaultValue.startsWith("\"") -> defaultValue
-            defaultValue == "true" || defaultValue == "false" -> defaultValue
-            defaultValue.toDoubleOrNull() != null -> defaultValue
-            else -> "\"$defaultValue\""
-        }
+        return GraphQLTypeMapper.toKotlinType(type, packageName, scalarMappings, schemaIndex)
     }
 }

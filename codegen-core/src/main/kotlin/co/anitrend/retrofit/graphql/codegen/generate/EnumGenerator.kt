@@ -23,21 +23,32 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 
 /**
- * Generates enum string constants for GraphQL enum types.
+ * Generates Kotlin enum classes for GraphQL enum types.
  *
- * By default, generates string constants grouped in an outer object:
+ * Active generation emits standalone Kotlin enum classes so generated variable,
+ * input object, and request helper types can reference real Kotlin types.
+ *
+ * Legacy string constant generation is still available for compatibility:
  * ```kotlin
- * public object GraphQLEnums {
- *     public object MediaSort {
- *         public const val SCORE: String = "SCORE"
- *         public const val POPULARITY: String = "POPULARITY"
- *     }
+ * public enum class MediaSort {
+ *     SCORE,
+ *     POPULARITY,
  * }
  * ```
- *
- * Future: Optional Kotlin enum class generation via [EnumGenerator.generateAsEnumClass].
  */
 object EnumGenerator {
+    /**
+     * Generates standalone Kotlin enum classes for a list of enum types.
+     */
+    fun generate(
+        enums: List<SchemaType.Enum>,
+        packageName: String,
+    ): List<FileSpec> {
+        return enums.map { enumType ->
+            generateAsEnumClass(enumType, packageName)
+        }
+    }
+
     /**
      * Generates string constants for a list of enum types.
      * All enums are grouped into a single `GraphQLEnums` file.

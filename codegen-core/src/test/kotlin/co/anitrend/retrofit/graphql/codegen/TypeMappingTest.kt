@@ -2,16 +2,17 @@ package co.anitrend.retrofit.graphql.codegen
 
 import co.anitrend.retrofit.graphql.codegen.mapping.GraphQLTypeMapper
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
+import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
+import co.anitrend.retrofit.graphql.codegen.model.SchemaType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName
-import com.squareup.kotlinpoet.TypeName
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Test
 
 class TypeMappingTest {
+    private val emptySchemaIndex = SchemaIndex.EMPTY
 
     // ---------------------------------------------------------------------------
     // List variable types
@@ -25,7 +26,7 @@ class TypeMappingTest {
             nullable = false,
         )
 
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySet())
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySchemaIndex)
 
         assertTrue("Result should be ParameterizedTypeName", result is ParameterizedTypeName)
         assertFalse("List should be non-nullable", result.isNullable)
@@ -47,7 +48,7 @@ class TypeMappingTest {
             nullable = false,
         )
 
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySet())
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySchemaIndex)
 
         assertTrue("Result should be ParameterizedTypeName", result is ParameterizedTypeName)
         assertFalse("List should be non-nullable", result.isNullable)
@@ -65,7 +66,7 @@ class TypeMappingTest {
         val middleType = GraphQLType.List(of = innerType, nullable = true)
         val type = GraphQLType.List(of = middleType, nullable = true)
 
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySet())
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySchemaIndex)
 
         assertTrue("Outer result should be ParameterizedTypeName", result is ParameterizedTypeName)
         assertTrue("Outer list should be nullable", result.isNullable)
@@ -95,7 +96,7 @@ class TypeMappingTest {
         val scalarMappings = mapOf("DateTime" to "java.time.Instant")
         val type = GraphQLType.Named(name = "DateTime", nullable = false)
 
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", scalarMappings, emptySet())
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", scalarMappings, emptySchemaIndex)
 
         assertTrue("Result should be ClassName", result is ClassName)
         assertFalse("Type should be non-nullable", result.isNullable)
@@ -107,7 +108,7 @@ class TypeMappingTest {
         val scalarMappings = mapOf("DateTime" to "java.time.Instant")
         val type = GraphQLType.Named(name = "DateTime", nullable = true)
 
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", scalarMappings, emptySet())
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", scalarMappings, emptySchemaIndex)
 
         assertTrue("Result should be ClassName", result is ClassName)
         assertTrue("Type should be nullable", result.isNullable)
@@ -119,7 +120,7 @@ class TypeMappingTest {
         val scalarMappings = mapOf("Upload" to "okhttp3.MultipartBody.Part")
         val type = GraphQLType.Named(name = "Upload", nullable = false)
 
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", scalarMappings, emptySet())
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", scalarMappings, emptySchemaIndex)
 
         assertTrue("Result should be ClassName", result is ClassName)
         assertEquals(
@@ -135,7 +136,7 @@ class TypeMappingTest {
     @Test
     fun `should map built-in String`() {
         val type = GraphQLType.Named(name = "String", nullable = false)
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySet())
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySchemaIndex)
 
         assertTrue(result is ClassName)
         assertFalse(result.isNullable)
@@ -145,7 +146,7 @@ class TypeMappingTest {
     @Test
     fun `should map built-in Int`() {
         val type = GraphQLType.Named(name = "Int", nullable = false)
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySet())
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySchemaIndex)
 
         assertTrue(result is ClassName)
         assertFalse(result.isNullable)
@@ -155,7 +156,7 @@ class TypeMappingTest {
     @Test
     fun `should map built-in Float to kotlin Double`() {
         val type = GraphQLType.Named(name = "Float", nullable = false)
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySet())
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySchemaIndex)
 
         assertTrue(result is ClassName)
         assertFalse(result.isNullable)
@@ -165,7 +166,7 @@ class TypeMappingTest {
     @Test
     fun `should map built-in Boolean`() {
         val type = GraphQLType.Named(name = "Boolean", nullable = false)
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySet())
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySchemaIndex)
 
         assertTrue(result is ClassName)
         assertFalse(result.isNullable)
@@ -175,7 +176,7 @@ class TypeMappingTest {
     @Test
     fun `should map built-in ID to kotlin String`() {
         val type = GraphQLType.Named(name = "ID", nullable = false)
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySet())
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySchemaIndex)
 
         assertTrue(result is ClassName)
         assertFalse(result.isNullable)
@@ -185,7 +186,7 @@ class TypeMappingTest {
     @Test
     fun `should map built-in scalars as nullable when type is nullable`() {
         val type = GraphQLType.Named(name = "String", nullable = true)
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySet())
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySchemaIndex)
 
         assertTrue(result is ClassName)
         assertTrue("Nullable String should be nullable", result.isNullable)
@@ -198,13 +199,38 @@ class TypeMappingTest {
 
     @Test
     fun `should resolve schema-defined input types by name`() {
-        val schemaTypeNames = setOf("MyInput", "UserFilter")
+        val schemaIndex =
+            SchemaIndex.from(
+                listOf(
+                    SchemaType.InputObject(name = "MyInput", fields = emptyList()),
+                    SchemaType.InputObject(name = "UserFilter", fields = emptyList()),
+                ),
+            )
         val type = GraphQLType.Named(name = "MyInput", nullable = false)
 
-        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), schemaTypeNames)
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), schemaIndex)
 
         assertTrue(result is ClassName)
         assertEquals("MyInput", (result as ClassName).simpleName)
+    }
+
+    @Test
+    fun `should resolve schema-defined enum types by name`() {
+        val schemaIndex = SchemaIndex.from(listOf(SchemaType.Enum(name = "Status", values = listOf("OPEN"))))
+        val type = GraphQLType.Named(name = "Status", nullable = false)
+
+        val result = GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), schemaIndex)
+
+        assertTrue(result is ClassName)
+        assertEquals("Status", (result as ClassName).simpleName)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `should throw for schema-defined scalar without mapping`() {
+        val schemaIndex = SchemaIndex.from(listOf(SchemaType.Scalar(name = "DateTime")))
+        val type = GraphQLType.Named(name = "DateTime", nullable = false)
+
+        GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), schemaIndex)
     }
 
     // ---------------------------------------------------------------------------
@@ -214,6 +240,6 @@ class TypeMappingTest {
     @Test(expected = IllegalStateException::class)
     fun `should throw for unknown scalar without mapping`() {
         val type = GraphQLType.Named(name = "UnknownScalar", nullable = false)
-        GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySet())
+        GraphQLTypeMapper.toKotlinType(type, "test.pkg", emptyMap(), emptySchemaIndex)
     }
 }

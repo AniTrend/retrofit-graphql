@@ -20,6 +20,10 @@ package co.anitrend.retrofit.graphql.codegen.model
  * Internal representation of a schema-level type definition.
  */
 sealed class SchemaType {
+    /**
+     * The schema type name.
+     */
+    abstract val name: String
 
     /**
      * An input object type defined in the schema.
@@ -28,7 +32,7 @@ sealed class SchemaType {
      * @param fields The input fields with their GraphQL types.
      */
     data class InputObject(
-        val name: String,
+        override val name: String,
         val fields: List<InputField>,
     ) : SchemaType()
 
@@ -39,7 +43,7 @@ sealed class SchemaType {
      * @param values The enum value names.
      */
     data class Enum(
-        val name: String,
+        override val name: String,
         val values: List<String>,
     ) : SchemaType()
 
@@ -49,7 +53,7 @@ sealed class SchemaType {
      * @param name The type name.
      */
     data class Scalar(
-        val name: String,
+        override val name: String,
     ) : SchemaType()
 
     /**

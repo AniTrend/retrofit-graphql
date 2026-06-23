@@ -20,7 +20,9 @@ import co.anitrend.retrofit.graphql.codegen.mapping.GraphQLTypeMapper
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLVariableInfo
+import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
@@ -50,7 +52,7 @@ object VariableClassGenerator {
         operation: GraphQLOperationInfo,
         packageName: String,
         scalarMappings: Map<String, String>,
-        schemaTypeNames: Set<String>,
+        schemaIndex: SchemaIndex,
     ): FileSpec? {
         if (operation.variables.isEmpty()) return null
 
@@ -64,7 +66,7 @@ object VariableClassGenerator {
                     // Constructor parameters
                     val constructorParams =
                         operation.variables.map { variable ->
-                            buildConstructorParam(variable, packageName, scalarMappings, schemaTypeNames)
+                            buildConstructorParam(variable, packageName, scalarMappings, schemaIndex)
                         }
                     primaryConstructor(
                         com.squareup.kotlinpoet.FunSpec.constructorBuilder()
@@ -76,7 +78,7 @@ object VariableClassGenerator {
                         addProperty(
                             PropertySpec.builder(
                                 variable.name,
-                                parseKotlinTypeString(variable.type, packageName, scalarMappings, schemaTypeNames),
+                                parseKotlinTypeString(variable.type, packageName, scalarMappings, schemaIndex),
                             )
                                 .initializer(variable.name)
                                 .addModifiers(KModifier.PUBLIC)
@@ -95,15 +97,23 @@ object VariableClassGenerator {
         variable: GraphQLVariableInfo,
         packageName: String,
         scalarMappings: Map<String, String>,
-        schemaTypeNames: Set<String>,
+        schemaIndex: SchemaIndex,
     ): ParameterSpec {
-        val kotlinType = parseKotlinTypeString(variable.type, packageName, scalarMappings, schemaTypeNames)
+        val kotlinType = parseKotlinTypeString(variable.type, packageName, scalarMappings, schemaIndex)
         val paramBuilder = ParameterSpec.builder(variable.name, kotlinType)
 
-        // Apply default value if present
+        // Apply default value if present, or provide implicit null for nullable params
         if (variable.defaultValue != null) {
-            val defaultExpr = convertGraphQLDefaultToKotlin(variable.defaultValue, variable.type)
+            val defaultExpr =
+                GraphQLDefaultValueRenderer.render(
+                    defaultValue = variable.defaultValue,
+                    type = variable.type,
+                    scalarMappings = scalarMappings,
+                    schemaIndex = schemaIndex,
+                )
             paramBuilder.defaultValue(defaultExpr)
+        } else if (kotlinType.isNullable) {
+            paramBuilder.defaultValue(CodeBlock.of("null"))
         }
 
         return paramBuilder.build()
@@ -113,24 +123,8 @@ object VariableClassGenerator {
         type: GraphQLType,
         packageName: String,
         scalarMappings: Map<String, String>,
-        schemaTypeNames: Set<String>,
+        schemaIndex: SchemaIndex,
     ): com.squareup.kotlinpoet.TypeName {
-        return GraphQLTypeMapper.toKotlinType(type, packageName, scalarMappings, schemaTypeNames)
-    }
-
-    /**
-     * Converts a GraphQL default value literal to a Kotlin expression.
-     */
-    private fun convertGraphQLDefaultToKotlin(
-        defaultValue: String,
-        type: GraphQLType,
-    ): String {
-        return when {
-            defaultValue == "null" -> "null"
-            defaultValue.startsWith("\"") -> defaultValue // String literal -- keep as-is
-            defaultValue == "true" || defaultValue == "false" -> defaultValue
-            defaultValue.toDoubleOrNull() != null -> defaultValue
-            else -> "\"$defaultValue\"" // Enum-like value, wrap in quotes
-        }
+        return GraphQLTypeMapper.toKotlinType(type, packageName, scalarMappings, schemaIndex)
     }
 }

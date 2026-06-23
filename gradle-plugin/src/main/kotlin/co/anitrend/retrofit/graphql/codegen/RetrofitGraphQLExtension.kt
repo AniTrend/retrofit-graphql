@@ -78,7 +78,7 @@ abstract class GraphQLTargetExtension @Inject constructor(val name: String) {
     abstract val generateHashes: Property<Boolean>
 
     //
-    // Whether to generate variable classes, input objects, enum constants, and
+    // Whether to generate variable classes, input objects, enum classes, and
     // operation request helpers. Requires [schema] to be set for input objects.
     // Falls back to the common {} block if not set on this target.
     //
@@ -134,7 +134,7 @@ abstract class CommonExtension {
     abstract val generateHashes: Property<Boolean>
 
     //
-    // Whether to generate variable classes, input objects, enum constants, and
+    // Whether to generate variable classes, input objects, enum classes, and
     // operation request helpers. Default false.
     //
     abstract val generateVariables: Property<Boolean>
