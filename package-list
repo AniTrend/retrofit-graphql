@@ -30,6 +30,7 @@ co.anitrend.retrofit.graphql.codegen.mapping
 co.anitrend.retrofit.graphql.codegen.model
 co.anitrend.retrofit.graphql.codegen.parser
 co.anitrend.retrofit.graphql.codegen.resolve
+co.anitrend.retrofit.graphql.codegen.validate
 module:library
 co.anitrend.retrofit.graphql.annotation.processor
 co.anitrend.retrofit.graphql.annotation.processor.fragment
