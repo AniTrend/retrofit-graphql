@@ -30,6 +30,7 @@ import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import co.anitrend.retrofit.graphql.codegen.parser.GraphQLDocumentParser
 import co.anitrend.retrofit.graphql.codegen.parser.SchemaParser
 import co.anitrend.retrofit.graphql.codegen.resolve.FragmentResolver
+import co.anitrend.retrofit.graphql.codegen.resolve.FragmentVariablePropagator
 import co.anitrend.retrofit.graphql.codegen.validate.GraphQLTypeUsageValidator
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -89,6 +90,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
     fun generate() {
         val parser = GraphQLDocumentParser()
         val resolver = FragmentResolver()
+        val propagator = FragmentVariablePropagator()
 
         val graphqlFiles = operationsDir.files.filter { it.extension == "graphql" }
 
@@ -125,8 +127,12 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
             )
         }
 
+        // Propagate fragment variable usages into consuming operations
+        val propagationResult = propagator.propagate(allOperations, allFragments)
+        propagationResult.warnings.forEach { warning -> logger.warn(warning) }
+
         // Flatten fragments into operations
-        val resolvedOperations = resolver.resolve(allOperations, allFragments)
+        val resolvedOperations = resolver.resolve(propagationResult.operations, allFragments)
 
         // Parse schema if available
         val scalarMap = scalarMappings.orNull ?: emptyMap()
