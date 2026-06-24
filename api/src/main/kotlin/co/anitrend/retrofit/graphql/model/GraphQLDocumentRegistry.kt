@@ -20,7 +20,8 @@ package co.anitrend.retrofit.graphql.model
  * A registry that provides GraphQL document text and APQ hash for a given operation name.
  *
  * Implementations can be generated at build time (e.g., [GeneratedGraphQLRegistry]) or
- * provided manually by the consumer.
+ * provided manually by the consumer. Runtime converter integrations check this registry before
+ * attempting legacy asset-based discovery.
  */
 public interface GraphQLDocumentRegistry {
     /**

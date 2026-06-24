@@ -83,8 +83,10 @@ open class QueryContainerBuilder(
     }
 
     /**
-     * Should only be called by the GraphQLConverter or any other subclasses of it
-     * after the query has been added to the request
+     * Should only be called by the GraphQL converter after query resolution has been attempted.
+     *
+     * The built request may still contain a `null` query when the calling Retrofit method does not
+     * declare [co.anitrend.retrofit.graphql.annotation.GraphQuery].
      *
      * @see co.anitrend.retrofit.graphql.converter.GraphConverter
      */

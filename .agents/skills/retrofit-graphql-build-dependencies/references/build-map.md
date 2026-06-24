@@ -11,7 +11,7 @@ Use this map to choose the right build file before editing.
 | Shared dependency strategy | `buildSrc/.../strategy/DependencyStrategy.kt` | Default Kotlin, Retrofit, OkHttp, coroutines, and test libraries per module type |
 | Shared Dokka behavior | `buildSrc/.../components/AndroidOptions.kt` | `dokkaHtml` task, `reportUndocumented = true`, internal packages suppressed, Android docs linked |
 | Shared formatting | `buildSrc/.../components/AndroidConfiguration.kt` (Spotless config), `spotless/copyright.kt` | Ktlint and license header configuration |
-| Publishing options | `buildSrc/.../components/AndroidOptions.kt` (Android), per-module `build.gradle.kts` (JVM) | AGP component-backed publications via `singleVariant("release")` + `withSourcesJar()`. JVM modules (`:annotations`, `:codegen-core`) inline publishing. Publication name `"maven"` for all modules. |
+| Publishing options | `buildSrc/.../components/AndroidOptions.kt` (Android), per-module `build.gradle.kts` (JVM), `gradle-plugin/build.gradle.kts`, `gradle-plugin/buildSrc/.../JvmConfiguration.kt`, `.jitpack.yml` | Root Android publications use AGP components. The standalone `gradle-plugin` composite build publishes both the plugin implementation + marker artifacts and republishes included `:codegen-core` with explicit coordinates from `gradle/version.properties`. `.jitpack.yml` must run both root and standalone plugin `publishToMavenLocal` commands with `CI=true` so JitPack excludes `:app` via `settings.gradle.kts`. |
 | Dependency versions and aliases | `gradle/libs.versions.toml` | Add or update aliases here first |
 | Library build | `library/build.gradle.kts` | Applies the shared plugin; no module-specific overrides needed for standard changes |
 | Sample app build | `app/build.gradle.kts` | Applies the shared plugin; Room compiler options, build config fields from `.config/` |
@@ -28,4 +28,5 @@ Use this map to choose the right build file before editing.
 - Cross-module convention: `buildSrc`.
 - One module only: that module's `build.gradle.kts`.
 - Documentation generation or publish behavior: Dokka config in `buildSrc/...AndroidOptions.kt` plus the workflow file.
+- Standalone plugin publishing or plugin marker issues: `gradle-plugin/build.gradle.kts`, `gradle-plugin/settings.gradle.kts`, `gradle-plugin/buildSrc/.../JvmConfiguration.kt`, and `.jitpack.yml`.
 - Memory or JVM tuning: `gradle.properties` (repo-wide) or `~/.gradle/gradle.properties` (user-local, preferred for personal overrides).

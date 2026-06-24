@@ -17,8 +17,10 @@
 package co.anitrend.retrofit.graphql.converter
 
 import android.content.Context
+import co.anitrend.retrofit.graphql.annotation.GraphQuery
 import co.anitrend.retrofit.graphql.annotation.processor.GraphProcessor
 import co.anitrend.retrofit.graphql.annotation.processor.contract.AbstractGraphProcessor
+import co.anitrend.retrofit.graphql.annotation.processor.fragment.FragmentPatcher
 import co.anitrend.retrofit.graphql.annotation.processor.plugin.AssetManagerDiscoveryPlugin
 import co.anitrend.retrofit.graphql.converter.request.GraphRequestConverter
 import co.anitrend.retrofit.graphql.converter.response.GraphResponseConverter
@@ -39,9 +41,10 @@ import java.lang.reflect.Type
  * Body for GraphQL requests and responses, closed for modification
  * but open for extension.
  *
- * @param graphProcessor A singleton reference of [AbstractLogger]
- * @param gson Any valid application context
- * @param registry Optional [GraphQLDocumentRegistry] for build-time generated operation documents
+ * @param graphProcessor Processor used for asset-based lookup. Registry-only factory overloads
+ * may provide a no-op implementation when no asset fallback is required.
+ * @param gson Gson instance used for request and response serialization.
+ * @param registry Optional [GraphQLDocumentRegistry] for build-time generated operation documents.
 */
 open class GraphConverter(
     protected val graphProcessor: AbstractGraphProcessor,
@@ -128,6 +131,50 @@ open class GraphConverter(
     companion object {
         const val MIME_TYPE = "application/graphql"
 
+        private fun defaultGson(): Gson =
+            GsonBuilder()
+                .enableComplexMapKeySerialization()
+                .serializeNulls()
+                .setLenient()
+                .create()
+
+        private fun assetBackedProcessor(
+            context: Context,
+            level: ILogger.Level,
+        ): AbstractGraphProcessor =
+            GraphProcessor(
+                AssetManagerDiscoveryPlugin(context.assets),
+                DefaultGraphLogger(level),
+            )
+
+        private fun registryOnlyProcessor(level: ILogger.Level): AbstractGraphProcessor =
+            object : AbstractGraphProcessor() {
+                override val defaultExtension: String = ".graphql"
+                override val defaultDirectory: String = "graphql"
+                override val logger: AbstractLogger = DefaultGraphLogger(level)
+                override val fragmentPatcher: FragmentPatcher = FragmentPatcher(defaultExtension, logger = logger)
+                override val graphFiles: Map<String, String> = emptyMap()
+
+                override fun getQuery(annotations: Array<out Annotation>): String? {
+                    // Keep this extraction logic in sync with GraphRequestConverter.extractOperationName().
+                    val operationName =
+                        annotations.filterIsInstance<GraphQuery>()
+                            .firstOrNull()
+                            ?.value
+                            ?.takeIf { it.isNotEmpty() }
+
+                    if (operationName != null) {
+                        throw IllegalStateException(
+                            "GraphQL operation '$operationName' was not found in the registry.",
+                        )
+                    }
+
+                    return null
+                }
+
+                override fun patchQueries() = Unit
+            }
+
         /**
          * Default creator that uses a predefined gson configuration
          *
@@ -140,17 +187,8 @@ open class GraphConverter(
             level: ILogger.Level = ILogger.Level.INFO,
         ): GraphConverter =
             GraphConverter(
-                graphProcessor =
-                    GraphProcessor(
-                        AssetManagerDiscoveryPlugin(context.assets),
-                        DefaultGraphLogger(level),
-                    ),
-                gson =
-                    GsonBuilder()
-                        .enableComplexMapKeySerialization()
-                        .serializeNulls()
-                        .setLenient()
-                        .create(),
+                graphProcessor = assetBackedProcessor(context, level),
+                gson = defaultGson(),
             )
 
         /**
@@ -168,11 +206,7 @@ open class GraphConverter(
             level: ILogger.Level = ILogger.Level.INFO,
         ): GraphConverter =
             GraphConverter(
-                graphProcessor =
-                    GraphProcessor(
-                        AssetManagerDiscoveryPlugin(context.assets),
-                        DefaultGraphLogger(level),
-                    ),
+                graphProcessor = assetBackedProcessor(context, level),
                 gson = gson,
             )
 
@@ -193,17 +227,8 @@ open class GraphConverter(
             level: ILogger.Level = ILogger.Level.INFO,
         ): GraphConverter =
             GraphConverter(
-                graphProcessor =
-                    GraphProcessor(
-                        AssetManagerDiscoveryPlugin(context.assets),
-                        DefaultGraphLogger(level),
-                    ),
-                gson =
-                    GsonBuilder()
-                        .enableComplexMapKeySerialization()
-                        .serializeNulls()
-                        .setLenient()
-                        .create(),
+                graphProcessor = assetBackedProcessor(context, level),
+                gson = defaultGson(),
                 registry = registry,
             )
 
@@ -224,11 +249,51 @@ open class GraphConverter(
             level: ILogger.Level = ILogger.Level.INFO,
         ): GraphConverter =
             GraphConverter(
-                graphProcessor =
-                    GraphProcessor(
-                        AssetManagerDiscoveryPlugin(context.assets),
-                        DefaultGraphLogger(level),
-                    ),
+                graphProcessor = assetBackedProcessor(context, level),
+                gson = gson,
+                registry = registry,
+            )
+
+        /**
+         * Creates a [GraphConverter] that resolves operation documents from a
+         * build-time generated [GraphQLDocumentRegistry] without requiring an Android [Context].
+         *
+         * If a requested [GraphQuery] operation is not registered, request conversion fails fast
+         * with [IllegalStateException] because no asset fallback is available in this mode.
+         *
+         * @param registry A build-time generated registry of GraphQL operations.
+         * @param level Minimum log level.
+         */
+        @JvmOverloads
+        fun create(
+            registry: GraphQLDocumentRegistry,
+            level: ILogger.Level = ILogger.Level.INFO,
+        ): GraphConverter =
+            GraphConverter(
+                graphProcessor = registryOnlyProcessor(level),
+                gson = defaultGson(),
+                registry = registry,
+            )
+
+        /**
+         * Creates a registry-first [GraphConverter] with a custom [Gson] instance and without
+         * requiring an Android [Context].
+         *
+         * If a requested [GraphQuery] operation is not registered, request conversion fails fast
+         * with [IllegalStateException] because no asset fallback is available in this mode.
+         *
+         * @param gson Custom gson implementation.
+         * @param registry A build-time generated registry of GraphQL operations.
+         * @param level Minimum log level.
+         */
+        @JvmOverloads
+        fun create(
+            gson: Gson,
+            registry: GraphQLDocumentRegistry,
+            level: ILogger.Level = ILogger.Level.INFO,
+        ): GraphConverter =
+            GraphConverter(
+                graphProcessor = registryOnlyProcessor(level),
                 gson = gson,
                 registry = registry,
             )

@@ -71,6 +71,17 @@ dependencies {
 If you want to replace asset-based discovery with build-time code generation:
 
 ```kotlin
+// settings.gradle.kts
+pluginManagement {
+    repositories {
+        maven(url = uri("https://jitpack.io"))
+        gradlePluginPortal()
+        mavenCentral()
+        google()
+    }
+}
+
+// build.gradle.kts
 plugins {
     id("co.anitrend.retrofit.graphql.codegen") version "{tag}"
 }
@@ -117,18 +128,33 @@ Generated output (under `build/generated/source/graphql/`) includes:
 
 Wire the registry into your converter via Koin or manual construction:
 ```kotlin
-// Koin
+// Koin, registry-only (no Context required)
 single<GraphQLDocumentRegistry> { GeneratedGraphQLRegistry }
+factory { GraphConverter.create(registry = get()) }
+
+// Koin, mixed asset + codegen fallback
 factory { GraphConverter.create(context = get(), registry = get()) }
 
-// Manual
-val factory = GraphConverter.create(
+// Manual, registry-only
+val registryOnlyFactory = GraphConverter.create(
+    registry = GeneratedGraphQLRegistry,
+)
+
+// Manual, custom Gson + registry-only
+val customGsonFactory = GraphConverter.create(
+    gson = GsonBuilder().serializeNulls().create(),
+    registry = GeneratedGraphQLRegistry,
+)
+
+// Manual, mixed asset + codegen fallback
+val mixedFactory = GraphConverter.create(
     context = context,
     registry = GeneratedGraphQLRegistry,
 )
 ```
 
-> **Note:** `GraphConverter.create(context, registry)` is the recommended factory for codegen consumers. It wires the generated registry while keeping asset-based discovery as a fallback.
+> **Note:** `GraphConverter.create(registry)` and `GraphConverter.create(gson, registry)` are the new codegen-first factories. Use `GraphConverter.create(context, registry)` when you still want asset-based fallback during a mixed migration.
+> **Note:** In registry-only mode, unresolved operations do not throw during conversion. The request is still built and the serialized GraphQL `query` remains `null`.
 
 ### Multipart Uploads
 
@@ -263,6 +289,8 @@ New (with optional registry for codegen):
 GraphConverter(processor, gson, registry = GeneratedGraphQLRegistry)
 // or via static factory:
 GraphConverter.create(androidContext(), registry = GeneratedGraphQLRegistry)
+GraphConverter.create(registry = GeneratedGraphQLRegistry)
+GraphConverter.create(gson, registry = GeneratedGraphQLRegistry)
 ```
 
 ### Query Resolution

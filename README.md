@@ -103,6 +103,52 @@ dependencies {
 
 For code generation support, apply the Gradle plugin and add a `retrofitGraphQL { }` config block. The plugin generates operation constants, a document registry, enum classes, variable classes, and typed request helpers. See [MIGRATION.md](MIGRATION.md) for the full migration guide and the [wiki Code Generation page](https://github.com/AniTrend/retrofit-graphql/wiki/Codegen) for the DSL reference.
 
+### Gradle Plugin Consumption
+
+The codegen plugin can now be consumed through the Gradle `plugins {}` DSL.
+
+```kotlin
+pluginManagement {
+    repositories {
+        mavenLocal() // optional for local verification / development
+        maven(url = uri("https://jitpack.io"))
+        gradlePluginPortal()
+        mavenCentral()
+        google()
+    }
+}
+
+plugins {
+    id("co.anitrend.retrofit.graphql.codegen") version "{latest_version}"
+}
+```
+
+> **JitPack note:** this repository now ships a root `.jitpack.yml` that runs both the main build publication and the standalone `gradle-plugin` publication path. Local verification in this repository resolves the plugin from `mavenLocal()` using the published plugin marker artifact; remote JitPack resolution should follow the same published metadata flow.
+
+### Converter Factories for Codegen Registries
+
+Codegen-only consumers no longer need an Android `Context` just to use the generated registry:
+
+```kotlin
+val converter = GraphConverter.create(registry = GeneratedGraphQLRegistry)
+
+val customGsonConverter = GraphConverter.create(
+    gson = GsonBuilder().serializeNulls().create(),
+    registry = GeneratedGraphQLRegistry,
+)
+```
+
+If you want generated documents first **and** asset-based fallback for mixed migrations, keep using the context-backed overload:
+
+```kotlin
+val converter = GraphConverter.create(
+    context = context,
+    registry = GeneratedGraphQLRegistry,
+)
+```
+
+In registry-only mode, if an operation is missing from the registry, the request body is still built and the serialized GraphQL `query` remains `null`.
+
 - __Optional R8 / ProGuard Rules__
 
 If you are using R8 the shrinking and obfuscation rules are included automatically.
