@@ -3,6 +3,7 @@ import co.anitrend.retrofit.graphql.buildSrc.plugin.components.configureSpotless
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.plugin.devel.tasks.PluginUnderTestMetadata
 
 plugins {
     kotlin("jvm")
@@ -23,6 +24,10 @@ configurations[functionalTestSourceSet.implementationConfigurationName].extendsF
 configurations[functionalTestSourceSet.runtimeOnlyConfigurationName].extendsFrom(
     configurations.testRuntimeOnly.get(),
 )
+val functionalTestPluginClasspath = configurations.create("functionalTestPluginClasspath") {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
 
 gradlePlugin {
     testSourceSets(functionalTestSourceSet)
@@ -66,6 +71,12 @@ dependencies {
     add(functionalTestSourceSet.implementationConfigurationName, gradleTestKit())
     add(functionalTestSourceSet.implementationConfigurationName, kotlin("test"))
     add(functionalTestSourceSet.implementationConfigurationName, libs.junit)
+    add(functionalTestSourceSet.runtimeOnlyConfigurationName, libs.android.gradle.plugin)
+    add(functionalTestPluginClasspath.name, libs.android.gradle.plugin)
+}
+
+tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
+    pluginClasspath.from(functionalTestPluginClasspath)
 }
 
 val functionalTest = tasks.register<Test>("functionalTest") {

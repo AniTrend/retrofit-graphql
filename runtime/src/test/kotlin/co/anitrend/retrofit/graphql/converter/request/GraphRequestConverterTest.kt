@@ -14,7 +14,7 @@ import com.google.gson.JsonObject
 import okhttp3.RequestBody
 import okio.Buffer
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import retrofit2.Retrofit
@@ -61,7 +61,7 @@ class GraphRequestConverterTest {
     }
 
     @Test
-    fun `registry only converter keeps missing operation behavior sensible`() {
+    fun `registry only converter throws for missing operation`() {
         val converter = GraphConverter.create(MapRegistry(emptyMap()))
         val requestConverter =
             converter.requestBodyConverter(
@@ -71,11 +71,12 @@ class GraphRequestConverterTest {
                 Retrofit.Builder().baseUrl("https://example.com/").build(),
             ) as retrofit2.Converter<Any, RequestBody>
 
-        val requestBody = requestConverter.convert(QueryContainerBuilder())
-        assertNotNull(requestBody)
-        val requestJson = requestJson(requireNotNull(requestBody))
+        val error =
+            assertThrows(IllegalStateException::class.java) {
+                requestConverter.convert(QueryContainerBuilder())
+            }
 
-        assertTrue(requestJson.get("query").isJsonNull)
+        assertTrue(error.message?.contains("UnregisteredOperation") == true)
     }
 
     @Test

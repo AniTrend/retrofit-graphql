@@ -17,6 +17,7 @@
 package co.anitrend.retrofit.graphql.converter
 
 import android.content.Context
+import co.anitrend.retrofit.graphql.annotation.GraphQuery
 import co.anitrend.retrofit.graphql.annotation.processor.GraphProcessor
 import co.anitrend.retrofit.graphql.annotation.processor.contract.AbstractGraphProcessor
 import co.anitrend.retrofit.graphql.annotation.processor.fragment.FragmentPatcher
@@ -154,7 +155,22 @@ open class GraphConverter(
                 override val fragmentPatcher: FragmentPatcher = FragmentPatcher(defaultExtension, logger = logger)
                 override val graphFiles: Map<String, String> = emptyMap()
 
-                override fun getQuery(annotations: Array<out Annotation>): String? = null
+                override fun getQuery(annotations: Array<out Annotation>): String? {
+                    // Keep this extraction logic in sync with GraphRequestConverter.extractOperationName().
+                    val operationName =
+                        annotations.filterIsInstance<GraphQuery>()
+                            .firstOrNull()
+                            ?.value
+                            ?.takeIf { it.isNotEmpty() }
+
+                    if (operationName != null) {
+                        throw IllegalStateException(
+                            "GraphQL operation '$operationName' was not found in the registry.",
+                        )
+                    }
+
+                    return null
+                }
 
                 override fun patchQueries() = Unit
             }
@@ -242,8 +258,8 @@ open class GraphConverter(
          * Creates a [GraphConverter] that resolves operation documents from a
          * build-time generated [GraphQLDocumentRegistry] without requiring an Android [Context].
          *
-         * If a requested operation is not registered, the request body is still built and the
-         * query remains unresolved (`null`) because no asset fallback is available in this mode.
+         * If a requested [GraphQuery] operation is not registered, request conversion fails fast
+         * with [IllegalStateException] because no asset fallback is available in this mode.
          *
          * @param registry A build-time generated registry of GraphQL operations.
          * @param level Minimum log level.
@@ -262,6 +278,9 @@ open class GraphConverter(
         /**
          * Creates a registry-first [GraphConverter] with a custom [Gson] instance and without
          * requiring an Android [Context].
+         *
+         * If a requested [GraphQuery] operation is not registered, request conversion fails fast
+         * with [IllegalStateException] because no asset fallback is available in this mode.
          *
          * @param gson Custom gson implementation.
          * @param registry A build-time generated registry of GraphQL operations.

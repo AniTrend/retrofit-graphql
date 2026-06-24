@@ -83,7 +83,7 @@ The project is organized into composable modules under the `co.anitrend.retrofit
 - **Toolchain**: Java/Kotlin 21 (pinned in `.java-version`). Local dev uses `jenv`; CI uses `actions/setup-java`.
 - **SDK**: `compileSdk=37`, `minSdk=23`, `targetSdk=37`.
 - **Formatting**: Ktlint via Spotless. License header at `spotless/copyright.kt`.
-- **Publishing**: JitPack. Root modules publish from the main build; the standalone `:gradle-plugin` composite build must also publish separately. `.jitpack.yml` runs both `./gradlew build publishToMavenLocal` and `./gradlew -p gradle-plugin publishToMavenLocal` so plugin marker + implementation artifacts and the included `:codegen-core` dependency are materialized for JitPack.
+- **Publishing**: JitPack. Root modules publish from the main build; the standalone `:gradle-plugin` composite build must also publish separately. `.jitpack.yml` runs both `CI=true ./gradlew build publishToMavenLocal` and `CI=true ./gradlew -p gradle-plugin publishToMavenLocal` so JitPack reliably excludes `:app` via `settings.gradle.kts`, while still materializing the plugin marker + implementation artifacts and the included `:codegen-core` dependency.
 - **CI**: Only `:library` is built/tested in CI environments. It serves as the aggregate facade and transitively builds all sub-modules via `api()` deps. `:app` is excluded in CI (see `settings.gradle.kts`).
 - **Dokka**: Generated via `buildSrc` `AndroidOptions.kt`. Published at `https://anitrend.github.io/retrofit-graphql/`. Currently generates from `:library` only; multi-module Dokka is a planned follow-up.
 

@@ -48,8 +48,7 @@ abstract class AbstractGraphProcessor {
      * @param annotations A collection of method annotation from an ongoing request
      *
      * @return GraphQL query in the form of [String] or null if the request method was not
-     * annotated with [GraphQuery], if no such file could be found, or when a no-op processor is
-     * intentionally used for registry-only runtime lookup.
+     * annotated with [GraphQuery], or if no such file could be found.
      */
     abstract fun getQuery(annotations: Array<out Annotation>): String?
 

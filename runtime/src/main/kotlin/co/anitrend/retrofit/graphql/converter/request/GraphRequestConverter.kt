@@ -33,8 +33,7 @@ import retrofit2.Converter
  * Supports both the legacy [QueryContainerBuilder] flow and the new [GraphQLRequest] flow.
  * When a [GraphQLDocumentRegistry] is provided, it is checked before falling back to the asset-based
  * [AbstractGraphProcessor] lookup (only for [QueryContainerBuilder] flow). Registry-only converter
- * factory overloads intentionally supply a no-op processor, so unresolved operations remain `null`
- * instead of throwing during request conversion.
+ * factory overloads use a strict no-op processor that throws when an annotated operation is missing.
  *
  * @param methodAnnotations Annotations applied to the Retrofit method.
  * @param graphProcessor The processor used for asset-based query resolution.
@@ -96,8 +95,10 @@ open class GraphRequestConverter(
      * 1. Build-time generated registry (if available)
      * 2. Asset-based file discovery
      *
-     * If neither source resolves a document, `null` is returned and serialized as part of the
-     * request body when the configured [Gson] instance includes nulls.
+     * Returns the resolved document when one is found.
+     * Returns `null` when the Retrofit method has no [GraphQuery] annotation and no lookup occurs.
+     * Throws [IllegalStateException] in registry-only mode when an annotated operation is missing
+     * from the registry and no asset fallback is available.
      */
     protected open fun resolveQuery(): String? {
         val operationName = extractOperationName()
@@ -116,6 +117,7 @@ open class GraphRequestConverter(
      * Extracts the operation name from the [GraphQuery] annotation value.
      */
     private fun extractOperationName(): String? {
+        // Keep this extraction logic in sync with GraphConverter.registryOnlyProcessor().getQuery().
         val annotation =
             methodAnnotations.filterIsInstance<GraphQuery>().firstOrNull()
                 ?: return null
