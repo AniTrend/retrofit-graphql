@@ -721,4 +721,133 @@ class FragmentResolverTest {
             resolved.single().document,
         )
     }
+
+    // ---------------------------------------------------------------------------
+    // Directive preservation on fragment spreads (@include, @skip)
+    // ---------------------------------------------------------------------------
+
+    @Test
+    fun `should preserve directives from fragment spread on the inlined inline fragment`() {
+        // When a fragment spread carries directives like @include(if: $enabled),
+        // those directives must be transferred to the generated inline fragment
+        // to preserve the original query semantics.
+        val operations = listOf(
+            GraphQLOperationInfo(
+                name = "GetWithDirective",
+                type = OperationType.QUERY,
+                document = "query GetWithDirective(\$enabled: Boolean!) { item { ...MyFragment @include(if: \$enabled) } }",
+                sourceFile = "directive.graphql",
+            ),
+        )
+
+        val fragments = mapOf(
+            "MyFragment" to GraphQLFragmentInfo(
+                name = "MyFragment",
+                document = "fragment MyFragment on Item { id name }",
+            ),
+        )
+
+        val resolved = resolver.resolve(operations, fragments)
+
+        val resolvedDocument = resolved.single().document
+
+        // The directive should be preserved in the output
+        assertTrue(
+            "Resolved document should contain '@include' directive",
+            resolvedDocument.contains("@include")
+        )
+        assertTrue(
+            "Resolved document should contain '@include(if: \$enabled)'",
+            resolvedDocument.contains("if: \$enabled")
+        )
+        // The fragment spread should be replaced with an inline fragment
+        assertTrue(
+            "Resolved document should contain '... on Item' inline fragment marker",
+            resolvedDocument.contains("... on Item")
+        )
+        // Fragment name should no longer appear
+        assertTrue(
+            "Fragment name 'MyFragment' should not appear in resolved document",
+            !resolvedDocument.contains("MyFragment")
+        )
+    }
+
+    @Test
+    fun `should preserve @skip directive from fragment spread on the inlined inline fragment`() {
+        val operations = listOf(
+            GraphQLOperationInfo(
+                name = "GetWithSkip",
+                type = OperationType.QUERY,
+                document = "query GetWithSkip(\$skip: Boolean!) { item { ...MyFragment @skip(if: \$skip) } }",
+                sourceFile = "directive.graphql",
+            ),
+        )
+
+        val fragments = mapOf(
+            "MyFragment" to GraphQLFragmentInfo(
+                name = "MyFragment",
+                document = "fragment MyFragment on Item { id name }",
+            ),
+        )
+
+        val resolved = resolver.resolve(operations, fragments)
+
+        val resolvedDocument = resolved.single().document
+
+        // The @skip directive should be preserved
+        assertTrue(
+            "Resolved document should contain '@skip' directive",
+            resolvedDocument.contains("@skip")
+        )
+        assertTrue(
+            "Resolved document should contain '@skip(if: \$skip)'",
+            resolvedDocument.contains("if: \$skip")
+        )
+        assertTrue(
+            "Resolved document should contain inline fragment marker",
+            resolvedDocument.contains("... on Item")
+        )
+        assertTrue(
+            "Fragment name 'MyFragment' should not appear",
+            !resolvedDocument.contains("MyFragment")
+        )
+    }
+
+    @Test
+    fun `should handle fragment spreads without directives`() {
+        // Regression test: a spread without directives should still inline correctly
+        // (directives list is null/empty, not carrying any)
+        val operations = listOf(
+            GraphQLOperationInfo(
+                name = "GetNoDirective",
+                type = OperationType.QUERY,
+                document = "query GetNoDirective { item { ...MyFragment } }",
+                sourceFile = "no_directive.graphql",
+            ),
+        )
+
+        val fragments = mapOf(
+            "MyFragment" to GraphQLFragmentInfo(
+                name = "MyFragment",
+                document = "fragment MyFragment on Item { id name }",
+            ),
+        )
+
+        val resolved = resolver.resolve(operations, fragments)
+
+        val resolvedDocument = resolved.single().document
+
+        assertTrue(
+            "Resolved document should contain 'id' from inlined fragment",
+            "id" in resolvedDocument
+        )
+        assertTrue(
+            "Resolved document should contain 'name' from inlined fragment",
+            "name" in resolvedDocument
+        )
+        assertTrue(
+            "Fragment name 'MyFragment' should not appear",
+            !resolvedDocument.contains("MyFragment")
+        )
+    }
 }

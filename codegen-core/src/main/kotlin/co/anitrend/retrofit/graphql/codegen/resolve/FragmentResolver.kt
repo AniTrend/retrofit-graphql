@@ -20,6 +20,7 @@ import co.anitrend.retrofit.graphql.codegen.model.GraphQLFragmentInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
 import graphql.language.AstPrinter
 import graphql.language.AstTransformer
+import graphql.language.Directive
 import graphql.language.FragmentDefinition
 import graphql.language.FragmentSpread
 import graphql.language.InlineFragment
@@ -43,7 +44,8 @@ import graphql.util.TreeTransformerUtil
  *    definitions cause immediate failure.
  * 2. **Cycle detection** — validates that no cycles exist among reachable fragments.
  * 3. **Inlining** — replaces each [FragmentSpread] with an [InlineFragment] carrying
- *    the definition's selection set and type condition.
+ *    the definition's selection set, type condition, and any directives
+ *    (e.g. `@include`, `@skip`) from the original spread node.
  * 4. **Invariant check** — verifies no named fragment spreads remain after inlining.
  */
 class FragmentResolver {
@@ -120,13 +122,20 @@ class FragmentResolver {
                                 ?: return TraversalControl.CONTINUE
 
                         // Replace spread with an inline fragment that carries the definition's
-                        // selection set and type condition. The AstTransformer will continue
+                        // selection set and type condition, plus any directives (e.g. @include,
+                        // @skip) from the original spread. The AstTransformer will continue
                         // traversing into the children of this new node, resolving any nested
                         // FragmentSpread references automatically.
+                        val spreadDirectives: List<Directive> = node.directives
                         val inlineFragment =
                             InlineFragment.newInlineFragment()
                                 .typeCondition(definition.typeCondition)
                                 .selectionSet(definition.selectionSet)
+                                .also { builder ->
+                                    if (spreadDirectives.isNotEmpty()) {
+                                        builder.directives(spreadDirectives)
+                                    }
+                                }
                                 .build()
 
                         return TreeTransformerUtil.changeNode(
