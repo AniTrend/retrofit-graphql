@@ -42,7 +42,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.APP_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           signoff: true
           delete-branch: true
           commit-message: "automation: update version.properties to v${{ github.event.client_payload.version }}"
