@@ -32,14 +32,17 @@ autolabeler:
     branch:
       - '/bugfix\/.+/'
       - '/hotfix\/.+/'
+      - '/fix\/.+/'
   - label: 'feature'
     branch:
       - '/feature\/.+/'
+      - '/feat\/.+/'
   - label: 'enhancement'
     branch:
       - '/enhancement\/.+/'
   - label: 'refactor'
     branch:
+      - '/chore\/.+/'
       - '/refactor\/.+/'
   - label: 'dependencies'
     branch:
