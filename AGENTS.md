@@ -61,7 +61,7 @@ The project is organized into composable modules under the `co.anitrend.retrofit
 | `:android-assets` | Android | Runtime asset-based query discovery: `GraphProcessor`, `AssetManagerDiscoveryPlugin`, APQ, logging |
 | `:runtime` | Android | Retrofit `Converter.Factory`: `GraphConverter`, `GraphRequestConverter`, `GraphResponseConverter`. Depends on `:api`, `:android-assets`, `:annotations` |
 | `:codegen-core` | Kotlin JVM | Code generation engine: parses `.graphql` files with graphql-java, generates Kotlin with KotlinPoet. Uses `SchemaIndex` for typed schema metadata, `GraphQLTypeMapper` for kind-aware mapping, `GraphQLDefaultValueRenderer` for default literals, and `GraphQLTypeUsageValidator` for recursive scalar validation. |
-| `:gradle-plugin` | Gradle Plugin | Plugin `id("co.anitrend.retrofit.graphql.codegen")`. Registers `GenerateGraphQLSourcesTask`, wires output into source sets. Lives in composite build under `pluginManagement` |
+| `:gradle-plugin` | Gradle Plugin | Plugin `id("co.anitrend.retrofit.graphql.codegen")`. Registers `GenerateGraphQLSourcesTask`, wires output into source sets, owns standalone functional tests, and publishes its own marker/implementation artifacts from the composite build. |
 | `:serialization-gson` | Android | Gson-backed `GraphQLJson` serialization |
 | `:serialization-kotlinx` | Android | kotlinx.serialization-backed `GraphQLJson` |
 | `:library` | Android | **Deprecated** aggregator. Re-exports all modules via `api()`. Contains type aliases from old `io.github.wax911.library` package |
@@ -83,7 +83,7 @@ The project is organized into composable modules under the `co.anitrend.retrofit
 - **Toolchain**: Java/Kotlin 21 (pinned in `.java-version`). Local dev uses `jenv`; CI uses `actions/setup-java`.
 - **SDK**: `compileSdk=37`, `minSdk=23`, `targetSdk=37`.
 - **Formatting**: Ktlint via Spotless. License header at `spotless/copyright.kt`.
-- **Publishing**: JitPack. JitPack badge/coordinates at top of README.
+- **Publishing**: JitPack. Root modules publish from the main build; the standalone `:gradle-plugin` composite build must also publish separately. `.jitpack.yml` runs both `./gradlew build publishToMavenLocal` and `./gradlew -p gradle-plugin publishToMavenLocal` so plugin marker + implementation artifacts and the included `:codegen-core` dependency are materialized for JitPack.
 - **CI**: Only `:library` is built/tested in CI environments. It serves as the aggregate facade and transitively builds all sub-modules via `api()` deps. `:app` is excluded in CI (see `settings.gradle.kts`).
 - **Dokka**: Generated via `buildSrc` `AndroidOptions.kt`. Published at `https://anitrend.github.io/retrofit-graphql/`. Currently generates from `:library` only; multi-module Dokka is a planned follow-up.
 

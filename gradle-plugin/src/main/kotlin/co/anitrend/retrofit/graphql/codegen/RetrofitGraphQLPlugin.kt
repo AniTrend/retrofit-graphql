@@ -202,14 +202,30 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
         // Wire generated sources into the appropriate source set
         wireSourceSet(project, taskProvider)
 
-        // Wire compile and KSP tasks to depend on generation
+        // Wire Kotlin compilation and symbol-processing tasks to depend on generation.
         project.tasks.configureEach { task ->
-            if (task.name.startsWith("compile") && task.name.contains("Kotlin") ||
-                task.name.startsWith("ksp") && task.name.contains("Kotlin")
-            ) {
+            if (shouldDependOnGraphQLGeneration(task.name)) {
                 task.dependsOn(taskProvider)
             }
         }
+    }
+
+    private fun shouldDependOnGraphQLGeneration(taskName: String): Boolean {
+        return isKotlinCompileTask(taskName) ||
+            isKspKotlinTask(taskName) ||
+            isKaptGenerateStubsKotlinTask(taskName)
+    }
+
+    private fun isKotlinCompileTask(taskName: String): Boolean {
+        return taskName.startsWith("compile") && taskName.contains("Kotlin")
+    }
+
+    private fun isKspKotlinTask(taskName: String): Boolean {
+        return taskName.startsWith("ksp") && taskName.contains("Kotlin")
+    }
+
+    private fun isKaptGenerateStubsKotlinTask(taskName: String): Boolean {
+        return taskName.startsWith("kaptGenerateStubs") && taskName.contains("Kotlin")
     }
 
     private fun wireSourceSet(
@@ -236,8 +252,49 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
 
         // Kotlin JVM
         project.plugins.withId("org.jetbrains.kotlin.jvm") {
+            wireKotlinJvmSourceSet(project, generatedDir)
             val sourceSets = project.extensions.findByType(SourceSetContainer::class.java)
             sourceSets?.getByName("main")?.java?.srcDir(generatedDir)
         }
+    }
+
+    private fun wireKotlinJvmSourceSet(
+        project: Project,
+        generatedDir: java.io.File,
+    ) {
+        val kotlinExtension =
+            project.extensions.findByName("kotlin") ?: return project.logger.warn(
+                "retrofit-graphql: unable to wire generated Kotlin sources because the 'kotlin' extension was not found.",
+            )
+        val sourceSets =
+            kotlinExtension.javaClass.methods
+                .firstOrNull { it.name == "getSourceSets" && it.parameterCount == 0 }
+                ?.invoke(kotlinExtension)
+                ?: return project.logger.warn(
+                    "retrofit-graphql: unable to wire generated Kotlin sources because kotlin source sets were not accessible.",
+                )
+        val mainSourceSet =
+            sourceSets.javaClass.methods
+                .firstOrNull { it.name == "getByName" && it.parameterCount == 1 }
+                ?.invoke(sourceSets, "main")
+                ?: return project.logger.warn(
+                    "retrofit-graphql: unable to wire generated Kotlin sources because the main Kotlin source set was not found.",
+                )
+        val kotlinSources =
+            mainSourceSet.javaClass.methods
+                .firstOrNull { it.name == "getKotlin" && it.parameterCount == 0 }
+                ?.invoke(mainSourceSet)
+                ?: return project.logger.warn(
+                    "retrofit-graphql: unable to wire generated Kotlin sources because the Kotlin source directory API was not found.",
+                )
+
+        val srcDirMethod =
+            kotlinSources.javaClass.methods
+                .firstOrNull { it.name == "srcDir" && it.parameterCount == 1 }
+                ?: return project.logger.warn(
+                    "retrofit-graphql: unable to wire generated Kotlin sources because srcDir(any) was not available on the Kotlin source directory API.",
+                )
+
+        srcDirMethod.invoke(kotlinSources, generatedDir)
     }
 }
