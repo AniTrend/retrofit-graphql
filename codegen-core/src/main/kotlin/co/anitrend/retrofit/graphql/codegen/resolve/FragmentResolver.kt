@@ -34,10 +34,17 @@ import graphql.util.TreeTransformerUtil
  * Resolves fragment references in operations by inlining fragment definitions.
  *
  * Fragment references (`...FragmentName`) are replaced with [InlineFragment] nodes
- * containing the fragment's selection set. The AstTransformer recursively handles
- * nested fragments.
+ * containing the fragment's selection set. The [AstTransformer] recursively visits
+ * transformed nodes, so nested fragment references are resolved automatically.
  *
- * Cyclic fragment references are detected and rejected before transformation.
+ * The resolution proceeds in distinct phases:
+ * 1. **Transitive reachability** — computes the full transitive closure of fragment
+ *    names reachable from each operation's direct fragment spreads. Missing fragment
+ *    definitions cause immediate failure.
+ * 2. **Cycle detection** — validates that no cycles exist among reachable fragments.
+ * 3. **Inlining** — replaces each [FragmentSpread] with an [InlineFragment] carrying
+ *    the definition's selection set and type condition.
+ * 4. **Invariant check** — verifies no named fragment spreads remain after inlining.
  */
 class FragmentResolver {
     private val parser = Parser()
@@ -72,8 +79,15 @@ class FragmentResolver {
 
     /**
      * Flattens all fragment references in a document string by inlining their definitions
-     * as [InlineFragment] nodes. Uses [AstTransformer] which recursively visits transformed
-     * nodes, so nested fragment references are resolved automatically.
+     * as [InlineFragment] nodes.
+     *
+     * Resolution phases:
+     * 1. Parse document to AST.
+     * 2. Compute all transitively-reachable fragment names from the operation's
+     *    direct fragment spreads, validating that every referenced fragment exists.
+     * 3. Detect cycles among the reachable fragments.
+     * 4. Transform: replace each [FragmentSpread] with an inline fragment.
+     * 5. Validate: no named fragment spreads remain (defensive invariant check).
      */
     private fun flattenFragments(
         documentText: String,
@@ -81,14 +95,15 @@ class FragmentResolver {
     ): String {
         val document = parser.parseDocument(documentText)
 
-        // Validate: no missing or cyclic fragments
-        val referencedNames = collectReferencedNames(document)
-        checkForCycles(referencedNames, fragmentDefinitions)
+        // Phase 1: Compute full transitive closure of reachable fragment names
+        val reachableNames = computeReachableFragments(document, fragmentDefinitions)
+        if (reachableNames.isEmpty()) return documentText
 
-        if (referencedNames.isEmpty()) return documentText
+        // Phase 2: Validate no cycles among reachable fragments
+        detectCycles(reachableNames, fragmentDefinitions)
 
-        // Filter to only fragments actually referenced from this document
-        val relevantDefinitions = fragmentDefinitions.filterKeys { it in referencedNames }
+        // Phase 3: Inline fragments using AstTransformer
+        val relevantDefinitions = fragmentDefinitions.filterKeys { it in reachableNames }
 
         val transformer = AstTransformer()
         val transformed =
@@ -122,44 +137,76 @@ class FragmentResolver {
                 },
             )
 
-        // Re-print with deterministic formatting
+        // Phase 4: Defensive invariant check — no named fragment spreads should
+        // remain after inlining. This catches bugs where a fragment spread name
+        // was not found in relevantDefinitions (e.g. missing from transitive closure).
+        val remainingSpreads = collectSpreadNames(transformed)
+        if (remainingSpreads.isNotEmpty()) {
+            throw IllegalStateException(
+                "Incomplete fragment resolution: the following fragment spread(s) remain " +
+                    "unresolved after inlining: ${remainingSpreads.joinToString(", ")}. " +
+                    "Ensure all referenced fragment definitions are included in the " +
+                    "fragment definitions map.",
+            )
+        }
+
+        // Serialize the transformed AST back to a GraphQL document string
         return AstPrinter.printAst(transformed)
     }
 
-    private fun collectReferencedNames(document: graphql.language.Document): Set<String> {
-        val names = mutableSetOf<String>()
-        NodeTraverser().depthFirst(
-            object : NodeVisitorStub() {
-                override fun visitFragmentSpread(
-                    node: FragmentSpread,
-                    context: TraverserContext<graphql.language.Node<*>>,
-                ): TraversalControl {
-                    names.add(node.name)
-                    return TraversalControl.CONTINUE
-                }
-            },
-            document,
-        )
-        return names
-    }
-
     /**
-     * Detects cycles and missing definitions in fragment references.
-     * Throws [IllegalArgumentException] with a descriptive message on failure.
+     * Computes the full transitive closure of fragment names reachable from
+     * the operation document's fragment spreads, following fragment spreads into
+     * fragment definitions.
+     *
+     * Uses a BFS-style queue to traverse the fragment graph. Each fragment definition
+     * is scanned for nested fragment spreads, and those names are added to the queue
+     * for further traversal. This process continues until all reachable fragments
+     * have been visited.
+     *
+     * @throws IllegalArgumentException if a referenced fragment is not defined in
+     *  [fragmentDefinitions].
      */
-    private fun checkForCycles(
-        fragmentNames: Set<String>,
+    private fun computeReachableFragments(
+        document: graphql.language.Document,
         fragmentDefinitions: Map<String, FragmentDefinition>,
-    ) {
-        for (name in fragmentNames) {
+    ): Set<String> {
+        val directNames = collectSpreadNames(document)
+        if (directNames.isEmpty()) return emptySet()
+
+        val reachable = mutableSetOf<String>()
+        val queue = ArrayDeque(directNames)
+
+        while (queue.isNotEmpty()) {
+            val name = queue.removeFirst()
+            if (!reachable.add(name)) continue
+
             val definition =
                 fragmentDefinitions[name]
                     ?: throw IllegalArgumentException(
                         "Fragment '$name' is referenced but not defined. " +
                             "Available fragments: ${fragmentDefinitions.keys}",
                     )
+
+            // Collect nested fragment spreads within this fragment's selection set
+            val nestedNames = collectSpreadNames(definition)
+            queue.addAll(nestedNames)
         }
 
+        return reachable
+    }
+
+    /**
+     * Detects cycles among the given fragment names by traversing the fragment
+     * dependency graph with DFS. A cycle is detected when a fragment is encountered
+     * again while it is still on the current DFS recursion stack.
+     *
+     * @throws IllegalArgumentException with the cycle path if a cycle is found.
+     */
+    private fun detectCycles(
+        fragmentNames: Set<String>,
+        fragmentDefinitions: Map<String, FragmentDefinition>,
+    ) {
         val visited = mutableSetOf<String>()
         val inStack = mutableSetOf<String>()
 
@@ -171,27 +218,47 @@ class FragmentResolver {
             }
             if (name in visited) return
 
-            val definition = fragmentDefinitions[name] ?: return
+            val definition = fragmentDefinitions[name]
+                ?: throw IllegalArgumentException(
+                    "Fragment '$name' is referenced but not defined. " +
+                        "Available fragments: ${fragmentDefinitions.keys}",
+                )
+
             inStack.add(name)
             visited.add(name)
 
-            // Find fragment references within this fragment definition
-            NodeTraverser().depthFirst(
-                object : NodeVisitorStub() {
-                    override fun visitFragmentSpread(
-                        node: FragmentSpread,
-                        context: TraverserContext<graphql.language.Node<*>>,
-                    ): TraversalControl {
-                        dfs(node.name)
-                        return TraversalControl.CONTINUE
-                    }
-                },
-                definition,
-            )
+            val nestedNames = collectSpreadNames(definition)
+            // Only follow references that exist in our reachable fragment set
+            for (nestedName in nestedNames) {
+                if (nestedName in fragmentNames) {
+                    dfs(nestedName)
+                }
+            }
 
             inStack.remove(name)
         }
 
         fragmentNames.forEach { dfs(it) }
+    }
+
+    /**
+     * Collects all [FragmentSpread] names from any AST node (document, definition,
+     * selection set) using a depth-first traversal.
+     */
+    private fun collectSpreadNames(node: graphql.language.Node<*>): Set<String> {
+        val names = mutableSetOf<String>()
+        NodeTraverser().depthFirst(
+            object : NodeVisitorStub() {
+                override fun visitFragmentSpread(
+                    node: FragmentSpread,
+                    context: TraverserContext<graphql.language.Node<*>>,
+                ): TraversalControl {
+                    names.add(node.name)
+                    return TraversalControl.CONTINUE
+                }
+            },
+            node,
+        )
+        return names
     }
 }
