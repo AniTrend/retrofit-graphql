@@ -88,79 +88,73 @@ class FragmentResolver {
      * 2. Compute all transitively-reachable fragment names from the operation's
      *    direct fragment spreads, validating that every referenced fragment exists.
      * 3. Detect cycles among the reachable fragments.
-     * 4. Transform: replace each [FragmentSpread] with an inline fragment.
-     * 5. Validate: no named fragment spreads remain (defensive invariant check).
+     * 4. Iteratively transform: replace each [FragmentSpread] with an inline
+     *    fragment.  Because the [AstTransformer] does not recursively visit the
+     *    **children** of nodes inserted via [TreeTransformerUtil.changeNode], a
+     *    single pass leaves nested fragment spreads unresolved.  We therefore
+     *    loop: after each pass we check whether any fragment spreads remain and,
+     *    if so, re-transform the result.  The loop exits when the invariant check
+     *    passes.
+     * 5. Serialize the fully-resolved AST back to a GraphQL document string.
      */
     private fun flattenFragments(
         documentText: String,
         fragmentDefinitions: Map<String, FragmentDefinition>,
     ): String {
-        val document = parser.parseDocument(documentText)
-
         // Phase 1: Compute full transitive closure of reachable fragment names
-        val reachableNames = computeReachableFragments(document, fragmentDefinitions)
+        val firstDocument = parser.parseDocument(documentText)
+        val reachableNames = computeReachableFragments(firstDocument, fragmentDefinitions)
         if (reachableNames.isEmpty()) return documentText
 
         // Phase 2: Validate no cycles among reachable fragments
         detectCycles(reachableNames, fragmentDefinitions)
 
-        // Phase 3: Inline fragments using AstTransformer
         val relevantDefinitions = fragmentDefinitions.filterKeys { it in reachableNames }
 
+        // Phase 3-4: Iteratively inline fragments until no spreads remain.
+        // The AstTransformer does not recursively visit children of nodes
+        // inserted via changeNode, so nested spreads (e.g. ...MediaTitleFragment
+        // inside ...MediaCoreFragment) require multiple passes.
         val transformer = AstTransformer()
-        val transformed =
-            transformer.transform(
-                document,
-                object : NodeVisitorStub() {
-                    @Suppress("UNCHECKED_CAST")
-                    override fun visitFragmentSpread(
-                        node: FragmentSpread,
-                        context: TraverserContext<graphql.language.Node<*>>,
-                    ): TraversalControl {
-                        val definition =
-                            relevantDefinitions[node.name]
-                                ?: return TraversalControl.CONTINUE
+        val spreadVisitor =
+            object : NodeVisitorStub() {
+                @Suppress("UNCHECKED_CAST")
+                override fun visitFragmentSpread(
+                    node: FragmentSpread,
+                    context: TraverserContext<graphql.language.Node<*>>,
+                ): TraversalControl {
+                    val definition =
+                        relevantDefinitions[node.name]
+                            ?: return TraversalControl.CONTINUE
 
-                        // Replace spread with an inline fragment that carries the definition's
-                        // selection set and type condition, plus any directives (e.g. @include,
-                        // @skip) from the original spread. The AstTransformer will continue
-                        // traversing into the children of this new node, resolving any nested
-                        // FragmentSpread references automatically.
-                        val spreadDirectives: List<Directive> = node.directives
-                        val inlineFragment =
-                            InlineFragment.newInlineFragment()
-                                .typeCondition(definition.typeCondition)
-                                .selectionSet(definition.selectionSet)
-                                .also { builder ->
-                                    if (spreadDirectives.isNotEmpty()) {
-                                        builder.directives(spreadDirectives)
-                                    }
+                    val spreadDirectives: List<Directive> = node.directives
+                    val inlineFragment =
+                        InlineFragment.newInlineFragment()
+                            .typeCondition(definition.typeCondition)
+                            .selectionSet(definition.selectionSet)
+                            .also { builder ->
+                                if (spreadDirectives.isNotEmpty()) {
+                                    builder.directives(spreadDirectives)
                                 }
-                                .build()
+                            }
+                            .build()
 
-                        return TreeTransformerUtil.changeNode(
-                            context as TraverserContext<InlineFragment>,
-                            inlineFragment,
-                        )
-                    }
-                },
-            )
+                    return TreeTransformerUtil.changeNode(
+                        context as TraverserContext<InlineFragment>,
+                        inlineFragment,
+                    )
+                }
+            }
 
-        // Phase 4: Defensive invariant check — no named fragment spreads should
-        // remain after inlining. This catches bugs where a fragment spread name
-        // was not found in relevantDefinitions (e.g. missing from transitive closure).
-        val remainingSpreads = collectSpreadNames(transformed)
-        if (remainingSpreads.isNotEmpty()) {
-            throw IllegalStateException(
-                "Incomplete fragment resolution: the following fragment spread(s) remain " +
-                    "unresolved after inlining: ${remainingSpreads.joinToString(", ")}. " +
-                    "Ensure all referenced fragment definitions are included in the " +
-                    "fragment definitions map.",
-            )
-        }
+        var document = firstDocument
+        var remainingSpreads: Set<String>
+        do {
+            document = transformer.transform(document, spreadVisitor) as graphql.language.Document
+            remainingSpreads = collectSpreadNames(document)
+        } while (remainingSpreads.isNotEmpty())
 
         // Serialize the transformed AST back to a GraphQL document string
-        return AstPrinter.printAst(transformed)
+        return AstPrinter.printAst(document)
     }
 
     /**
