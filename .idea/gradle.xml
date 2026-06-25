@@ -12,6 +12,17 @@
                   <project path="$PROJECT_DIR$/buildSrc" />
                 </projects>
               </build>
+              <build path="$PROJECT_DIR$/gradle-plugin" name="gradle-plugin">
+                <projects>
+                  <project path="$PROJECT_DIR$/codegen-core" />
+                  <project path="$PROJECT_DIR$/gradle-plugin" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/gradle-plugin/buildSrc" name="buildSrc">
+                <projects>
+                  <project path="$PROJECT_DIR$/gradle-plugin/buildSrc" />
+                </projects>
+              </build>
             </builds>
           </compositeBuild>
         </compositeConfiguration>
@@ -21,9 +32,18 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/android-assets" />
+            <option value="$PROJECT_DIR$/annotations" />
+            <option value="$PROJECT_DIR$/api" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/buildSrc" />
+            <option value="$PROJECT_DIR$/codegen-core" />
+            <option value="$PROJECT_DIR$/gradle-plugin" />
+            <option value="$PROJECT_DIR$/gradle-plugin/buildSrc" />
             <option value="$PROJECT_DIR$/library" />
+            <option value="$PROJECT_DIR$/runtime" />
+            <option value="$PROJECT_DIR$/serialization-gson" />
+            <option value="$PROJECT_DIR$/serialization-kotlinx" />
           </set>
         </option>
       </GradleProjectSettings>
