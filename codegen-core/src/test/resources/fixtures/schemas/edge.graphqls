@@ -1,0 +1,38 @@
+"""Standard String scalar per the GraphQL specification."""
+scalar String
+
+"""Standard Int scalar per the GraphQL specification."""
+scalar Int
+
+"""Standard ID scalar per the GraphQL specification."""
+scalar ID
+
+"""An image resource."""
+type PosterImage {
+  """A small-sized poster image."""
+  small: String
+  """A medium-sized poster image."""
+  medium: String
+}
+
+"""An anime entry."""
+type Anime {
+  """The anime ID."""
+  id: ID!
+  """The canonical (preferred) title."""
+  canonicalTitle: String
+  """The poster/cover image."""
+  posterImage: PosterImage
+}
+
+"""An anime connection."""
+type AnimeConnection {
+  """List of anime nodes."""
+  nodes: [Anime]
+}
+
+"""Root query type for the Edge API."""
+type Query {
+  """Get trending anime."""
+  trending: AnimeConnection
+}

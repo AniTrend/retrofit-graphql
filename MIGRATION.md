@@ -96,6 +96,7 @@ dependencies {
 retrofitGraphQL {
     common {
         generateVariables.set(true)
+        generateResponses.set(true)  // opt-in response model generation
     }
     packageName.set("your.package.generated")
     schema.set(file("src/main/graphql/schema.graphql"))
@@ -125,6 +126,7 @@ Generated output (under `build/generated/source/graphql/`) includes:
 - Variable classes — typed data classes implementing `GraphQLVariables` (when `generateVariables = true`)
 - Input object classes — typed data classes for GraphQL input types (when `generateVariables = true`)
 - Request helpers — `.request(...)` factory methods on operation objects returning `GraphQLRequest<VariableType>` (when `generateVariables = true`)
+- Response model classes — kotlinx-serializable `{OperationName}Data` classes with nested types for selected fields (when `generateResponses = true`)
 
 Wire the registry into your converter via Koin or manual construction:
 ```kotlin
@@ -194,6 +196,43 @@ retrofitGraphQL {
 ```
 
 Scalars that appear in the schema but are not mapped will cause a build error with a path-aware message indicating where the unmapped scalar was encountered. Scalars that are mapped but absent from the schema (e.g. `"Upload"`) are allowed — they generate no type but do not fail the build.
+
+### Response Model Generation
+
+When `generateResponses` is enabled (default `false`), the codegen plugin generates kotlinx-serializable response model data classes for each operation's selection set.
+
+**Features:**
+- Operation-scoped models representing the exact JSON shape of each query/mutation
+- `@Serializable` and `@SerialName` annotations for kotlinx serialization
+- Alias-aware property naming (distinct property per aliased field)
+- List nullability preservation (container and element nullability)
+- Conditional field handling (`@include`/`@skip` → nullable types with `null` defaults)
+- Sealed interface generation for GraphQL interfaces and unions with `__typename`-based polymorphism
+
+**Usage:**
+```kotlin
+retrofitGraphQL {
+    common {
+        generateResponses.set(true)
+    }
+    target("anilist") {
+        schema.set(file("src/main/graphql/anilist/schema.graphql"))
+        operations.from(fileTree("src/main/graphql/anilist"))
+    }
+}
+```
+
+**Consumer integration:**
+```kotlin
+// Configure kotlinx Json for __typename polymorphism
+val json = Json { classDiscriminator = "__typename" }
+
+// Decode responses into generated types
+@GET("graphql")
+suspend fun getMedia(@Body request: GraphQLRequest<GetMediaDetailVariables>): GraphContainer<GetMediaDetailData>
+```
+
+Generated types are transport DTOs. Map them to your domain models at the Retrofit boundary rather than exposing generated classes throughout your application.
 
 ### Custom Serialization Backend
 

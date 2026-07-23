@@ -89,6 +89,9 @@ object GraphQLTypeMapper {
         when (schemaIndex.definition(name)) {
             is SchemaType.InputObject,
             is SchemaType.Enum,
+            is SchemaType.ObjectType,
+            is SchemaType.InterfaceType,
+            is SchemaType.UnionType,
             -> return ClassName(packageName, name)
             is SchemaType.Scalar -> {
                 error(

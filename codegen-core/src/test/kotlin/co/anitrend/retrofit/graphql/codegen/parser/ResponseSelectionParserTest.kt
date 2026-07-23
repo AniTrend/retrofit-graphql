@@ -1,0 +1,332 @@
+/**
+ * Copyright 2026 AniTrend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package co.anitrend.retrofit.graphql.codegen.parser
+
+import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
+import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
+import co.anitrend.retrofit.graphql.codegen.model.OperationType
+import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
+import co.anitrend.retrofit.graphql.codegen.schema.SchemaCompiler
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import java.io.File
+
+class ResponseSelectionParserTest {
+
+    private lateinit var githubIndex: SchemaIndex
+    private lateinit var anilistIndex: SchemaIndex
+    private lateinit var schemaCompiler: SchemaCompiler
+
+    @Before
+    fun setUp() {
+        schemaCompiler = SchemaCompiler()
+
+        val githubFile =
+            fixtureFile(
+                "fixtures/simple/schemas/github-simple.graphqls",
+            )
+        val githubTypes =
+            SchemaParser().parseWithRootTypes(githubFile)
+        githubIndex =
+            SchemaIndex.from(
+                types = githubTypes.types,
+                queryTypeName = githubTypes.queryTypeName,
+                mutationTypeName = githubTypes.mutationTypeName,
+                subscriptionTypeName = githubTypes.subscriptionTypeName,
+            )
+
+        val anilistFile =
+            fixtureFile("fixtures/schemas/anilist.graphqls")
+        val anilistTypes =
+            SchemaParser().parseWithRootTypes(anilistFile)
+        anilistIndex =
+            SchemaIndex.from(
+                types = anilistTypes.types,
+                queryTypeName = anilistTypes.queryTypeName,
+                mutationTypeName = anilistTypes.mutationTypeName,
+                subscriptionTypeName = anilistTypes.subscriptionTypeName,
+            )
+    }
+
+    // --- Simple query ---
+
+    @Test
+    fun `parses simple query with scalar fields`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val operation = buildOperation(
+            name = "GetUser",
+            type = OperationType.QUERY,
+            document = operationText("fixtures/simple/queries/GetUser.graphql"),
+        )
+
+        val result = parser.parse(operation)
+
+        assertEquals("Query", result.parentType)
+        assertEquals(1, result.fields.size)
+
+        val viewer = result.fields.first()
+        assertEquals("viewer", viewer.responseName)
+        assertEquals("viewer", viewer.schemaName)
+        assertEquals("User", resolveNamed(viewer.outputType))
+
+        val userFields = viewer.selectionSet!!
+        assertEquals("User", userFields.parentType)
+        val fieldNames = userFields.fields.map { it.responseName }
+        assertTrue(fieldNames.containsAll(listOf("id", "login", "name", "bio")))
+    }
+
+    // --- Mutation ---
+
+    @Test
+    fun `parses mutation with nested response`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val operation = buildOperation(
+            name = "UpdateBio",
+            type = OperationType.MUTATION,
+            document = operationText(
+                "fixtures/simple/mutations/UpdateBio.graphql",
+            ),
+        )
+
+        val result = parser.parse(operation)
+
+        assertEquals("Mutation", result.parentType)
+        val updateBio = result.fields.first { it.responseName == "updateBio" }
+        val nested = updateBio.selectionSet!!
+        val user = nested.fields.first { it.responseName == "user" }
+        val userFields = user.selectionSet!!
+        val fieldNames = userFields.fields.map { it.responseName }
+        assertTrue(fieldNames.containsAll(listOf("id", "bio")))
+    }
+
+    // --- Aliased fields ---
+
+    @Test
+    fun `parses aliased fields with correct response names`() {
+        val parser = ResponseSelectionParser(anilistIndex)
+        val operation = buildOperation(
+            name = "AliasedFields",
+            type = OperationType.QUERY,
+            document = operationText(
+                "fixtures/advanced/aliases/AliasedFields.graphql",
+            ),
+        )
+
+        val result = parser.parse(operation)
+
+        val media = result.fields.first { it.responseName == "Media" }
+        val mediaFields = media.selectionSet!!
+
+        val englishTitle = mediaFields.fields.find { it.responseName == "englishTitle" }
+        assertNotNull("Should have aliased englishTitle", englishTitle)
+        assertEquals("title", englishTitle!!.schemaName)
+        assertEquals(
+            "english",
+            englishTitle.selectionSet!!.fields.first().responseName,
+        )
+
+        val nativeTitle = mediaFields.fields.find { it.responseName == "nativeTitle" }
+        assertNotNull("Should have aliased nativeTitle", nativeTitle)
+        assertEquals("title", nativeTitle!!.schemaName)
+        assertEquals(
+            "native",
+            nativeTitle.selectionSet!!.fields.first().responseName,
+        )
+    }
+
+    // --- Deterministic ordering ---
+
+    @Test
+    fun `fields are ordered by responseName`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val operation = buildOperation(
+            name = "GetUser",
+            type = OperationType.QUERY,
+            document = operationText("fixtures/simple/queries/GetUser.graphql"),
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first()
+        val fieldNames = viewer.selectionSet!!.fields.map { it.responseName }
+        assertEquals(fieldNames.sorted(), fieldNames)
+    }
+
+    // --- List types ---
+
+    @Test
+    fun `parses list field types`() {
+        val parser = ResponseSelectionParser(anilistIndex)
+        val document =
+            """query TestQuery { Page { media { id } } }""".trimIndent()
+        val operation = buildOperation(
+            name = "TestQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val page = result.fields.first { it.responseName == "Page" }
+        val media = page.selectionSet!!.fields.first { it.responseName == "media" }
+        assertTrue(media.outputType is GraphQLType.List)
+    }
+
+    // --- Schema validation ---
+
+    @Test
+    fun `valid operation passes schema validation`() {
+        val schema = schemaCompiler.compile(
+            fixtureFile(
+                "fixtures/simple/schemas/github-simple.graphqls",
+            ).readText(),
+        )
+        val result = schemaCompiler.validate(
+            schema,
+            operationText("fixtures/simple/queries/GetUser.graphql"),
+        )
+        assertTrue("Should be valid: ${result.errors}", result.isValid)
+    }
+
+    // --- Error: invalid field ---
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `invalid field throws path-aware error`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document = """query BadQuery { viewer { nonexistent } }"""
+        val operation = buildOperation(
+            name = "BadQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        parser.parse(operation)
+    }
+
+    // --- Error: missing root type ---
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `missing mutation root type throws`() {
+        // github-simple schema has no subscription type
+        val parser = ResponseSelectionParser(githubIndex)
+        val operation = buildOperation(
+            name = "BadSubscription",
+            type = OperationType.SUBSCRIPTION,
+            document = operationText("fixtures/simple/queries/GetUser.graphql"),
+        )
+
+        parser.parse(operation)
+    }
+
+    // --- Field merge ---
+
+    @Test
+    fun `repeated compatible fields are merged`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document =
+            """
+            query TestMerge {
+              viewer {
+                id
+                login
+              }
+              viewer {
+                name
+                bio
+              }
+            }
+            """.trimIndent()
+        val operation = buildOperation(
+            name = "TestMerge",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first { it.responseName == "viewer" }
+        val fieldNames = viewer.selectionSet!!.fields.map { it.responseName }
+        assertEquals(4, fieldNames.size)
+        assertTrue(fieldNames.containsAll(listOf("id", "login", "name", "bio")))
+    }
+
+    // --- Nested fragments ---
+
+    @Test
+    fun `parses nested fragment selections`() {
+        val parser = ResponseSelectionParser(anilistIndex)
+        val operation = buildOperation(
+            name = "GetMediaDetail",
+            type = OperationType.QUERY,
+            document = operationText(
+                "fixtures/advanced/fragments/MediaDetail.graphql",
+            ),
+        )
+
+        val result = parser.parse(operation)
+
+        val media = result.fields.first { it.responseName == "Media" }
+        val mediaFields = media.selectionSet!!
+
+        // MediaCore fields
+        assertNotNull(mediaFields.fields.find { it.responseName == "id" })
+        val title = mediaFields.fields.find { it.responseName == "title" }
+        assertNotNull(title)
+        val coverImage = mediaFields.fields.find { it.responseName == "coverImage" }
+        assertNotNull(coverImage)
+
+        // MediaExtended fields
+        assertNotNull(mediaFields.fields.find { it.responseName == "description" })
+        assertNotNull(mediaFields.fields.find { it.responseName == "genres" })
+    }
+
+    // --- Helpers ---
+
+    private fun fixtureFile(path: String): File {
+        val url =
+            checkNotNull(
+                this::class.java.classLoader.getResource(path),
+            ) { "Fixture not found: $path" }
+        return File(url.toURI())
+    }
+
+    private fun operationText(path: String): String {
+        return fixtureFile(path).readText()
+    }
+
+    private fun buildOperation(
+        name: String,
+        type: OperationType,
+        document: String,
+    ): GraphQLOperationInfo {
+        return GraphQLOperationInfo(
+            name = name,
+            type = type,
+            document = document,
+            sourceFile = "$name.graphql",
+            variables = emptyList(),
+        )
+    }
+
+    private fun resolveNamed(type: GraphQLType): String {
+        return when (type) {
+            is GraphQLType.Named -> type.name
+            is GraphQLType.List -> resolveNamed(type.of)
+        }
+    }
+}

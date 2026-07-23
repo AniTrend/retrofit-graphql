@@ -22,12 +22,14 @@ import co.anitrend.retrofit.graphql.codegen.generate.HashConstantsGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.InputObjectGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.OperationConstantsGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.OperationRequestGenerator
+import co.anitrend.retrofit.graphql.codegen.generate.ResponseModelGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.RegistryGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.VariableClassGenerator
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLFragmentInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import co.anitrend.retrofit.graphql.codegen.parser.GraphQLDocumentParser
+import co.anitrend.retrofit.graphql.codegen.parser.ResponseSelectionParser
 import co.anitrend.retrofit.graphql.codegen.parser.SchemaParser
 import co.anitrend.retrofit.graphql.codegen.resolve.FragmentResolver
 import co.anitrend.retrofit.graphql.codegen.resolve.FragmentVariablePropagator
@@ -82,6 +84,9 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
 
     @get:Input
     abstract val generateVariables: Property<Boolean>
+
+    @get:Input
+    abstract val generateResponses: Property<Boolean>
 
     @get:Input
     abstract val scalarMappings: MapProperty<String, String>
@@ -139,7 +144,13 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         val schemaIndex =
             if (schemaFile.isPresent && schemaFile.get().asFile.exists()) {
                 val schemaParser = SchemaParser()
-                SchemaIndex.from(schemaParser.parse(schemaFile.get().asFile))
+                val result = schemaParser.parseWithRootTypes(schemaFile.get().asFile)
+                SchemaIndex.from(
+                    types = result.types,
+                    queryTypeName = result.queryTypeName,
+                    mutationTypeName = result.mutationTypeName,
+                    subscriptionTypeName = result.subscriptionTypeName,
+                )
             } else {
                 if (generateVariables.get()) {
                     logger.warn(
@@ -191,6 +202,24 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                 pkg,
                 outputDirectory,
             )
+        }
+
+        // Response model generation
+        if (generateResponses.get()) {
+            if (schemaIndex == SchemaIndex.EMPTY) {
+                logger.warn(
+                    "generateResponses is enabled but no schema file is set. " +
+                        "Response model generation will be skipped.",
+                )
+            } else {
+                generateResponseArtifacts(
+                    resolvedOperations,
+                    schemaIndex,
+                    scalarMap,
+                    pkg,
+                    outputDirectory,
+                )
+            }
         }
 
         logger.lifecycle(
@@ -250,6 +279,30 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                 )
             writeFile(reqFile, outputDirectory)
             logger.info("Generated ${operation.name} request helper")
+        }
+    }
+
+    private fun generateResponseArtifacts(
+        operations: List<GraphQLOperationInfo>,
+        schemaIndex: SchemaIndex,
+        scalarMap: Map<String, String>,
+        pkg: String,
+        outputDirectory: File,
+    ) {
+        val selectionParser = ResponseSelectionParser(schemaIndex)
+        val modelGenerator = ResponseModelGenerator(schemaIndex, scalarMap)
+
+        operations.forEach { operation ->
+            try {
+                val selectionSet = selectionParser.parse(operation)
+                val fileSpecs = modelGenerator.generate(operation, selectionSet, pkg)
+                fileSpecs.forEach { writeFile(it, outputDirectory) }
+                logger.info("Generated ${operation.name}Data response model")
+            } catch (e: Exception) {
+                logger.warn(
+                    "Skipping response model for '${operation.name}': ${e.message}",
+                )
+            }
         }
     }
 

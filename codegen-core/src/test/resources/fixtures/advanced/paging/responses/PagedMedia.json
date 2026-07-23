@@ -1,0 +1,26 @@
+{
+  "data": {
+    "Page": {
+      "pageInfo": {
+        "total": 42,
+        "currentPage": 1,
+        "lastPage": 3,
+        "hasNextPage": true
+      },
+      "media": [
+        {
+          "id": 1,
+          "title": {
+            "romaji": "Cowboy Bebop"
+          }
+        },
+        {
+          "id": 2,
+          "title": {
+            "romaji": "Fullmetal Alchemist: Brotherhood"
+          }
+        }
+      ]
+    }
+  }
+}

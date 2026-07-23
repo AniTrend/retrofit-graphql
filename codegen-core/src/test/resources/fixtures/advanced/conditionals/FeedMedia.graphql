@@ -1,0 +1,18 @@
+query GetFeedMedia($id: Int, $includeActivity: Boolean!) {
+  Page {
+    activities(id: $id) @include(if: $includeActivity) {
+      ... on ListActivity {
+        id
+        status
+        progress
+        media {
+          ...MediaCore
+        }
+      }
+      ... on TextActivity {
+        id
+        text
+      }
+    }
+  }
+}

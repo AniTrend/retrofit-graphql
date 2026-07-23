@@ -1,0 +1,24 @@
+query GetMediaDetail($mediaId: Int) {
+  Media(id: $mediaId) {
+    ...MediaCore
+    ...MediaExtended
+  }
+}
+
+fragment MediaCore on Media {
+  id
+  title {
+    romaji
+    english
+    native
+  }
+  coverImage {
+    large
+    medium
+  }
+}
+
+fragment MediaExtended on Media {
+  description
+  genres
+}

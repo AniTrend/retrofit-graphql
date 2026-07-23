@@ -138,6 +138,9 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
         if (extension.generateVariables.isPresent) {
             target.generateVariables.set(extension.generateVariables)
         }
+        if (extension.generateResponses.isPresent) {
+            target.generateResponses.set(extension.generateResponses)
+        }
         if (extension.outputDir.isPresent) {
             target.outputDir.set(extension.outputDir)
         }
@@ -192,6 +195,9 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
             )
             task.generateVariables.set(
                 target.generateVariables.orElse(common.generateVariables),
+            )
+            task.generateResponses.set(
+                target.generateResponses.orElse(common.generateResponses),
             )
 
             task.scalarMappings.set(

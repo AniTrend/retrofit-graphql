@@ -1,0 +1,21 @@
+query GetMediaCharacters($mediaId: Int) {
+  Media(id: $mediaId) {
+    id
+    characters {
+      nodes {
+        id
+        name {
+          full
+        }
+      }
+    }
+    staff {
+      nodes {
+        id
+        name {
+          full
+        }
+      }
+    }
+  }
+}
