@@ -730,6 +730,130 @@ class ResponseModelGeneratorTest {
         assertNull("Should NOT have merged MediaTitle class", mergedTitleClass)
     }
 
+    // --- Item 1: Nested objects inside abstract subtypes ---
+
+    @Test
+    fun `nested objects inside union inline fragments are generated`() {
+        // Parse notification schema
+        val notificationSchemaFile = fixtureFile("fixtures/schemas/notification.graphqls")
+        val notificationResult = SchemaParser().parseWithRootTypes(notificationSchemaFile)
+        val notificationIndex = SchemaIndex.from(
+            types = notificationResult.types,
+            queryTypeName = notificationResult.queryTypeName,
+            mutationTypeName = notificationResult.mutationTypeName,
+            subscriptionTypeName = notificationResult.subscriptionTypeName,
+        )
+
+        val parser = ResponseSelectionParser(notificationIndex)
+        val generator = ResponseModelGenerator(notificationIndex)
+
+        val operation = buildOperation(
+            name = "GetNotifications",
+            type = OperationType.QUERY,
+            document = fixtureText("fixtures/advanced/unions/GetNotifications.graphql"),
+        )
+        val selectionSet = parser.parse(operation)
+        val fileSpecs = generator.generate(operation, selectionSet, "com.example")
+
+        val dataClass = fileSpecs.first().members
+            .filterIsInstance<TypeSpec>()
+            .first { it.name == "GetNotificationsData" }
+
+        // Page should have a nested notifications sealed interface
+        val pageClass = dataClass.typeSpecs.find { it.name == "Page" }
+        assertNotNull("Should have nested Page class", pageClass)
+
+        val notificationsIface = dataClass.typeSpecs.find { it.name == "PageNotifications" }
+        assertNotNull("Should have sealed interface for notifications", notificationsIface)
+        assertTrue(
+            "Should be sealed",
+            notificationsIface!!.modifiers.contains(KModifier.SEALED),
+        )
+
+        // AiringNotification subtype should exist inside the sealed interface
+        val airingNotif = notificationsIface.typeSpecs.find { it.name == "AiringNotification" }
+        assertNotNull("Should have AiringNotification subtype", airingNotif)
+
+        // AiringNotification should have a 'media' property
+        val mediaProp = airingNotif!!.propertySpecs.find { it.name == "media" }
+        assertNotNull("AiringNotification should have media property", mediaProp)
+
+        // The nested object types should be generated inside the root Data class.
+        // Log all nested type names for debugging
+        val allNestedNames = dataClass.typeSpecs.map { it.name }.filterNotNull()
+        val mediaType = dataClass.typeSpecs.find {
+            it.name == "NotificationsMedia" ||
+                it.name == "PageNotificationsMedia"
+        }
+        assertNotNull(
+            "Should have a nested media type. Found nested types: $allNestedNames",
+            mediaType,
+        )
+
+        // Verify NotificationMediaTitle is also nested
+        val mediaTitleType = dataClass.typeSpecs.find {
+            it.name == "NotificationsMediaTitle" ||
+                it.name == "PageNotificationsMediaTitle" ||
+                it.name == "NotificationMediaTitle"
+        }
+        assertNotNull(
+            "Should have a nested media title type. Found nested types: $allNestedNames",
+            mediaTitleType,
+        )
+    }
+
+    // --- Item 2: Aliased __typename not removed from models ---
+
+    @Test
+    fun `aliased __typename remains as property on sealed subtype`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document = """
+            query AliasTypenameQuery {
+              node(id: "123") {
+                kind: __typename
+                id
+                ... on User {
+                  login
+                  name
+                }
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "AliasTypenameQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+        val selectionSet = parser.parse(operation)
+        val generator = ResponseModelGenerator(githubIndex)
+
+        val fileSpecs = generator.generate(operation, selectionSet, "com.example")
+        val dataClass = fileSpecs.first().members
+            .filterIsInstance<TypeSpec>()
+            .first { it.name == "AliasTypenameQueryData" }
+
+        // Should have a sealed interface for Node
+        val nodeInterface = dataClass.typeSpecs.find { it.name == "Node" }
+        assertNotNull("Should have sealed interface for Node", nodeInterface)
+
+        // Should have a User concrete subtype
+        val userSubtype = nodeInterface!!.typeSpecs.find { it.name == "User" }
+        assertNotNull("Should have User subtype inside Node", userSubtype)
+
+        // User subtype should have 'kind' property (aliased __typename)
+        val kindProp = userSubtype!!.propertySpecs.find { it.name == "kind" }
+        assertNotNull("User subtype should have kind property (aliased __typename)", kindProp)
+        assertEquals(
+            "kind should be non-null String",
+            "kotlin.String",
+            kindProp!!.type.toString(),
+        )
+
+        // User subtype should NOT have a separate __typename property
+        val typenameProp = userSubtype.propertySpecs.find { it.name == "__typename" }
+        assertNull("User subtype should NOT have __typename property", typenameProp)
+    }
+
     // --- Helpers ---
 
     private fun fixtureFile(path: String): File {

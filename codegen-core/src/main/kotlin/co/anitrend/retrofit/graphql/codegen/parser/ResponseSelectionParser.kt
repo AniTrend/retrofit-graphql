@@ -19,6 +19,7 @@ package co.anitrend.retrofit.graphql.codegen.parser
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
 import co.anitrend.retrofit.graphql.codegen.model.OperationType
+import co.anitrend.retrofit.graphql.codegen.model.OutputField
 import co.anitrend.retrofit.graphql.codegen.model.ResponseField
 import co.anitrend.retrofit.graphql.codegen.model.ResponseSelectionSet
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
@@ -146,7 +147,7 @@ class ResponseSelectionParser(
      *   response path. Empty for the root.
      */
     private fun parseSelectionSet(
-        parentType: SchemaType.ObjectType,
+        parentType: SchemaType,
         selections: List<Selection<*>>,
         fragmentMap: Map<String, FragmentDefinition>,
         responseIdentity: String = "",
@@ -189,9 +190,12 @@ class ResponseSelectionParser(
                                         selection.directives,
                                     ),
                                 ),
-                                applicableTypes = schemaIndex
-                                    .possibleTypesFor(fragmentTypeName)
-                                    .ifEmpty { setOf(fragmentTypeName) },
+                                applicableTypes = composeApplicableTypes(
+                                    field.applicableTypes,
+                                    schemaIndex
+                                        .possibleTypesFor(fragmentTypeName)
+                                        .ifEmpty { setOf(fragmentTypeName) },
+                                ),
                             )
                         }
                     rawFields.addAll(spreadFields)
@@ -216,9 +220,12 @@ class ResponseSelectionParser(
                                         selection.directives,
                                     ),
                                 ),
-                                applicableTypes = schemaIndex
-                                    .possibleTypesFor(inlineTypeName)
-                                    .ifEmpty { setOf(inlineTypeName) },
+                                applicableTypes = composeApplicableTypes(
+                                    field.applicableTypes,
+                                    schemaIndex
+                                        .possibleTypesFor(inlineTypeName)
+                                        .ifEmpty { setOf(inlineTypeName) },
+                                ),
                             )
                         }
                     rawFields.addAll(inlineFields)
@@ -248,7 +255,7 @@ class ResponseSelectionParser(
      */
     private fun parseField(
         field: Field,
-        parentType: SchemaType.ObjectType,
+        parentType: SchemaType,
         fragmentMap: Map<String, FragmentDefinition>,
         parentIdentity: String = "",
     ): ResponseField {
@@ -266,7 +273,7 @@ class ResponseSelectionParser(
 
         val fieldDef =
             requireNotNull(
-                parentType.fields.find { it.name == schemaName },
+                getOutputFields(parentType).find { it.name == schemaName },
             ) {
                 "Field '$schemaName' not found on type '${parentType.name}'."
             }
@@ -408,18 +415,17 @@ class ResponseSelectionParser(
     }
 
     /**
-     * Resolves a [TypeName] to a [SchemaType.ObjectType], handling
-     * fragment type conditions that may target interfaces or unions
-     * (not just concrete object types).
+     * Resolves a [TypeName] to a [SchemaType], handling fragment type
+     * conditions that may target interfaces, unions, or concrete object types.
      *
-     * For interface type conditions, returns the first possible
-     * concrete type (for field lookups). For union type conditions,
-     * returns the first member type. For object type conditions,
+     * For interface type conditions, returns the interface definition directly
+     * (so fields can be resolved from the interface's own field list). For union
+     * type conditions, returns the union definition. For object type conditions,
      * returns the object type directly.
      */
     private fun resolveFragmentType(
         typeName: TypeName?,
-    ): SchemaType.ObjectType {
+    ): SchemaType {
         val name =
             requireNotNull(typeName?.name) {
                 "Type condition must have a name."
@@ -430,31 +436,40 @@ class ResponseSelectionParser(
             }
         return when (def) {
             is SchemaType.ObjectType -> def
-            is SchemaType.InterfaceType -> {
-                val firstPossible = schemaIndex.possibleTypesFor(name).firstOrNull()
-                    ?: throw IllegalArgumentException(
-                        "Interface '$name' has no implementors",
-                    )
-                schemaIndex.objectType(firstPossible)
-                    ?: throw IllegalArgumentException(
-                        "Concrete type '$firstPossible' not found for interface '$name'",
-                    )
-            }
-            is SchemaType.UnionType -> {
-                val firstMember = def.memberTypes.firstOrNull()
-                    ?: throw IllegalArgumentException(
-                        "Union '$name' has no member types",
-                    )
-                schemaIndex.objectType(firstMember)
-                    ?: throw IllegalArgumentException(
-                        "Union member '$firstMember' not found",
-                    )
-            }
+            is SchemaType.InterfaceType -> def
+            is SchemaType.UnionType -> def
             else -> throw IllegalArgumentException(
                 "Fragment type condition '$name' is not a composite type " +
                     "(found ${def::class.simpleName})",
             )
         }
+    }
+
+    /**
+     * Gets the output fields defined on a schema type, handling
+     * objects, interfaces, and unions uniformly. Objects and interfaces
+     * return their field lists; unions and other types return empty.
+     */
+    private fun getOutputFields(type: SchemaType): List<OutputField> = when (type) {
+        is SchemaType.ObjectType -> type.fields
+        is SchemaType.InterfaceType -> type.fields
+        else -> emptyList()
+    }
+
+    /**
+     * Composes the [existing] applicable types with an [outerScope]
+     * from a parent fragment. When both are non-empty, the result
+     * is their intersection (narrowing the scope). When one is empty,
+     * the other wins. This prevents outer fragments from over-expanding
+     * the scope of nested fragments.
+     */
+    private fun composeApplicableTypes(
+        existing: Set<String>,
+        outerScope: Set<String>,
+    ): Set<String> = when {
+        existing.isEmpty() -> outerScope
+        outerScope.isEmpty() -> existing
+        else -> existing.intersect(outerScope)
     }
 
     /**

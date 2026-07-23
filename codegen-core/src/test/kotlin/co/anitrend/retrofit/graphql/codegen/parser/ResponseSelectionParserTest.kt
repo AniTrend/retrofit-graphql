@@ -624,6 +624,95 @@ class ResponseSelectionParserTest {
         assertEquals(setOf("TextActivity"), textField.applicableTypes)
     }
 
+    // --- Item 3: Outer abstract fragments overwrite nested concrete scopes ---
+
+    @Test
+    fun `nested inline fragments compose applicableTypes via intersection`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        // github-simple has Node interface with User as implementor.
+        // Test that the outer Node fragment's scope is intersected with
+        // the inner User fragment's scope rather than overwriting it.
+        val document = """
+            query NestedNodeQuery {
+              node(id: "123") {
+                ... on Node {
+                  id
+                  ... on User {
+                    login
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "NestedNodeQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val node = result.fields.first { it.responseName == "node" }
+        val nodeFields = node.selectionSet!!
+
+        // id comes from the outer Node fragment; applicableTypes should be
+        // narrowed by the outer scope (all Node implementors: {User})
+        val idField = nodeFields.fields.find { it.responseName == "id" }!!
+        assertEquals(
+            "id should have Node implementors as applicableTypes",
+            setOf("User"),
+            idField.applicableTypes,
+        )
+
+        // login comes from the nested User fragment. Without composition
+        // it would incorrectly expand to all Node implementors.
+        val loginField = nodeFields.fields.find { it.responseName == "login" }!!
+        assertEquals(
+            "login should be scoped to User only via intersection",
+            setOf("User"),
+            loginField.applicableTypes,
+        )
+    }
+
+    // --- Item 4: Fragment type condition on interface resolves fields from the interface ---
+
+    @Test
+    fun `fragment on interface resolves fields from the interface definition`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        // Node is an interface with an `id` field. The parser should resolve
+        // it from the Node interface directly, not from an arbitrary concrete
+        // implementor.
+        val document = """
+            query InterfaceFragmentQuery {
+              node(id: "123") {
+                ... on Node {
+                  id
+                }
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "InterfaceFragmentQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val node = result.fields.first { it.responseName == "node" }
+        val nodeFields = node.selectionSet!!
+
+        // id should be present and resolved from the Node interface
+        val idField = nodeFields.fields.find { it.responseName == "id" }
+        assertNotNull("Should have id field resolved from Node interface", idField)
+        assertEquals("id", idField!!.schemaName)
+
+        // The parentType of the response selection set should reflect the
+        // fragment type condition (Node), not an arbitrary concrete type.
+        // The __typename auto-injection would be in the node field's
+        // selection set since node returns Node (abstract).
+        val typename = nodeFields.fields.find { it.schemaName == "__typename" }
+        assertNotNull("Should have __typename auto-injected for abstract node", typename)
+    }
+
     // --- Helpers ---
 
     private fun fixtureFile(path: String): File {

@@ -196,9 +196,13 @@ class ResponseModelGenerator(
                         result[key] = field.selectionSet
                     }
                     walk(field.selectionSet)
+                } else if (field.selectionSet != null) {
+                    // Walk into abstract (interface/union) selection sets
+                    // to find nested concrete objects (e.g.
+                    // AiringNotification.media.title inside a notification
+                    // union inline fragment).
+                    walk(field.selectionSet)
                 }
-
-                // Skip interfaces and unions for now (handled by collectAbstractTypes)
             }
         }
 
@@ -306,7 +310,10 @@ class ResponseModelGenerator(
             // data class property. Including it causes a collision.
             val sortedFields = selSet.fields.sortedBy { it.responseName }
             val applicableFields = sortedFields.filter { field ->
-                field.schemaName != "__typename" &&
+                // Only remove the unaliased discriminator __typename.
+                // Aliased fields like `kind: __typename` should remain
+                // as regular properties on the subtype.
+                !(field.schemaName == "__typename" && field.responseName == "__typename") &&
                     (
                         field.applicableTypes.isEmpty() ||
                             concreteTypeName in field.applicableTypes

@@ -17,7 +17,9 @@
 package co.anitrend.retrofit.graphql.codegen.schema
 
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
+import co.anitrend.retrofit.graphql.codegen.model.OutputField
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
+import co.anitrend.retrofit.graphql.codegen.model.SchemaType
 import graphql.language.AstPrinter
 import graphql.language.Document
 import graphql.language.Field
@@ -117,8 +119,7 @@ class TypenameInjector(private val schemaIndex: SchemaIndex) {
             when (selection) {
                 is Field -> {
                     val field = selection
-                    val objectType = schemaIndex.objectType(parentTypeName)
-                    val outputField = objectType?.fields?.find { it.name == field.name }
+                    val outputField = getOutputFields(parentTypeName).find { it.name == field.name }
                     // Resolve base type name, unwrapping List wrappers
                     val resolvedType = outputField?.type?.let { resolveBaseTypeName(it) }
 
@@ -176,6 +177,21 @@ class TypenameInjector(private val schemaIndex: SchemaIndex) {
         return SelectionSet.newSelectionSet()
             .selections(newSelections)
             .build()
+    }
+
+    /**
+     * Gets the output fields defined on a schema type name, handling
+     * objects, interfaces, and unions uniformly. Objects and interfaces
+     * return their field lists; unions and other types return empty.
+     */
+    private fun getOutputFields(typeName: String): List<OutputField> {
+        val def = schemaIndex.definition(typeName) ?: return emptyList()
+        return when (def) {
+            is SchemaType.ObjectType -> def.fields
+            is SchemaType.InterfaceType -> def.fields
+            is SchemaType.UnionType -> emptyList()
+            else -> emptyList()
+        }
     }
 
     /**
