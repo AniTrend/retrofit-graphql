@@ -1,0 +1,35 @@
+"""Standard String scalar per the GraphQL specification."""
+scalar String
+
+"""A union type where both members have a field with the same name but different sub-selections."""
+union Result = Success | Failure
+
+"""Success type — has id (common) and detail (type-specific)."""
+type Success {
+  """Common identifier."""
+  id: String!
+  """The detail object."""
+  detail: Detail
+}
+
+"""Failure type — has id (common) and detail (type-specific)."""
+type Failure {
+  """Common identifier."""
+  id: String!
+  """The detail object."""
+  detail: Detail
+}
+
+"""Detail type with mutually exclusive fields selected from different branches."""
+type Detail {
+  """Value from success branch."""
+  value: String!
+  """Reason from failure branch."""
+  reason: String!
+}
+
+"""Root query type."""
+type Query {
+  """Get the union result."""
+  result: Result
+}

@@ -1,0 +1,18 @@
+query NestedScopedObjects {
+  result {
+    ... on Success {
+      detail {
+        child {
+          value
+        }
+      }
+    }
+    ... on Failure {
+      detail {
+        child {
+          reason
+        }
+      }
+    }
+  }
+}

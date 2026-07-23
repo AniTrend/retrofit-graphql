@@ -100,19 +100,30 @@ class ResponseModelGenerator(
         // Collect all abstract types (interfaces/unions) and their concrete subtypes
         val abstractTypes = collectAbstractTypes(selectionSet)
 
-        // Assign generated class names (schema type name by default, with collision detection)
+        // Collect all known concrete type names (used to derive scope prefix
+        // from dotted identity keys for nested type resolution inside sealed
+        // interface subtypes)
+        val allConcreteTypeNames = abstractTypes.values
+            .flatten()
+            .map { (name, _) -> name }
+            .toSet()
+
+        // Assign generated class names from dotted response-path identities
         val allTypeNames = mergedSelections.keys.toList() + abstractTypes.keys.toList()
         val resolvedNames = assignClassNames(allTypeNames)
 
-        // Generate nested data classes for object types
-        val nestedObjectSpecs = mergedSelections.map { (schemaTypeName, selSet) ->
-            val className = resolvedNames[schemaTypeName]!!
+        // Generate nested data classes for object types, threading scope
+        // prefix where the dotted identity starts with a concrete type name
+        val nestedObjectSpecs = mergedSelections.map { (dottedIdentity, selSet) ->
+            val className = resolvedNames[dottedIdentity]!!
+            val scopePrefix = deriveScopePrefix(dottedIdentity, allConcreteTypeNames)
             generateDataClass(
                 className = className,
                 selectionSet = selSet,
                 dataClassName = dataClassName,
                 packageName = packageName,
                 resolvedNames = resolvedNames,
+                scopePrefix = scopePrefix,
             )
         }
 
@@ -123,18 +134,6 @@ class ResponseModelGenerator(
                 abstractName = abstractName,
                 interfaceName = ifaceName,
                 concreteTypes = concreteTypes,
-                dataClassName = dataClassName,
-                packageName = packageName,
-                resolvedNames = resolvedNames,
-            )
-        }
-
-        // Generate nested data classes first, since root class references them
-        val nestedTypeSpecs = mergedSelections.map { (schemaTypeName, selSet) ->
-            val className = resolvedNames[schemaTypeName]!!
-            generateDataClass(
-                className = className,
-                selectionSet = selSet,
                 dataClassName = dataClassName,
                 packageName = packageName,
                 resolvedNames = resolvedNames,
@@ -192,7 +191,15 @@ class ResponseModelGenerator(
                     val nestedGroups =
                         field.selectionSet.fields.groupBy { it.applicableTypes }
 
-                    if (nestedGroups.size <= 1) {
+                    // Also split when the field itself has multiple
+                    // applicableTypes (merged from multiple fragment
+                    // branches) even if its immediate children are
+                    // not yet split. This ensures parent entries exist
+                    // for deeply nested scope resolution.
+                    val needsSplit = nestedGroups.size > 1 ||
+                        field.applicableTypes.size > 1
+
+                    if (!needsSplit) {
                         // All fields share the same scope — normal case
                         val key =
                             field.selectionSet.responseIdentity.ifBlank {
@@ -208,25 +215,38 @@ class ResponseModelGenerator(
                             result[key] = field.selectionSet
                         }
                     } else {
-                        // Fields have different type scopes —
-                        // create per-scope entries
-                        for ((scope, scopeFields) in nestedGroups) {
-                            val scopeStr = if (scope.isEmpty()) {
-                                ""
+                        // Determine concrete types to project for.
+                        // Use the field's own applicableTypes when
+                        // immediate children are all in one group
+                        // (nestedGroups.size <= 1) but the field
+                        // itself was merged from multiple branches.
+                        val allConcreteTypes =
+                            if (nestedGroups.size <= 1) {
+                                field.applicableTypes
                             } else {
-                                scope.sorted()
-                                    .joinToString("") {
-                                        it.replaceFirstChar { c -> c.uppercase() }
-                                    }
+                                field.selectionSet.fields
+                                    .flatMap { it.applicableTypes }
+                                    .toSet()
                             }
+
+                        for (concreteType in allConcreteTypes) {
+                            val projectedFields =
+                                field.selectionSet.fields.filter { f ->
+                                    f.applicableTypes.isEmpty() ||
+                                        concreteType in f.applicableTypes
+                                }
+                            if (projectedFields.isEmpty()) continue
+
                             val baseIdentity =
                                 field.selectionSet.responseIdentity
                                     .ifBlank { dataClassName }
-                            val scopedIdentity = scopeStr + baseIdentity
+                            val scopedIdentity =
+                                "$concreteType.$baseIdentity"
                             val scopedSelSet =
                                 field.selectionSet.copy(
                                     responseIdentity = scopedIdentity,
-                                    fields = scopeFields.sortedBy { it.responseName },
+                                    fields = projectedFields
+                                        .sortedBy { it.responseName },
                                 )
                             val existing = result[scopedIdentity]
                             result[scopedIdentity] =
@@ -253,6 +273,24 @@ class ResponseModelGenerator(
 
         walk(selectionSet)
         return result
+    }
+
+    /**
+     * Derives the scope prefix from a dotted identity key for nested
+     * type resolution inside sealed interface subtypes.
+     *
+     * When the first segment of a dotted identity matches a known
+     * concrete type name (e.g. "Success" in "Success.result.detail"),
+     * that segment is the scope prefix that should be threaded through
+     * child property generation. Otherwise returns null.
+     */
+    private fun deriveScopePrefix(
+        dottedIdentity: String,
+        concreteTypeNames: Set<String>,
+    ): String? {
+        if (!dottedIdentity.contains('.')) return null
+        val firstSegment = dottedIdentity.substringBefore('.')
+        return if (firstSegment in concreteTypeNames) firstSegment else null
     }
 
     /**
@@ -460,33 +498,46 @@ class ResponseModelGenerator(
     }
 
     /**
-     * Assigns generated class names. Defaults to the schema type name.
-     * Handles naming collisions from the [collision-safe spec](#) by prepending
-     * the parent context.
+     * Assigns generated class names from dotted response-path identities.
+     * Converts dot-separated identities (e.g. "updateBio.user") to PascalCase
+     * class names (e.g. "UpdateBioUser"). Handles naming collisions by appending
+     * numeric suffixes.
      *
-     * In practice, GraphQL schema type names are unique so collisions are rare
-     * in Phase 3, but this check guards against future phases where abstract
-     * type resolution may produce conflicting names.
+     * Dot-separated identities cannot collide at the map-key level because
+     * '.' is not valid in GraphQL field names, so "foo.bar" (nested) and
+     * "fooBar" (flat) are always distinct keys. Class name collisions from
+     * different identities (e.g. both map to "FooBar") are resolved via
+     * numeric suffixes.
      */
-    private fun assignClassNames(schemaTypeNames: List<String>): Map<String, String> {
+    private fun assignClassNames(dottedIdentities: List<String>): Map<String, String> {
         val result = linkedMapOf<String, String>()
-        val seen = mutableMapOf<String, Int>() // generatedName -> count
+        val seen = mutableMapOf<String, Int>() // pascalCaseName -> count
 
-        for (name in schemaTypeNames) {
-            val count = seen.getOrDefault(name, 0)
+        for (identity in dottedIdentities) {
+            val className = dottedToPascalCase(identity)
+            val count = seen.getOrDefault(className, 0)
             if (count == 0) {
-                result[name] = name
-                seen[name] = 1
+                result[identity] = className
+                seen[className] = 1
             } else {
                 // Collision: append numeric suffix
-                val uniqueName = "${name}${count + 1}"
-                result[name] = uniqueName
-                seen[name] = count + 1
+                val uniqueName = "${className}${count + 1}"
+                result[identity] = uniqueName
+                seen[className] = count + 1
             }
         }
 
         return result
     }
+
+    /**
+     * Converts a dot-separated response-path identity to PascalCase.
+     * Example: "updateBio.user" → "UpdateBioUser"
+     */
+    private fun dottedToPascalCase(identity: String): String =
+        identity.split(".").joinToString("") {
+            it.replaceFirstChar { c -> c.uppercase() }
+        }
 
     /**
      * Extracts the innermost named type from a [GraphQLType], stripping
@@ -508,6 +559,7 @@ class ResponseModelGenerator(
         dataClassName: String,
         packageName: String,
         resolvedNames: Map<String, String>,
+        scopePrefix: String? = null,
     ): TypeSpec {
         val sortedFields = selectionSet.fields.sortedBy { it.responseName }
 
@@ -519,6 +571,7 @@ class ResponseModelGenerator(
                     dataClassName = dataClassName,
                     packageName = packageName,
                     resolvedNames = resolvedNames,
+                    scopePrefix = scopePrefix,
                 )
             }
 
@@ -565,8 +618,16 @@ class ResponseModelGenerator(
         dataClassName: String,
         packageName: String,
         resolvedNames: Map<String, String>,
+        scopePrefix: String? = null,
     ): TypeSpec {
-        return buildDataClass(className, selectionSet, dataClassName, packageName, resolvedNames)
+        return buildDataClass(
+            className,
+            selectionSet,
+            dataClassName,
+            packageName,
+            resolvedNames,
+            scopePrefix,
+        )
     }
 
     /**
@@ -705,11 +766,11 @@ class ResponseModelGenerator(
         }
         // Per-scope fallback: when a sealed interface subtype has a nested
         // ObjectType field whose identity was split by the collector
-        // (e.g. "Result__Detail" → "SuccessResult__Detail"), the identity
+        // (e.g. "result.detail" → "Success.result.detail"), the identity
         // on the field still points to the merged key. Try prefixing with
         // the concrete type name that owns this field.
         if (!scopePrefix.isNullOrBlank() && !lookupKey.isNullOrBlank()) {
-            val scopedKey = scopePrefix + lookupKey
+            val scopedKey = "$scopePrefix.$lookupKey"
             resolvedNames[scopedKey]?.let { generatedName ->
                 return ClassName(packageName, dataClassName, generatedName)
             }

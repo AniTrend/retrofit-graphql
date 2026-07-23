@@ -1,0 +1,16 @@
+query NestedMutualExclusiveWithCommon {
+  result {
+    ... on Success {
+      id
+      detail {
+        value
+      }
+    }
+    ... on Failure {
+      id
+      detail {
+        reason
+      }
+    }
+  }
+}

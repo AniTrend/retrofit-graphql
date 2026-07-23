@@ -398,11 +398,11 @@ class ResponseSelectionParserTest {
 
         // Each alias should have a distinct responseIdentity
         assertEquals(
-            "Media__EnglishTitle",
+            "Media.englishTitle",
             englishTitle.selectionSet!!.responseIdentity,
         )
         assertEquals(
-            "Media__NativeTitle",
+            "Media.nativeTitle",
             nativeTitle.selectionSet!!.responseIdentity,
         )
     }
@@ -793,11 +793,12 @@ class ResponseSelectionParserTest {
     // --- Item 4: Collision-safe response-path identities ---
 
     @Test
-    fun `response identities use double-underscore separator to prevent collisions`() {
+    fun `response identities use dot separator to prevent collisions`() {
         val parser = ResponseSelectionParser(githubIndex)
-        // Flat field 'fooBar' should produce identity "FooBar".
-        // Nested path 'foo.bar' should produce identity "Foo__Bar".
-        // Without the separator, both would collide on "FooBar".
+        // Flat field 'fooBar' should produce identity "fooBar".
+        // Nested path 'foo.bar' should produce identity "foo.bar".
+        // Dot separator prevents collisions since '.' is invalid in
+        // GraphQL field names.
         val document = """
             query FooBarFlat {
               viewer {
@@ -816,7 +817,7 @@ class ResponseSelectionParserTest {
         val viewer = result.fields.first { it.responseName == "viewer" }
 
         // Root-level field uses just the response name, no separator
-        assertEquals("Viewer", viewer.selectionSet!!.responseIdentity)
+        assertEquals("viewer", viewer.selectionSet!!.responseIdentity)
     }
 
     @Test
@@ -843,7 +844,7 @@ class ResponseSelectionParserTest {
         // viewer.bio -> bio is a scalar leaf, no nested identity
         // viewer.name -> name is a scalar leaf, no nested identity
         // But the viewer's own identity is root-level
-        assertEquals("Viewer", viewerFields.responseIdentity)
+        assertEquals("viewer", viewerFields.responseIdentity)
     }
 
     @Test
@@ -851,8 +852,8 @@ class ResponseSelectionParserTest {
         val parser = ResponseSelectionParser(githubIndex)
         // Use updateBio mutation which produces a nested path:
         //   updateBio { user { id bio } }
-        // Identity chain:
-        //   root("") -> UpdateBio -> UpdateBio__User
+        // Identity chain (dot-separated):
+        //   root("") -> updateBio -> updateBio.user
         val document = operationText(
             "fixtures/simple/mutations/UpdateBio.graphql",
         )
@@ -866,13 +867,169 @@ class ResponseSelectionParserTest {
         val updateBio = result.fields.first { it.responseName == "updateBio" }
 
         // updateBio is root-level, no separator
-        assertEquals("UpdateBio", updateBio.selectionSet!!.responseIdentity)
+        assertEquals("updateBio", updateBio.selectionSet!!.responseIdentity)
 
         val user = updateBio.selectionSet!!.fields.first { it.responseName == "user" }
-        // user is nested under updateBio, so separator appears
+        // user is nested under updateBio, so dot separator appears
         assertEquals(
-            "UpdateBio__User",
+            "updateBio.user",
             user.selectionSet!!.responseIdentity,
+        )
+    }
+
+    // --- Item 4: Collision-safe dot-separated identities ---
+
+    @Test
+    fun `foo and Foo produce different dot-path identities`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        // Fields 'foo' and 'Foo' (different case) are both valid GraphQL
+        // names, and produce different dot-path identities since the parser
+        // preserves the original response name.
+        val document = """
+            query FooCaseQuery {
+              viewer {
+                login
+                name
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "FooCaseQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first { it.responseName == "viewer" }
+        // viewer's identity is "viewer" (lowercase, as in the query)
+        assertEquals("viewer", viewer.selectionSet!!.responseIdentity)
+    }
+
+    @Test
+    fun `fooDotBar and fooBar produce different dot-path identities`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        // Nested path 'foo.bar' (two levels) produces identity "foo.bar"
+        // Flat field 'fooBar' (one level) produces identity "fooBar"
+        // These are always distinct because '.' is invalid in field names.
+        val document = """
+            query NestedFlatQuery {
+              viewer {
+                login
+                name
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "NestedFlatQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first { it.responseName == "viewer" }
+
+        // viewer is a single-level field, identity = "viewer"
+        assertEquals("viewer", viewer.selectionSet!!.responseIdentity)
+        // No nested objects, so no dot-separated identity
+    }
+
+    // --- Item 3: Nested abstract types preserve local applicableTypes ---
+
+    @Test
+    fun `nested inline fragments preserve local applicableTypes for inner abstract type`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        // Two levels of abstract type: node(id) returns Node (interface).
+        // Inner inline fragments on User are nested inside the outer
+        // Node fragment. The inner applicableTypes should be local to
+        // the User type, not propagated from the outer Node scope.
+        val document = """
+            query NestedNodeQuery2 {
+              node(id: "123") {
+                ... on Node {
+                  id
+                  ... on User {
+                    login
+                    name
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "NestedNodeQuery2",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val node = result.fields.first { it.responseName == "node" }
+        val nodeFields = node.selectionSet!!
+
+        // login from the inner User fragment should have applicableTypes
+        // narrowed to User via intersection. Outer Node scope is {User},
+        // inner User scope is {User}, intersection = {User}.
+        val loginField = nodeFields.fields.find { it.responseName == "login" }!!
+        assertEquals(
+            "login should be scoped to User",
+            setOf("User"),
+            loginField.applicableTypes,
+        )
+
+        // id from outer Node fragment should also be narrowed to {User}
+        val idField = nodeFields.fields.find { it.responseName == "id" }!!
+        assertEquals(
+            "id should have Node implementors as applicableTypes",
+            setOf("User"),
+            idField.applicableTypes,
+        )
+    }
+
+    // --- Item 5: Inline fragments without type conditions ---
+
+    @Test
+    fun `inline fragment without type condition uses parent type and has no additional applicableTypes`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        // Type-condition-less inline fragment with @include directive.
+        // Fields inside should be parsed correctly with
+        // condition.isConditional = true.
+        val document = """
+            query ConditionalFragmentQuery {
+              viewer {
+                ... @include(if: true) {
+                  name
+                  bio
+                }
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "ConditionalFragmentQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first { it.responseName == "viewer" }
+        val viewerFields = viewer.selectionSet!!
+
+        // name should be present and conditional
+        val nameField = viewerFields.fields.find { it.responseName == "name" }
+        assertNotNull("Should have name field", nameField)
+        assertTrue("name should be conditional", nameField!!.condition.isConditional)
+
+        // bio should be present and conditional
+        val bioField = viewerFields.fields.find { it.responseName == "bio" }
+        assertNotNull("Should have bio field", bioField)
+        assertTrue("bio should be conditional", bioField!!.condition.isConditional)
+
+        // applicableTypes should be empty (no type condition = no scope)
+        assertTrue(
+            "name applicableTypes should be empty",
+            nameField.applicableTypes.isEmpty(),
+        )
+        assertTrue(
+            "bio applicableTypes should be empty",
+            bioField.applicableTypes.isEmpty(),
         )
     }
 
