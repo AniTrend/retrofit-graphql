@@ -30,6 +30,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -477,10 +478,10 @@ class ResponseModelGeneratorTest {
         // Create a query with a conditional @include directive
         val document =
             """
-            query CondQuery {
+            query CondQuery(${'$'}includeName: Boolean!) {
               viewer {
                 id
-                name @include(if: true)
+                name @include(if: ${'$'}includeName)
                 login
               }
             }
@@ -1230,6 +1231,227 @@ class ResponseModelGeneratorTest {
             "Should not have User class (path-based identity)",
             0,
             userClasses.size,
+        )
+    }
+
+    // --- Item 1 (P0): Projection universe from abstract parent's possibleTypes ---
+
+    @Test
+    fun `three implementors with only two selected generates class for unselected third`() {
+        val schemaFile = fixtureFile(
+            "fixtures/advanced/unions/ThreeImplementors.graphqls",
+        )
+        val schemaResult = SchemaParser().parseWithRootTypes(schemaFile)
+        val schemaIndex = SchemaIndex.from(
+            types = schemaResult.types,
+            queryTypeName = schemaResult.queryTypeName,
+            mutationTypeName = schemaResult.mutationTypeName,
+            subscriptionTypeName = schemaResult.subscriptionTypeName,
+        )
+
+        val parser = ResponseSelectionParser(schemaIndex)
+        val generator = ResponseModelGenerator(schemaIndex)
+
+        val operation = buildOperation(
+            name = "ThreeImplementors",
+            type = OperationType.QUERY,
+            document = fixtureText(
+                "fixtures/advanced/unions/ThreeImplementors.graphql",
+            ),
+        )
+        val selectionSet = parser.parse(operation)
+        val fileSpecs = generator.generate(operation, selectionSet, "com.example")
+
+        val dataClass = fileSpecs.first().members
+            .filterIsInstance<TypeSpec>()
+            .first { it.name == "ThreeImplementorsData" }
+
+        val allNestedNames = dataClass.typeSpecs.map { it.name }.filterNotNull()
+
+        // Should have the sealed interface for Result
+        val resultIface = dataClass.typeSpecs.find { it.name == "Result" }
+        assertNotNull("Should have sealed interface for Result", resultIface)
+        assertTrue(
+            "Result should be sealed",
+            resultIface!!.modifiers.contains(KModifier.SEALED),
+        )
+
+        // Should have all three subtypes (Success, Failure, Pending)
+        assertEquals(
+            "Should have 3 subtypes (all schema members present)",
+            3,
+            resultIface.typeSpecs.size,
+        )
+
+        // Pending should be generated as a class (not data class, since
+        // it has no fields beyond the common type-independent ones from
+        // the interface/union level)
+        val pendingSubtype = resultIface.typeSpecs.find { it.name == "Pending" }
+        assertNotNull(
+            "Should have Pending subtype. Names: $allNestedNames",
+            pendingSubtype,
+        )
+
+        // SuccessResultDetail should exist (from schema-driven projection)
+        val successDetail = dataClass.typeSpecs.find {
+            it.name == "SuccessResultDetail"
+        }
+        assertNotNull(
+            "Should have SuccessResultDetail. Names: $allNestedNames",
+            successDetail,
+        )
+        val sdFields = successDetail!!.propertySpecs.map { it.name }.toSet()
+        assertTrue("Success detail should have id", "id" in sdFields)
+        assertTrue("Success detail should have value", "value" in sdFields)
+        assertFalse(
+            "Success detail should NOT have reason",
+            "reason" in sdFields,
+        )
+
+        // FailureResultDetail should exist
+        val failureDetail = dataClass.typeSpecs.find {
+            it.name == "FailureResultDetail"
+        }
+        assertNotNull(
+            "Should have FailureResultDetail. Names: $allNestedNames",
+            failureDetail,
+        )
+        val fdFields = failureDetail!!.propertySpecs.map { it.name }.toSet()
+        assertTrue("Failure detail should have id", "id" in fdFields)
+        assertTrue("Failure detail should have reason", "reason" in fdFields)
+        assertFalse(
+            "Failure detail should NOT have value",
+            "value" in fdFields,
+        )
+
+        // PendingResultDetail should also exist (from schema-derived
+        // projection, not from child field applicableTypes)
+        val pendingDetail = dataClass.typeSpecs.find {
+            it.name == "PendingResultDetail"
+        }
+        assertNotNull(
+            "Should have PendingResultDetail (schema-driven projection). " +
+                "Names: $allNestedNames",
+            pendingDetail,
+        )
+        // Pending has no type-specific fields, so its Detail should
+        // only have the common `id` field
+        val pdFields = pendingDetail!!.propertySpecs.map { it.name }.toSet()
+        assertTrue("Pending detail should have id", "id" in pdFields)
+        assertFalse(
+            "Pending detail should NOT have value",
+            "value" in pdFields,
+        )
+        assertFalse(
+            "Pending detail should NOT have reason",
+            "reason" in pdFields,
+        )
+    }
+
+    // --- Item 2 (P0): Nested abstract branches retain enclosing runtime context ---
+
+    @Test
+    fun `nested abstract branches generate separate per-branch classes`() {
+        val schemaFile = fixtureFile(
+            "fixtures/advanced/unions/NestedAbstractBranches.graphqls",
+        )
+        val schemaResult = SchemaParser().parseWithRootTypes(schemaFile)
+        val schemaIndex = SchemaIndex.from(
+            types = schemaResult.types,
+            queryTypeName = schemaResult.queryTypeName,
+            mutationTypeName = schemaResult.mutationTypeName,
+            subscriptionTypeName = schemaResult.subscriptionTypeName,
+        )
+
+        val parser = ResponseSelectionParser(schemaIndex)
+        val generator = ResponseModelGenerator(schemaIndex)
+
+        val operation = buildOperation(
+            name = "NestedAbstractBranches",
+            type = OperationType.QUERY,
+            document = fixtureText(
+                "fixtures/advanced/unions/NestedAbstractBranches.graphql",
+            ),
+        )
+        val selectionSet = parser.parse(operation)
+        val fileSpecs = generator.generate(operation, selectionSet, "com.example")
+
+        val dataClass = fileSpecs.first().members
+            .filterIsInstance<TypeSpec>()
+            .first { it.name == "NestedAbstractBranchesData" }
+
+        val allNestedNames = dataClass.typeSpecs.map { it.name }.filterNotNull()
+
+        // Should have sealed interfaces for both Outer and Inner levels
+        val outerIface = dataClass.typeSpecs.find { it.name == "Outer" }
+        assertNotNull("Should have sealed interface for Outer", outerIface)
+
+        // Outer subtypes
+        val outerASubtype = outerIface!!.typeSpecs.find { it.name == "OuterA" }
+        assertNotNull("Should have OuterA subtype", outerASubtype)
+        val outerBSubtype = outerIface.typeSpecs.find { it.name == "OuterB" }
+        assertNotNull("Should have OuterB subtype", outerBSubtype)
+
+        // The Inner sealed interface should also exist (path-based name)
+        val innerIface = dataClass.typeSpecs.find { it.name == "OuterInner" }
+        assertNotNull(
+            "Should have Inner sealed interface. Names: $allNestedNames",
+            innerIface,
+        )
+        assertTrue(
+            "Inner should be sealed",
+            innerIface!!.modifiers.contains(KModifier.SEALED),
+        )
+
+        // Should have InnerX and InnerY subtypes
+        val innerX = innerIface.typeSpecs.find { it.name == "InnerX" }
+        assertNotNull("Should have InnerX subtype", innerX)
+        val innerY = innerIface.typeSpecs.find { it.name == "InnerY" }
+        assertNotNull("Should have InnerY subtype", innerY)
+
+        // Two separate Detail classes: one for OuterA → InnerX,
+        // one for OuterB → InnerX
+        val outerAInnerXDetail = dataClass.typeSpecs.find {
+            it.name == "OuterA.OuterInnerDetail" ||
+                it.name == "OuterAOuterInnerDetail" ||
+                // Also check for the chain-based scoped identity name
+                // produced by the generator
+                it.name?.contains("OuterA") == true && it.name?.contains("Detail") == true
+        }
+        assertNotNull(
+            "Should have Detail class for OuterA.InnerX branch. Names: $allNestedNames",
+            outerAInnerXDetail,
+        )
+
+        val outerBInnerXDetail = dataClass.typeSpecs.find {
+            it.name == "OuterB.OuterInnerDetail" ||
+                it.name == "OuterBOuterInnerDetail" ||
+                (it.name?.contains("OuterB") == true && it.name?.contains("Detail") == true)
+        }
+        assertNotNull(
+            "Should have Detail class for OuterB.InnerX branch. Names: $allNestedNames",
+            outerBInnerXDetail,
+        )
+
+        // They should be different classes
+        assertNotSame(
+            "Detail classes for different outer branches should be distinct",
+            outerAInnerXDetail,
+            outerBInnerXDetail,
+        )
+
+        val oaFields = outerAInnerXDetail!!.propertySpecs.map { it.name }.toSet()
+        assertTrue("OuterA.InnerX detail should have fromA", "fromA" in oaFields)
+        assertFalse(
+            "OuterA.InnerX detail should NOT have fromB",
+            "fromB" in oaFields,
+        )
+
+        val obFields = outerBInnerXDetail!!.propertySpecs.map { it.name }.toSet()
+        assertTrue("OuterB.InnerX detail should have fromB", "fromB" in obFields)
+        assertFalse(
+            "OuterB.InnerX detail should NOT have fromA",
+            "fromA" in obFields,
         )
     }
 

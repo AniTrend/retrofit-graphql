@@ -37,6 +37,25 @@ data class SelectionCondition(
 }
 
 /**
+ * Captures a single runtime type assignment for a nested abstract
+ * hierarchy. Multiple branches represent the path through nested
+ * interfaces/unions.
+ *
+ * @param abstractPath The response path to the abstract parent field,
+ *   e.g. `["result"]` or `["outer", "inner"]`. Derived from the
+ *   [ResponseSelectionSet.responseIdentity] split by `"."` at the
+ *   fragment location.
+ * @param concreteType The concrete runtime type at this level,
+ *   e.g. `"Success"` or `"OuterA"`. When the fragment type condition
+ *   is an interface, this is resolved to the actual concrete
+ *   implementor type.
+ */
+data class RuntimeBranch(
+    val abstractPath: List<String>,
+    val concreteType: String,
+)
+
+/**
  * A single field in a response selection set, normalized against
  * the schema so generators can produce the correct Kotlin types.
  *
@@ -50,12 +69,24 @@ data class SelectionCondition(
  * @param possibleTypes When the parent type is an interface or union,
  *   the set of concrete object type names that are possible at runtime.
  *   Empty for concrete object fields.
- * @param applicableTypes When non-empty, this field only belongs to
- *   the specified concrete types (used for inline fragment and
- *   fragment spread scoping on abstract selections). Empty means
- *   the field applies to all possible subtypes.
+ * @param applicableTypes **Deprecated** -- kept for backward
+ *   compatibility. Populated from [runtimeBranches]. When non-empty,
+ *   this field only belongs to the specified concrete types (used for
+ *   inline fragment and fragment spread scoping on abstract
+ *   selections). Empty means the field applies to all possible
+ *   subtypes.
+ * @param runtimeBranches Structured runtime branch paths capturing the
+ *   chain through abstract hierarchies. Each entry records a concrete
+ *   type assignment at a specific abstract-path level. Prefer this
+ *   over [applicableTypes] for new code.
  * @param selectionSet Nested selections when this field returns an
  *   object, interface, or union type; null for leaf fields.
+ * @param alternatives Field alternatives for mutually exclusive type
+ *   scopes with incompatible schema names or output types. When the
+ *   parser encounters two fields with the same responseName but
+ *   different schema names (or incompatible output types) from
+ *   disjoint concrete type branches, the alternatives are stored here
+ *   rather than being merged or rejected.
  */
 data class ResponseField(
     val responseName: String,
@@ -63,9 +94,24 @@ data class ResponseField(
     val outputType: GraphQLType,
     val condition: SelectionCondition = SelectionCondition.UNCONDITIONAL,
     val possibleTypes: Set<String> = emptySet(),
+    @Deprecated(
+        message = "Use runtimeBranches instead",
+        replaceWith = ReplaceWith("runtimeBranches"),
+    )
     val applicableTypes: Set<String> = emptySet(),
+    val runtimeBranches: List<RuntimeBranch> = emptyList(),
     val selectionSet: ResponseSelectionSet? = null,
-)
+    val alternatives: List<ResponseField> = emptyList(),
+) {
+    /**
+     * Computes [applicableTypes] from [runtimeBranches] for backward
+     * compatibility. Code that previously inspected [applicableTypes]
+     * should migrate to [runtimeBranches] for correct nested branch
+     * handling.
+     */
+    fun computeApplicableTypes(): Set<String> =
+        runtimeBranches.map { it.concreteType }.toSet()
+}
 
 /**
  * A normalized set of response fields selected from a single parent

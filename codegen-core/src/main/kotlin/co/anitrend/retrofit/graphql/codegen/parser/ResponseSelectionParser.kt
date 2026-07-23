@@ -22,6 +22,7 @@ import co.anitrend.retrofit.graphql.codegen.model.OperationType
 import co.anitrend.retrofit.graphql.codegen.model.OutputField
 import co.anitrend.retrofit.graphql.codegen.model.ResponseField
 import co.anitrend.retrofit.graphql.codegen.model.ResponseSelectionSet
+import co.anitrend.retrofit.graphql.codegen.model.RuntimeBranch
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import co.anitrend.retrofit.graphql.codegen.model.SchemaType
 import co.anitrend.retrofit.graphql.codegen.model.SelectionCondition
@@ -32,6 +33,7 @@ import graphql.language.InlineFragment
 import graphql.language.OperationDefinition
 import graphql.language.Selection
 import graphql.language.TypeName
+import graphql.language.VariableReference
 import graphql.parser.Parser
 import graphql.parser.ParserOptions
 
@@ -60,6 +62,51 @@ class ResponseSelectionParser(
             condition = SelectionCondition.UNCONDITIONAL,
             // applicableTypes empty = applies to all concrete types
         )
+
+        /**
+         * Creates [RuntimeBranch] instances for the given fragment scope,
+         * expanding interface type conditions into their concrete implementors.
+         *
+         * @param abstractPath The response path to the abstract parent field.
+         * @param typeName The fragment type condition name.
+         * @param schemaIndex Used to resolve interface implementors.
+         * @return One [RuntimeBranch] per concrete type in the scope.
+         */
+        fun buildRuntimeBranches(
+            abstractPath: List<String>,
+            typeName: String,
+            schemaIndex: SchemaIndex,
+        ): List<RuntimeBranch> {
+            val concreteTypes =
+                schemaIndex.possibleTypesFor(typeName)
+                    .ifEmpty { setOf(typeName) }
+            return concreteTypes.map { concreteType ->
+                RuntimeBranch(
+                    abstractPath = abstractPath,
+                    concreteType = concreteType,
+                )
+            }
+        }
+
+        /**
+         * Tests whether two lists of [RuntimeBranch] are compatible
+         * (i.e. their concrete types at matching abstract paths could
+         * overlap). Returns `true` if the branches do NOT conflict.
+         */
+        fun areBranchesCompatible(
+            a: List<RuntimeBranch>,
+            b: List<RuntimeBranch>,
+        ): Boolean {
+            // Empty branches mean "applies to all" --- compatible
+            if (a.isEmpty() || b.isEmpty()) return true
+            val aMap = a.associateBy { it.abstractPath }
+            val bMap = b.associateBy { it.abstractPath }
+            for ((path, aBranch) in aMap) {
+                val bBranch = bMap[path] ?: return true
+                if (aBranch.concreteType != bBranch.concreteType) return false
+            }
+            return true
+        }
     }
 
     init {
@@ -157,14 +204,15 @@ class ResponseSelectionParser(
         for (selection in selections) {
             when (selection) {
                 is Field -> {
-                    rawFields.add(
-                        parseField(
-                            field = selection,
-                            parentType = parentType,
-                            fragmentMap = fragmentMap,
-                            parentIdentity = responseIdentity,
-                        ),
+                    val parsed = parseField(
+                        field = selection,
+                        parentType = parentType,
+                        fragmentMap = fragmentMap,
+                        parentIdentity = responseIdentity,
                     )
+                    if (parsed != null) {
+                        rawFields.add(parsed)
+                    }
                 }
                 is FragmentSpread -> {
                     val fragment =
@@ -176,28 +224,49 @@ class ResponseSelectionParser(
                         resolveFragmentType(fragment.typeCondition)
                     val fragmentSelections =
                         fragment.selectionSet?.selections.orEmpty()
-                    val outerScope = schemaIndex
-                        .possibleTypesFor(fragmentTypeName)
-                        .ifEmpty { setOf(fragmentTypeName) }
+
+                    // Build abstract path from the parent selection-set identity
+                    val abstractPath =
+                        responseIdentity.ifEmpty { "" }
+                            .split(".")
+                            .filter { it.isNotEmpty() }
+                    val branches =
+                        buildRuntimeBranches(
+                            abstractPath = abstractPath,
+                            typeName = fragmentTypeName,
+                            schemaIndex = schemaIndex,
+                        )
+                    val applicableTypes =
+                        branches.map { it.concreteType }.toSet()
+
+                    val dirCond = directivesToCondition(selection.directives)
+                    // If the fragment's own directives exclude it
+                    // (e.g. @include(if: false)), skip its fields.
                     val spreadFields =
-                        parseSelectionSet(
-                            parentType = fragmentType,
-                            selections = fragmentSelections,
-                            fragmentMap = fragmentMap,
-                            responseIdentity = responseIdentity,
-                        ).fields.map { field ->
-                            field.copy(
-                                applicableTypes = composeApplicableTypes(
-                                    field.applicableTypes,
-                                    outerScope,
-                                ),
-                                condition = mergeConditions(
-                                    field.condition,
-                                    directivesToCondition(
-                                        selection.directives,
+                        if (dirCond == null) {
+                            emptyList()
+                        } else {
+                            parseSelectionSet(
+                                parentType = fragmentType,
+                                selections = fragmentSelections,
+                                fragmentMap = fragmentMap,
+                                responseIdentity = responseIdentity,
+                            ).fields.map { field ->
+                                val newBranches =
+                                    field.runtimeBranches + branches
+                                field.copy(
+                                    applicableTypes =
+                                    composeApplicableTypes(
+                                        field.computeApplicableTypes(),
+                                        applicableTypes,
                                     ),
-                                ),
-                            ).propagateApplicableTypesToImmediateChildren()
+                                    runtimeBranches = newBranches,
+                                    condition = mergeConditions(
+                                        field.condition,
+                                        dirCond,
+                                    ),
+                                ).propagateBranches()
+                            }
                         }
                     rawFields.addAll(spreadFields)
                 }
@@ -212,33 +281,52 @@ class ResponseSelectionParser(
                         }
                     val inlineSelections =
                         selection.selectionSet?.selections.orEmpty()
-                    val outerScope =
+
+                    val abstractPath =
+                        responseIdentity.ifEmpty { "" }
+                            .split(".")
+                            .filter { it.isNotEmpty() }
+                    val branches =
                         if (selection.typeCondition != null) {
-                            schemaIndex
-                                .possibleTypesFor(inlineTypeName)
-                                .ifEmpty { setOf(inlineTypeName) }
+                            buildRuntimeBranches(
+                                abstractPath = abstractPath,
+                                typeName = inlineTypeName,
+                                schemaIndex = schemaIndex,
+                            )
                         } else {
-                            emptySet<String>()
+                            emptyList()
                         }
+                    val applicableTypes =
+                        branches.map { it.concreteType }.toSet()
+
+                    val dirCond = directivesToCondition(selection.directives)
+                    // If the fragment's own directives exclude it
+                    // (e.g. @include(if: false)), skip its fields.
                     val inlineFields =
-                        parseSelectionSet(
-                            parentType = inlineType,
-                            selections = inlineSelections,
-                            fragmentMap = fragmentMap,
-                            responseIdentity = responseIdentity,
-                        ).fields.map { field ->
-                            field.copy(
-                                applicableTypes = composeApplicableTypes(
-                                    field.applicableTypes,
-                                    outerScope,
-                                ),
-                                condition = mergeConditions(
-                                    field.condition,
-                                    directivesToCondition(
-                                        selection.directives,
+                        if (dirCond == null) {
+                            emptyList()
+                        } else {
+                            parseSelectionSet(
+                                parentType = inlineType,
+                                selections = inlineSelections,
+                                fragmentMap = fragmentMap,
+                                responseIdentity = responseIdentity,
+                            ).fields.map { field ->
+                                val newBranches =
+                                    field.runtimeBranches + branches
+                                field.copy(
+                                    applicableTypes =
+                                    composeApplicableTypes(
+                                        field.computeApplicableTypes(),
+                                        applicableTypes,
                                     ),
-                                ),
-                            ).propagateApplicableTypesToImmediateChildren()
+                                    runtimeBranches = newBranches,
+                                    condition = mergeConditions(
+                                        field.condition,
+                                        dirCond,
+                                    ),
+                                ).propagateBranches()
+                            }
                         }
                     rawFields.addAll(inlineFields)
                 }
@@ -270,7 +358,7 @@ class ResponseSelectionParser(
         parentType: SchemaType,
         fragmentMap: Map<String, FragmentDefinition>,
         parentIdentity: String = "",
-    ): ResponseField {
+    ): ResponseField? {
         val schemaName = field.name
         val responseName = field.alias ?: schemaName
 
@@ -291,6 +379,9 @@ class ResponseSelectionParser(
             }
 
         val condition = directivesToCondition(field.directives)
+        // If the directive literal consistently excludes this field
+        // (e.g. @include(if: false) or @skip(if: true)), skip it entirely.
+        if (condition == null) return null
 
         // Resolve the field's return type to determine possible types
         val typeName = resolveNamedType(fieldDef.type)
@@ -378,7 +469,8 @@ class ResponseSelectionParser(
      * Merges fields that share the same [ResponseField.responseName].
      * Compatible fields (same schemaName, same top-level output type)
      * have their nested selection sets combined. Incompatible fields
-     * cause an error.
+     * from mutually exclusive runtime branches are stored as
+     * [ResponseField.alternatives] rather than causing an error.
      */
     private fun mergeFields(
         fields: List<ResponseField>,
@@ -392,47 +484,101 @@ class ResponseSelectionParser(
         return grouped.map { (responseName, group) ->
             if (group.size == 1) return@map group.first()
 
-            // Multiple fields with same responseName — must be compatible
+            // Multiple fields with same responseName -- must be compatible
             val first = group.first()
-            for (other in group.drop(1)) {
-                require(other.schemaName == first.schemaName) {
-                    "Incompatible field merge at '$responseName': " +
-                        "'${first.schemaName}' and '${other.schemaName}' " +
-                        "have the same response name but different schema names."
+            // Resolve applicableTypes from branches if not already set
+            val normalized = group.map { f ->
+                if (f.applicableTypes.isEmpty() && f.runtimeBranches.isNotEmpty()) {
+                    f.copy(applicableTypes = f.computeApplicableTypes())
+                } else {
+                    f
                 }
             }
 
-            // Merge applicableTypes: if any field applies to all
-            // (empty set), the merged field also applies to all.
-            val mergedApplicableTypes =
-                if (group.any { it.applicableTypes.isEmpty() }) {
-                    emptySet<String>()
-                } else {
-                    group.fold(emptySet<String>()) { acc, f -> acc + f.applicableTypes }
-                }
+            // Check for schema name conflicts and handle via alternatives
+            var result = normalized.first()
+            var allAlternatives = result.alternatives.toMutableList()
 
-            // Merge nested selection sets
-            val mergedSelectionSet =
-                group
-                    .mapNotNull { it.selectionSet }
-                    .fold(null as ResponseSelectionSet?) { acc, set ->
-                        if (acc == null) {
-                            set
+            for (other in normalized.drop(1)) {
+                val sameSchemaName = other.schemaName == result.schemaName
+                val branchesCompatible =
+                    areBranchesCompatible(
+                        result.runtimeBranches,
+                        other.runtimeBranches,
+                    )
+
+                if (sameSchemaName && branchesCompatible) {
+                    // Compatible: merge the nested selection sets and
+                    // accumulate applicableTypes (union of scopes).
+                    val mergedApplicableTypes =
+                        if (
+                            result.applicableTypes.isEmpty() ||
+                            other.applicableTypes.isEmpty()
+                        ) {
+                            emptySet<String>()
                         } else {
-                            ResponseSelectionSet(
-                                parentType = acc.parentType,
-                                responseIdentity = acc.responseIdentity,
-                                fields = mergeFields(
-                                    acc.fields + set.fields,
-                                ),
-                            )
+                            result.applicableTypes + other.applicableTypes
                         }
-                    }
+                    val mergedBranches =
+                        result.runtimeBranches.toSet() +
+                            other.runtimeBranches.toSet()
 
-            first.copy(
-                selectionSet = mergedSelectionSet,
-                applicableTypes = mergedApplicableTypes,
-            )
+                    val mergedSelectionSet =
+                        listOfNotNull(result.selectionSet, other.selectionSet)
+                            .fold(null as ResponseSelectionSet?) { acc, set ->
+                                if (acc == null) {
+                                    set
+                                } else {
+                                    ResponseSelectionSet(
+                                        parentType = acc.parentType,
+                                        responseIdentity = acc.responseIdentity,
+                                        fields = mergeFields(
+                                            acc.fields + set.fields,
+                                        ),
+                                    )
+                                }
+                            }
+
+                    result = result.copy(
+                        selectionSet = mergedSelectionSet,
+                        applicableTypes = mergedApplicableTypes,
+                        runtimeBranches = mergedBranches.toList(),
+                    )
+                } else if (!sameSchemaName) {
+                    // Incompatible schema names from mutually exclusive
+                    // branches: keep as alternative.
+                    allAlternatives.add(other)
+                } else {
+                    // Same schema name but incompatible branches:
+                    // this shouldn't normally happen but if it does,
+                    // merge the nested fields and keep branches.
+                    val mergedSelectionSet =
+                        listOfNotNull(result.selectionSet, other.selectionSet)
+                            .fold(null as ResponseSelectionSet?) { acc, set ->
+                                if (acc == null) {
+                                    set
+                                } else {
+                                    ResponseSelectionSet(
+                                        parentType = acc.parentType,
+                                        responseIdentity = acc.responseIdentity,
+                                        fields = mergeFields(
+                                            acc.fields + set.fields,
+                                        ),
+                                    )
+                                }
+                            }
+
+                    result = result.copy(
+                        selectionSet = mergedSelectionSet,
+                        applicableTypes =
+                        result.applicableTypes + other.applicableTypes,
+                        runtimeBranches =
+                        result.runtimeBranches + other.runtimeBranches,
+                    )
+                }
+            }
+
+            result.copy(alternatives = allAlternatives)
         }
     }
 
@@ -495,33 +641,48 @@ class ResponseSelectionParser(
     }
 
     /**
-     * Propagates this field's [ResponseField.applicableTypes] to its
+     * Propagates this field's [ResponseField.runtimeBranches] to its
      * children within its selection set, continuing to grandchildren
-     * and deeper ONLY while the child has empty applicableTypes.
-     * This ensures the fragment scope reaches deep enough for the
-     * collector's per-concrete-type splitting to work, but stops at
-     * fields that already have their own applicableTypes from nested
-     * fragment scopes (preventing outer scopes from corrupting
-     * nested abstract type selections).
+     * and deeper. For children that already have their own
+     * runtimeBranches from a nested fragment scope, the parent's
+     * branches are appended (accumulated) rather than overwriting.
+     * This ensures that nested abstract type branches correctly
+     * capture the full chain from outer to inner levels.
+     *
+     * Also populates applicableTypes from runtimeBranches for backward
+     * compatibility.
      */
-    private fun ResponseField.propagateApplicableTypesToImmediateChildren(): ResponseField {
-        val scope = applicableTypes
-        // Only propagate if this field carries type-specific scope
-        // (set by a parent fragment handler via composeApplicableTypes)
-        if (scope.isEmpty() || selectionSet == null) return this
+    private fun ResponseField.propagateBranches(): ResponseField {
+        val branches = runtimeBranches
+        if (branches.isEmpty() || selectionSet == null) return this
+        val computedApplicable = branches.map { it.concreteType }.toSet()
         return copy(
+            applicableTypes = computedApplicable,
             selectionSet = selectionSet.copy(
                 fields = selectionSet.fields.map { child ->
-                    if (child.applicableTypes.isEmpty()) {
-                        // Child has no scope yet — apply parent scope
-                        // and continue propagating deeper
+                    if (child.runtimeBranches.isEmpty()) {
+                        // Child has no scope yet -- apply parent
+                        // branches and continue propagating deeper
                         child.copy(
-                            applicableTypes = scope,
-                        ).propagateApplicableTypesToImmediateChildren()
+                            runtimeBranches = branches,
+                            applicableTypes = computedApplicable,
+                        ).propagateBranches()
                     } else {
-                        // Child already has scope from a nested fragment —
-                        // do NOT overwrite it (would corrupt nested types)
-                        child
+                        // Child already has scope from a nested
+                        // fragment -- accumulate parent branches
+                        // alongside the child's own branches, then
+                        // continue propagating the merged set deeper
+                        val mergedBranches =
+                            branches +
+                                child.runtimeBranches
+                        val mergedApplicable =
+                            mergedBranches
+                                .map { it.concreteType }
+                                .toSet()
+                        child.copy(
+                            runtimeBranches = mergedBranches,
+                            applicableTypes = mergedApplicable,
+                        ).propagateBranches()
                     }
                 },
             ),
@@ -542,52 +703,65 @@ class ResponseSelectionParser(
     /**
      * Converts a list of graphql-java [graphql.language.Directive] nodes
      * to a [SelectionCondition], handling `@include` and `@skip`.
+     *
+     * Literal boolean values are folded at parse time:
+     * - `@include(if: true)` → unconditional (isConditional = false)
+     * - `@include(if: false)` → returns null (field is always excluded)
+     * - `@skip(if: false)` → unconditional (isConditional = false)
+     * - `@skip(if: true)` → returns null (field is always excluded)
      */
     private fun directivesToCondition(
         directives: List<graphql.language.Directive>,
-    ): SelectionCondition {
+    ): SelectionCondition? {
         if (directives.isEmpty()) return SelectionCondition.UNCONDITIONAL
 
-        var isConditional = false
-        var skipIf = false
-        var variableName: String? = null
-
         for (directive in directives) {
+            val arg =
+                directive.getArgument("if")
+                    ?: continue
+            val value = arg.value
+
             when (directive.name) {
                 "include" -> {
-                    isConditional = true
-                    skipIf = false
-                    variableName =
-                        extractDirectiveVariable(directive, "if")
+                    return when {
+                        value is graphql.language.VariableReference -> {
+                            SelectionCondition(
+                                isConditional = true,
+                                skipIf = false,
+                                variableName = value.name,
+                            )
+                        }
+                        value is graphql.language.BooleanValue &&
+                            !value.isValue ->
+                            // @include(if: false) → always excluded
+                            null
+                        else ->
+                            // @include(if: true) or other literal → unconditional
+                            SelectionCondition.UNCONDITIONAL
+                    }
                 }
                 "skip" -> {
-                    isConditional = true
-                    skipIf = true
-                    variableName =
-                        extractDirectiveVariable(directive, "if")
+                    return when {
+                        value is graphql.language.VariableReference -> {
+                            SelectionCondition(
+                                isConditional = true,
+                                skipIf = true,
+                                variableName = value.name,
+                            )
+                        }
+                        value is graphql.language.BooleanValue &&
+                            value.isValue ->
+                            // @skip(if: true) → always excluded
+                            null
+                        else ->
+                            // @skip(if: false) or other literal → unconditional
+                            SelectionCondition.UNCONDITIONAL
+                    }
                 }
             }
         }
 
-        return SelectionCondition(
-            isConditional = isConditional,
-            skipIf = skipIf,
-            variableName = variableName,
-        )
-    }
-
-    private fun extractDirectiveVariable(
-        directive: graphql.language.Directive,
-        argumentName: String,
-    ): String? {
-        val arg =
-            directive.getArgument(argumentName)
-                ?: return null
-        return when (val value = arg.value) {
-            is graphql.language.VariableReference -> value.name
-            is graphql.language.BooleanValue -> null // literal true/false, not conditional
-            else -> null
-        }
+        return SelectionCondition.UNCONDITIONAL
     }
 
     /**

@@ -1,0 +1,14 @@
+query NestedAbstractBranches {
+  outer {
+    ... on OuterA {
+      inner {
+        ... on InnerX { detail { fromA } }
+      }
+    }
+    ... on OuterB {
+      inner {
+        ... on InnerX { detail { fromB } }
+      }
+    }
+  }
+}

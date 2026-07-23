@@ -989,13 +989,14 @@ class ResponseSelectionParserTest {
     @Test
     fun `inline fragment without type condition uses parent type and has no additional applicableTypes`() {
         val parser = ResponseSelectionParser(githubIndex)
-        // Type-condition-less inline fragment with @include directive.
-        // Fields inside should be parsed correctly with
-        // condition.isConditional = true.
+        // Type-condition-less inline fragment with @include directive
+        // referencing a variable. Using a variable preserves the
+        // conditional behavior; literal true/false are now folded
+        // at parse time.
         val document = """
-            query ConditionalFragmentQuery {
+            query ConditionalFragmentQuery(${'$'}includeName: Boolean!) {
               viewer {
-                ... @include(if: true) {
+                ... @include(if: ${'$'}includeName) {
                   name
                   bio
                 }
@@ -1030,6 +1031,77 @@ class ResponseSelectionParserTest {
         assertTrue(
             "bio applicableTypes should be empty",
             bioField.applicableTypes.isEmpty(),
+        )
+    }
+
+    // --- Item 3: Field alternatives for mutually exclusive type scopes ---
+
+    @Test
+    fun `aliased fields from disjoint union branches are kept as alternatives`() {
+        // Use a schema with a SearchResult union (User | Repository)
+        // where each member has a different field name under the same alias.
+        val searchSchemaFile = fixtureFile(
+            "fixtures/advanced/unions/SearchResult.graphqls",
+        )
+        val searchTypes = SchemaParser().parseWithRootTypes(searchSchemaFile)
+        val searchIndex = SchemaIndex.from(
+            types = searchTypes.types,
+            queryTypeName = searchTypes.queryTypeName,
+            mutationTypeName = searchTypes.mutationTypeName,
+            subscriptionTypeName = searchTypes.subscriptionTypeName,
+        )
+
+        val parser = ResponseSelectionParser(searchIndex)
+        val document = """
+            query SearchQuery {
+              search {
+                ... on User { value: displayName }
+                ... on Repository { value: repositoryName }
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "SearchQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val search = result.fields.first { it.responseName == "search" }
+        val searchFields = search.selectionSet!!
+
+        // The merged field 'value' should have runtimeBranches for both
+        // User and Repository, and one of them should be the
+        // "primary" field while the other is an alternative.
+        val valueField = searchFields.fields.find { it.responseName == "value" }
+        assertNotNull("Should have merged value field", valueField)
+
+        // Check that alternatives are populated
+        val alternatives = valueField!!.alternatives
+        assertFalse(
+            "Should have alternatives for differently scoped fields",
+            alternatives.isEmpty(),
+        )
+
+        // The primary field should have one schema name,
+        // the alternative should have the other.
+        val allSchemaNames = (listOf(valueField) + alternatives)
+            .map { it.schemaName }
+            .toSet()
+        assertTrue(
+            "All schema names should be present: $allSchemaNames",
+            allSchemaNames.contains("displayName"),
+        )
+        assertTrue(
+            "All schema names should be present: $allSchemaNames",
+            allSchemaNames.contains("repositoryName"),
+        )
+
+        // Check runtime branches are present and correct
+        val allBranchTypes = valueField.runtimeBranches.map { it.concreteType }.toSet()
+        assertTrue(
+            "Primary field should have branch types: $allBranchTypes",
+            allBranchTypes.isNotEmpty(),
         )
     }
 

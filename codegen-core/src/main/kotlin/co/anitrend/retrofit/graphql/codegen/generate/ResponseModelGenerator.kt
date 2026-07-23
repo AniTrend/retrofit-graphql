@@ -183,21 +183,29 @@ class ResponseModelGenerator(
 
                 if (def is SchemaType.ObjectType && field.selectionSet != null) {
                     // Check if nested fields within this selection set
-                    // have different applicableTypes (meaning they come
+                    // have different runtimeBranches (meaning they come
                     // from different fragment branches of an abstract
                     // parent). If so, split into per-scope entries to
                     // avoid merging unrelated fields from mutually
                     // exclusive subtype branches into one class.
                     val nestedGroups =
-                        field.selectionSet.fields.groupBy { it.applicableTypes }
+                        field.selectionSet.fields.groupBy {
+                            it.runtimeBranches
+                        }
+
+                    // Also collect alternatives for projection
+                    val alternatives =
+                        field.selectionSet.fields.flatMap { f ->
+                            f.alternatives
+                        }
 
                     // Also split when the field itself has multiple
-                    // applicableTypes (merged from multiple fragment
+                    // runtimeBranches (merged from multiple fragment
                     // branches) even if its immediate children are
                     // not yet split. This ensures parent entries exist
                     // for deeply nested scope resolution.
                     val needsSplit = nestedGroups.size > 1 ||
-                        field.applicableTypes.size > 1
+                        field.runtimeBranches.size > 1
 
                     if (!needsSplit) {
                         // All fields share the same scope — normal case
@@ -215,49 +223,240 @@ class ResponseModelGenerator(
                             result[key] = field.selectionSet
                         }
                     } else {
-                        // Determine concrete types to project for.
-                        // Use the field's own applicableTypes when
-                        // immediate children are all in one group
-                        // (nestedGroups.size <= 1) but the field
-                        // itself was merged from multiple branches.
-                        val allConcreteTypes =
-                            if (nestedGroups.size <= 1) {
-                                field.applicableTypes
-                            } else {
-                                field.selectionSet.fields
-                                    .flatMap { it.applicableTypes }
-                                    .toSet()
+                        val baseIdentity =
+                            field.selectionSet.responseIdentity
+                                .ifBlank { dataClassName }
+                        val allCandidates =
+                            field.selectionSet.fields + alternatives
+
+                        // Determine the maximum abstract depth from all
+                        // branches. If all branches are at depth 1
+                        // (single abstract level), iterate by individual
+                        // concrete types so that fields belonging to
+                        // multiple types (like a common `id`) appear in
+                        // every type's projection.
+                        val allBranches =
+                            allCandidates.flatMap { it.runtimeBranches }
+                        val maxDepth =
+                            allBranches.maxOfOrNull {
+                                it.abstractPath.size
+                            } ?: 0
+
+                        // Group the child fields by their branch set
+                        val fieldGroups =
+                            nestedGroups.filterKeys { it.isNotEmpty() }
+
+                        if (maxDepth <= 1) {
+                            // Single abstract level: iterate by
+                            // individual concrete types from the schema
+                            // parent definition, collecting fields that
+                            // include that type in their branch set.
+                            // This naturally includes common fields
+                            // (which belong to multiple types).
+                            val enclosingDef =
+                                schemaIndex.definition(
+                                    selSet.parentType,
+                                )
+                            val schemaTypes =
+                                when (enclosingDef) {
+                                    is SchemaType.InterfaceType ->
+                                        enclosingDef.possibleTypes.toSet()
+                                    is SchemaType.UnionType ->
+                                        enclosingDef.memberTypes.toSet()
+                                    else -> emptySet()
+                                }
+
+                            val typesToProject =
+                                if (schemaTypes.isNotEmpty()) {
+                                    schemaTypes
+                                } else {
+                                    allBranches
+                                        .map { it.concreteType }
+                                        .toSet()
+                                }
+
+                            for (concreteType in typesToProject) {
+                                val allSelectedTypes =
+                                    allCandidates
+                                        .flatMap { f ->
+                                            f.runtimeBranches.map {
+                                                it.concreteType
+                                            }
+                                        }.toSet()
+                                val projectedFields =
+                                    allCandidates.filter { f ->
+                                        val branchTypes =
+                                            f.runtimeBranches
+                                                .map {
+                                                    it.concreteType
+                                                }.toSet()
+                                        branchTypes.isEmpty() ||
+                                            concreteType in branchTypes ||
+                                            (
+                                                branchTypes
+                                                    .containsAll(
+                                                        allSelectedTypes,
+                                                    ) &&
+                                                    allSelectedTypes
+                                                        .isNotEmpty()
+                                                )
+                                    }
+                                        .distinctBy { it.responseName }
+
+                                if (projectedFields.isEmpty()) continue
+
+                                val scopedIdentity =
+                                    "$concreteType.$baseIdentity"
+                                val scopedSelSet =
+                                    field.selectionSet.copy(
+                                        responseIdentity =
+                                        scopedIdentity,
+                                        fields = projectedFields
+                                            .sortedBy {
+                                                it.responseName
+                                            },
+                                    )
+                                val existing = result[scopedIdentity]
+                                result[scopedIdentity] =
+                                    if (existing != null) {
+                                        mergeSelectionSets(
+                                            existing,
+                                            scopedSelSet,
+                                        )
+                                    } else {
+                                        scopedSelSet
+                                    }
+                            }
+                        } else {
+                            // Multi-level abstract hierarchy:
+                            // iterate over distinct branch chains.
+                            // Each chain represents a concrete type
+                            // path (e.g. OuterA → InnerX).
+                            for (
+                            (branchChain, scopedFields) in fieldGroups
+                            ) {
+                                // Include fields with empty branches
+                                // (common to all types) in each scope
+                                val commonFields =
+                                    allCandidates.filter { f ->
+                                        f.runtimeBranches.isEmpty()
+                                    }
+                                val allScopedFields =
+                                    (commonFields + scopedFields)
+                                        .distinctBy { it.responseName }
+
+                                if (allScopedFields.isEmpty()) continue
+
+                                val chainTypes =
+                                    branchChain.map {
+                                        it.concreteType
+                                    }
+                                val scopedIdentity =
+                                    "${
+                                        chainTypes.joinToString(".")
+                                    }.$baseIdentity"
+                                val scopedSelSet =
+                                    field.selectionSet.copy(
+                                        responseIdentity =
+                                        scopedIdentity,
+                                        fields = allScopedFields
+                                            .sortedBy {
+                                                it.responseName
+                                            },
+                                    )
+                                val existing = result[scopedIdentity]
+                                result[scopedIdentity] =
+                                    if (existing != null) {
+                                        mergeSelectionSets(
+                                            existing,
+                                            scopedSelSet,
+                                        )
+                                    } else {
+                                        scopedSelSet
+                                    }
                             }
 
-                        for (concreteType in allConcreteTypes) {
-                            val projectedFields =
-                                field.selectionSet.fields.filter { f ->
-                                    f.applicableTypes.isEmpty() ||
-                                        concreteType in f.applicableTypes
-                                }
-                            if (projectedFields.isEmpty()) continue
-
-                            val baseIdentity =
-                                field.selectionSet.responseIdentity
-                                    .ifBlank { dataClassName }
-                            val scopedIdentity =
-                                "$concreteType.$baseIdentity"
-                            val scopedSelSet =
-                                field.selectionSet.copy(
-                                    responseIdentity = scopedIdentity,
-                                    fields = projectedFields
-                                        .sortedBy { it.responseName },
+                            // Item 1: also create entries for
+                            // missing types from the schema
+                            val enclosingDef =
+                                schemaIndex.definition(
+                                    selSet.parentType,
                                 )
-                            val existing = result[scopedIdentity]
-                            result[scopedIdentity] =
-                                if (existing != null) {
-                                    mergeSelectionSets(
-                                        existing,
-                                        scopedSelSet,
-                                    )
-                                } else {
-                                    scopedSelSet
+                            val allPossibleTypes =
+                                when (enclosingDef) {
+                                    is SchemaType.InterfaceType ->
+                                        enclosingDef.possibleTypes
+                                            .toSet()
+                                    is SchemaType.UnionType ->
+                                        enclosingDef.memberTypes
+                                            .toSet()
+                                    else -> emptySet()
                                 }
+
+                            if (allPossibleTypes.isNotEmpty()) {
+                                val projectedTypes =
+                                    fieldGroups.keys
+                                        .flatMap { chain ->
+                                            chain.map {
+                                                it.concreteType
+                                            }
+                                        }.toSet()
+                                val missingTypes =
+                                    allPossibleTypes -
+                                        projectedTypes
+
+                                // Compute fields that are common
+                                // across ALL selected types — these
+                                // should appear even for types that
+                                // have no type-specific selections.
+                                val allSelectedTypes =
+                                    allCandidates
+                                        .flatMap { f ->
+                                            f.runtimeBranches.map {
+                                                it.concreteType
+                                            }
+                                        }.toSet()
+                                val commonToAllSelected =
+                                    allCandidates.filter { f ->
+                                        f.runtimeBranches
+                                            .isEmpty() ||
+                                            f.runtimeBranches
+                                                .map {
+                                                    it.concreteType
+                                                }.toSet()
+                                                .containsAll(
+                                                    allSelectedTypes,
+                                                )
+                                    }
+                                if (
+                                    commonToAllSelected.isEmpty()
+                                ) {
+                                    continue
+                                }
+                                for (missingType in missingTypes) {
+                                    val scopedIdentity =
+                                        "$missingType.$baseIdentity"
+                                    if (
+                                        result.containsKey(
+                                            scopedIdentity,
+                                        )
+                                    ) {
+                                        continue
+                                    }
+                                    val scopedSelSet =
+                                        field.selectionSet.copy(
+                                            responseIdentity =
+                                            scopedIdentity,
+                                            fields =
+                                            commonToAllSelected
+                                                .sortedBy {
+                                                    it.responseName
+                                                },
+                                        )
+                                    result[scopedIdentity] =
+                                        scopedSelSet
+                                }
+                            }
                         }
                     }
                     walk(field.selectionSet)
@@ -398,8 +597,8 @@ class ResponseModelGenerator(
                 // as regular properties on the subtype.
                 !(field.schemaName == "__typename" && field.responseName == "__typename") &&
                     (
-                        field.applicableTypes.isEmpty() ||
-                            concreteTypeName in field.applicableTypes
+                        field.computeApplicableTypes().isEmpty() ||
+                            concreteTypeName in field.computeApplicableTypes()
                         )
             }
             val properties =
@@ -769,10 +968,58 @@ class ResponseModelGenerator(
         // (e.g. "result.detail" → "Success.result.detail"), the identity
         // on the field still points to the merged key. Try prefixing with
         // the concrete type name that owns this field.
+        //
+        // For multi-level scoped identifiers (e.g.
+        // "OuterA.InnerX.outer.inner.detail"), try progressively longer
+        // prefix combinations derived from the scopePrefix segments.
         if (!scopePrefix.isNullOrBlank() && !lookupKey.isNullOrBlank()) {
+            // Try exact prefix match first
             val scopedKey = "$scopePrefix.$lookupKey"
             resolvedNames[scopedKey]?.let { generatedName ->
                 return ClassName(packageName, dataClassName, generatedName)
+            }
+
+            // For multi-level chains, try partial prefixes.
+            // The scopePrefix may be "OuterA" but the actual key
+            // could be "OuterA.InnerX.outer.inner.detail". Search for
+            // any key that:
+            //   a) ends with ".{lookupKey}"
+            //   b) contains scopePrefix as a prefix component
+            val prefixParts = scopePrefix.split(".")
+            val candidates =
+                resolvedNames.keys.filter { key ->
+                    key.endsWith(".$lookupKey") &&
+                        prefixParts.all { part ->
+                            key.split(".")
+                                .contains(part)
+                        }
+                }
+            if (candidates.size == 1) {
+                resolvedNames[candidates.first()]?.let {
+                        generatedName ->
+                    return ClassName(
+                        packageName,
+                        dataClassName,
+                        generatedName,
+                    )
+                }
+            } else if (candidates.isNotEmpty()) {
+                // Multiple candidates: prefer the one with the
+                // longest prefix match (most specific).
+                val best =
+                    candidates.minByOrNull { key ->
+                        key.length
+                    }
+                best?.let { bestKey ->
+                    resolvedNames[bestKey]?.let {
+                            generatedName ->
+                        return ClassName(
+                            packageName,
+                            dataClassName,
+                            generatedName,
+                        )
+                    }
+                }
             }
         }
 
