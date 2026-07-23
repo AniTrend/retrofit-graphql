@@ -183,17 +183,62 @@ class ResponseModelGenerator(
                 val def = schemaIndex.definition(typeName)
 
                 if (def is SchemaType.ObjectType && field.selectionSet != null) {
-                    val key = field.selectionSet.responseIdentity.ifBlank {
-                        dataClassName
-                    }
-                    val existing = result[key]
-                    if (existing != null) {
-                        result[key] = mergeSelectionSets(
-                            existing,
-                            field.selectionSet,
-                        )
+                    // Check if nested fields within this selection set
+                    // have different applicableTypes (meaning they come
+                    // from different fragment branches of an abstract
+                    // parent). If so, split into per-scope entries to
+                    // avoid merging unrelated fields from mutually
+                    // exclusive subtype branches into one class.
+                    val nestedGroups =
+                        field.selectionSet.fields.groupBy { it.applicableTypes }
+
+                    if (nestedGroups.size <= 1) {
+                        // All fields share the same scope — normal case
+                        val key =
+                            field.selectionSet.responseIdentity.ifBlank {
+                                dataClassName
+                            }
+                        val existing = result[key]
+                        if (existing != null) {
+                            result[key] = mergeSelectionSets(
+                                existing,
+                                field.selectionSet,
+                            )
+                        } else {
+                            result[key] = field.selectionSet
+                        }
                     } else {
-                        result[key] = field.selectionSet
+                        // Fields have different type scopes —
+                        // create per-scope entries
+                        for ((scope, scopeFields) in nestedGroups) {
+                            val scopeStr = if (scope.isEmpty()) {
+                                ""
+                            } else {
+                                scope.sorted()
+                                    .joinToString("") {
+                                        it.replaceFirstChar { c -> c.uppercase() }
+                                    }
+                            }
+                            val baseIdentity =
+                                field.selectionSet.responseIdentity
+                                    .ifBlank { dataClassName }
+                            val scopedIdentity = scopeStr + baseIdentity
+                            val scopedSelSet =
+                                field.selectionSet.copy(
+                                    responseIdentity = scopedIdentity,
+                                    fields = scopeFields.sortedBy { it.responseName },
+                                )
+                            val existing = result[scopedIdentity]
+                            result[scopedIdentity] =
+                                if (existing != null) {
+                                    mergeSelectionSets(
+                                        existing,
+                                        scopedSelSet,
+                                    )
+                                } else {
+                                    scopedSelSet
+                                }
+                        }
                     }
                     walk(field.selectionSet)
                 } else if (field.selectionSet != null) {
@@ -326,6 +371,7 @@ class ResponseModelGenerator(
                         dataClassName = dataClassName,
                         packageName = packageName,
                         resolvedNames = resolvedNames,
+                        scopePrefix = concreteTypeName,
                     )
                 }
             val constructorParams =
@@ -339,30 +385,48 @@ class ResponseModelGenerator(
                     paramBuilder.build()
                 }
 
-            val subtypeSpec = TypeSpec.classBuilder(className)
-                .addModifiers(KModifier.PUBLIC, KModifier.DATA)
-                .addAnnotation(SERIALIZABLE)
-                .addAnnotation(
-                    AnnotationSpec.builder(SERIAL_NAME)
-                        .addMember("%S", concreteTypeName)
-                        .build(),
-                )
-                .addSuperinterface(
-                    ClassName(packageName, dataClassName, interfaceName),
-                )
-                .primaryConstructor(
-                    com.squareup.kotlinpoet.FunSpec.constructorBuilder()
-                        .addParameters(constructorParams)
-                        .build(),
-                )
-                .apply {
-                    properties.forEach { prop ->
-                        val builder = prop.toBuilder()
-                        builder.initializer(prop.name)
-                        addProperty(builder.build())
+            val subtypeSpec = if (applicableFields.isEmpty()) {
+                // Unselected union/interfaces members have no fields at all.
+                // Data classes require at least one primary-constructor parameter,
+                // so emit a plain serializable class instead.
+                TypeSpec.classBuilder(className)
+                    .addModifiers(KModifier.PUBLIC)
+                    .addAnnotation(SERIALIZABLE)
+                    .addAnnotation(
+                        AnnotationSpec.builder(SERIAL_NAME)
+                            .addMember("%S", concreteTypeName)
+                            .build(),
+                    )
+                    .addSuperinterface(
+                        ClassName(packageName, dataClassName, interfaceName),
+                    )
+                    .build()
+            } else {
+                TypeSpec.classBuilder(className)
+                    .addModifiers(KModifier.PUBLIC, KModifier.DATA)
+                    .addAnnotation(SERIALIZABLE)
+                    .addAnnotation(
+                        AnnotationSpec.builder(SERIAL_NAME)
+                            .addMember("%S", concreteTypeName)
+                            .build(),
+                    )
+                    .addSuperinterface(
+                        ClassName(packageName, dataClassName, interfaceName),
+                    )
+                    .primaryConstructor(
+                        com.squareup.kotlinpoet.FunSpec.constructorBuilder()
+                            .addParameters(constructorParams)
+                            .build(),
+                    )
+                    .apply {
+                        properties.forEach { prop ->
+                            val builder = prop.toBuilder()
+                            builder.initializer(prop.name)
+                            addProperty(builder.build())
+                        }
                     }
-                }
-                .build()
+                    .build()
+            }
             interfaceBuilder.addType(subtypeSpec)
         }
 
@@ -515,6 +579,7 @@ class ResponseModelGenerator(
         dataClassName: String,
         packageName: String,
         resolvedNames: Map<String, String>,
+        scopePrefix: String? = null,
     ): PropertySpec {
         var kotlinType = resolveTypeName(
             graphQLType = field.outputType,
@@ -522,6 +587,7 @@ class ResponseModelGenerator(
             packageName = packageName,
             resolvedNames = resolvedNames,
             selectionIdentity = field.selectionSet?.responseIdentity,
+            scopePrefix = scopePrefix,
         )
 
         // Conditional fields (@include/@skip) may be absent from the response
@@ -562,6 +628,7 @@ class ResponseModelGenerator(
         packageName: String,
         resolvedNames: Map<String, String>,
         selectionIdentity: String? = null,
+        scopePrefix: String? = null,
     ): TypeName {
         return when (graphQLType) {
             is GraphQLType.Named -> {
@@ -571,6 +638,7 @@ class ResponseModelGenerator(
                     packageName = packageName,
                     resolvedNames = resolvedNames,
                     selectionIdentity = selectionIdentity,
+                    scopePrefix = scopePrefix,
                 )
                 if (graphQLType.nullable) base.copy(nullable = true) else base
             }
@@ -581,6 +649,7 @@ class ResponseModelGenerator(
                     packageName = packageName,
                     resolvedNames = resolvedNames,
                     selectionIdentity = selectionIdentity,
+                    scopePrefix = scopePrefix,
                 )
                 val listType = ClassName("kotlin.collections", "List")
                     .parameterizedBy(elementType)
@@ -611,6 +680,7 @@ class ResponseModelGenerator(
         packageName: String,
         resolvedNames: Map<String, String>,
         selectionIdentity: String? = null,
+        scopePrefix: String? = null,
     ): TypeName {
         // 1. Custom scalar mappings
         scalarMappings[name]?.let { return parseFqcnToTypeName(it) }
@@ -630,6 +700,17 @@ class ResponseModelGenerator(
         // from the key used in resolvedNames, e.g. for abstract types)
         if (lookupKey != name) {
             resolvedNames[name]?.let { generatedName ->
+                return ClassName(packageName, dataClassName, generatedName)
+            }
+        }
+        // Per-scope fallback: when a sealed interface subtype has a nested
+        // ObjectType field whose identity was split by the collector
+        // (e.g. "Result__Detail" → "SuccessResult__Detail"), the identity
+        // on the field still points to the merged key. Try prefixing with
+        // the concrete type name that owns this field.
+        if (!scopePrefix.isNullOrBlank() && !lookupKey.isNullOrBlank()) {
+            val scopedKey = scopePrefix + lookupKey
+            resolvedNames[scopedKey]?.let { generatedName ->
                 return ClassName(packageName, dataClassName, generatedName)
             }
         }

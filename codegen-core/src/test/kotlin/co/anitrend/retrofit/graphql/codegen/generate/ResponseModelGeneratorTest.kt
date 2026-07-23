@@ -177,11 +177,11 @@ class ResponseModelGeneratorTest {
         assertNotNull("UpdateBio should have user property", userProp)
 
         // Check nested UpdateBioUser class (path-based name)
-        val userClass = dataClass.typeSpecs.firstOrNull { it.name == "UpdateBioUser" }
-        assertNotNull("Should contain nested UpdateBioUser class", userClass)
+        val userClass = dataClass.typeSpecs.firstOrNull { it.name == "UpdateBio__User" }
+        assertNotNull("Should contain nested UpdateBio__User class", userClass)
         val userFieldNames = userClass!!.propertySpecs.map { it.name }.toSet()
-        assertTrue("UpdateBioUser should have id field", "id" in userFieldNames)
-        assertTrue("UpdateBioUser should have bio field", "bio" in userFieldNames)
+        assertTrue("UpdateBio__User should have id field", "id" in userFieldNames)
+        assertTrue("UpdateBio__User should have bio field", "bio" in userFieldNames)
     }
 
     // --- @SerialName for aliases ---
@@ -634,11 +634,11 @@ class ResponseModelGeneratorTest {
             .first { it.name == "ActivityQueryData" }
 
         // Should have a sealed interface keyed by response-path identity
-        // ("PageActivities") instead of schema type name ("ActivityUnion")
-        val activityUnion = dataClass.typeSpecs.find { it.name == "PageActivities" }
-        assertNotNull("Should have sealed interface for PageActivities", activityUnion)
+        // ("Page__Activities") instead of schema type name ("ActivityUnion")
+        val activityUnion = dataClass.typeSpecs.find { it.name == "Page__Activities" }
+        assertNotNull("Should have sealed interface for Page__Activities", activityUnion)
         assertTrue(
-            "PageActivities should be sealed",
+            "Page__Activities should be sealed",
             activityUnion!!.modifiers.contains(KModifier.SEALED),
         )
 
@@ -715,15 +715,15 @@ class ResponseModelGeneratorTest {
         assertNotNull("Should contain AliasedFieldsData class", dataClass)
 
         // MediaEnglishTitle and MediaNativeTitle should be separate classes
-        val mediaEnglishTitle = dataClass!!.typeSpecs.find { it.name == "MediaEnglishTitle" }
-        assertNotNull("Should have MediaEnglishTitle class", mediaEnglishTitle)
+        val mediaEnglishTitle = dataClass!!.typeSpecs.find { it.name == "Media__EnglishTitle" }
+        assertNotNull("Should have Media__EnglishTitle class", mediaEnglishTitle)
         val englishFields = mediaEnglishTitle!!.propertySpecs.map { it.name }
-        assertTrue("MediaEnglishTitle should have english", "english" in englishFields)
+        assertTrue("Media__EnglishTitle should have english", "english" in englishFields)
 
-        val mediaNativeTitle = dataClass.typeSpecs.find { it.name == "MediaNativeTitle" }
-        assertNotNull("Should have MediaNativeTitle class", mediaNativeTitle)
+        val mediaNativeTitle = dataClass.typeSpecs.find { it.name == "Media__NativeTitle" }
+        assertNotNull("Should have Media__NativeTitle class", mediaNativeTitle)
         val nativeFields = mediaNativeTitle!!.propertySpecs.map { it.name }
-        assertTrue("MediaNativeTitle should have native", "native" in nativeFields)
+        assertTrue("Media__NativeTitle should have native", "native" in nativeFields)
 
         // No merged MediaTitle class
         val mergedTitleClass = dataClass.typeSpecs.find { it.name == "MediaTitle" }
@@ -763,7 +763,7 @@ class ResponseModelGeneratorTest {
         val pageClass = dataClass.typeSpecs.find { it.name == "Page" }
         assertNotNull("Should have nested Page class", pageClass)
 
-        val notificationsIface = dataClass.typeSpecs.find { it.name == "PageNotifications" }
+        val notificationsIface = dataClass.typeSpecs.find { it.name == "Page__Notifications" }
         assertNotNull("Should have sealed interface for notifications", notificationsIface)
         assertTrue(
             "Should be sealed",
@@ -782,8 +782,7 @@ class ResponseModelGeneratorTest {
         // Log all nested type names for debugging
         val allNestedNames = dataClass.typeSpecs.map { it.name }.filterNotNull()
         val mediaType = dataClass.typeSpecs.find {
-            it.name == "NotificationsMedia" ||
-                it.name == "PageNotificationsMedia"
+            it.name == "Page__Notifications__Media"
         }
         assertNotNull(
             "Should have a nested media type. Found nested types: $allNestedNames",
@@ -792,9 +791,7 @@ class ResponseModelGeneratorTest {
 
         // Verify NotificationMediaTitle is also nested
         val mediaTitleType = dataClass.typeSpecs.find {
-            it.name == "NotificationsMediaTitle" ||
-                it.name == "PageNotificationsMediaTitle" ||
-                it.name == "NotificationMediaTitle"
+            it.name == "Page__Notifications__Media__Title"
         }
         assertNotNull(
             "Should have a nested media title type. Found nested types: $allNestedNames",
@@ -852,6 +849,192 @@ class ResponseModelGeneratorTest {
         // User subtype should NOT have a separate __typename property
         val typenameProp = userSubtype.propertySpecs.find { it.name == "__typename" }
         assertNull("User subtype should NOT have __typename property", typenameProp)
+    }
+
+    // --- Item 1: Unselected union members generate regular classes ---
+
+    @Test
+    fun `unselected union members generate regular class instead of invalid empty data class`() {
+        // Load the activity schema (ActivityUnion has 3 members:
+        // ListActivity, TextActivity, MessageActivity).
+        // Only select ListActivity and TextActivity, leaving
+        // MessageActivity with zero applicable fields after
+        // __typename filtering.
+        val activitySchemaFile = fixtureFile("fixtures/schemas/activity.graphqls")
+        val activityResult = SchemaParser().parseWithRootTypes(activitySchemaFile)
+        val activityIndex = SchemaIndex.from(
+            types = activityResult.types,
+            queryTypeName = activityResult.queryTypeName,
+            mutationTypeName = activityResult.mutationTypeName,
+            subscriptionTypeName = activityResult.subscriptionTypeName,
+        )
+
+        val parser = ResponseSelectionParser(activityIndex)
+        val generator = ResponseModelGenerator(activityIndex)
+
+        val document = """
+            query ActivityQuery {
+              activities {
+                ... on ListActivity { status progress }
+                ... on TextActivity { text }
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "ActivityQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+        val selectionSet = parser.parse(operation)
+        val fileSpecs = generator.generate(operation, selectionSet, "com.example")
+
+        val dataClass = fileSpecs.first().members
+            .filterIsInstance<TypeSpec>()
+            .first { it.name == "ActivityQueryData" }
+
+        // The sealed interface should use response-path identity
+        val activityUnion = dataClass.typeSpecs.find { it.name == "Activities" }
+        assertNotNull("Should have sealed interface for Activities", activityUnion)
+
+        // Should have all 3 subtype classes (all schema-defined members)
+        assertEquals(
+            "Should have 3 subtypes (all schema members present)",
+            3,
+            activityUnion!!.typeSpecs.size,
+        )
+
+        // ListActivity should be a data class with its fields
+        val listActivity = activityUnion.typeSpecs.find { it.name == "ListActivity" }
+        assertNotNull("Should have ListActivity subtype", listActivity)
+        assertTrue(
+            "ListActivity should be a data class",
+            listActivity!!.modifiers.contains(KModifier.DATA),
+        )
+        assertTrue(
+            "ListActivity should have status",
+            listActivity.propertySpecs.any { it.name == "status" },
+        )
+        assertTrue(
+            "ListActivity should have progress",
+            listActivity.propertySpecs.any { it.name == "progress" },
+        )
+
+        // TextActivity should be a data class with its fields
+        val textActivity = activityUnion.typeSpecs.find { it.name == "TextActivity" }
+        assertNotNull("Should have TextActivity subtype", textActivity)
+        assertTrue(
+            "TextActivity should be a data class",
+            textActivity!!.modifiers.contains(KModifier.DATA),
+        )
+        assertTrue(
+            "TextActivity should have text",
+            textActivity.propertySpecs.any { it.name == "text" },
+        )
+
+        // MessageActivity should be a regular class (NOT data class)
+        // because it has zero applicable fields after __typename filtering
+        val messageActivity = activityUnion.typeSpecs.find { it.name == "MessageActivity" }
+        assertNotNull("Should have MessageActivity subtype", messageActivity)
+        assertFalse(
+            "MessageActivity should NOT be a data class (zero fields)",
+            messageActivity!!.modifiers.contains(KModifier.DATA),
+        )
+        assertEquals(
+            "MessageActivity should be a regular class",
+            TypeSpec.Kind.CLASS,
+            messageActivity.kind,
+        )
+
+        // MessageActivity should still have @Serializable and @SerialName
+        val hasSerializable = messageActivity.annotations.any {
+            it is AnnotationSpec &&
+                it.typeName == ClassName("kotlinx.serialization", "Serializable")
+        }
+        assertTrue("MessageActivity should have @Serializable", hasSerializable)
+
+        val hasSerialName = messageActivity.annotations.any {
+            it is AnnotationSpec &&
+                it.typeName == ClassName("kotlinx.serialization", "SerialName") &&
+                it.members.any { m -> m.toString().contains("\"MessageActivity\"") }
+        }
+        assertTrue(
+            "MessageActivity should have @SerialName(\"MessageActivity\")",
+            hasSerialName,
+        )
+    }
+
+    // --- Item 2: Nested models split across mutually exclusive subtype branches ---
+
+    @Test
+    fun `nested object type split per-scope when fields have different applicableTypes`() {
+        val schemaFile = fixtureFile(
+            "fixtures/advanced/unions/NestedMutualExclusive.graphqls",
+        )
+        val schemaResult = SchemaParser().parseWithRootTypes(schemaFile)
+        val schemaIndex = SchemaIndex.from(
+            types = schemaResult.types,
+            queryTypeName = schemaResult.queryTypeName,
+            mutationTypeName = schemaResult.mutationTypeName,
+            subscriptionTypeName = schemaResult.subscriptionTypeName,
+        )
+
+        val parser = ResponseSelectionParser(schemaIndex)
+        val generator = ResponseModelGenerator(schemaIndex)
+
+        val operation = buildOperation(
+            name = "NestedMutualExclusive",
+            type = OperationType.QUERY,
+            document = fixtureText(
+                "fixtures/advanced/unions/NestedMutualExclusive.graphql",
+            ),
+        )
+        val selectionSet = parser.parse(operation)
+        val fileSpecs = generator.generate(operation, selectionSet, "com.example")
+
+        val dataClass = fileSpecs.first().members
+            .filterIsInstance<TypeSpec>()
+            .first { it.name == "NestedMutualExclusiveData" }
+
+        val allNestedNames = dataClass.typeSpecs.map { it.name }.filterNotNull()
+
+        // Should have two separate Detail classes, one per scope.
+        // The per-scope identity is built as scopePrefix + baseIdentity,
+        // where baseIdentity = "Result__Detail" (from the response path)
+        // and scopePrefix = "Success" or "Failure".
+        val successDetail = dataClass.typeSpecs.find {
+            it.name == "SuccessResult__Detail"
+        }
+        assertNotNull(
+            "Should have SuccessResult__Detail class. Names: $allNestedNames",
+            successDetail,
+        )
+
+        val failureDetail = dataClass.typeSpecs.find {
+            it.name == "FailureResult__Detail"
+        }
+        assertNotNull(
+            "Should have FailureResult__Detail class. Names: $allNestedNames",
+            failureDetail,
+        )
+
+        // Success detail should have value but NOT reason
+        val successFields = successDetail!!.propertySpecs.map { it.name }.toSet()
+        assertTrue("Success detail should have value", "value" in successFields)
+        assertFalse("Success detail should NOT have reason", "reason" in successFields)
+
+        // Failure detail should have reason but NOT value
+        val failureFields = failureDetail!!.propertySpecs.map { it.name }.toSet()
+        assertTrue("Failure detail should have reason", "reason" in failureFields)
+        assertFalse("Failure detail should NOT have value", "value" in failureFields)
+
+        // Should NOT have a single merged Detail class with both fields
+        val mergedDetail = dataClass.typeSpecs.find {
+            it.name == "Result__Detail"
+        }
+        assertNull(
+            "Should NOT have a merged Result__Detail class",
+            mergedDetail,
+        )
     }
 
     // --- Helpers ---

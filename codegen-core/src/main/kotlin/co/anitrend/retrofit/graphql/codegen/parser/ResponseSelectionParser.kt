@@ -176,6 +176,9 @@ class ResponseSelectionParser(
                         resolveFragmentType(fragment.typeCondition)
                     val fragmentSelections =
                         fragment.selectionSet?.selections.orEmpty()
+                    val outerScope = schemaIndex
+                        .possibleTypesFor(fragmentTypeName)
+                        .ifEmpty { setOf(fragmentTypeName) }
                     val spreadFields =
                         parseSelectionSet(
                             parentType = fragmentType,
@@ -183,18 +186,15 @@ class ResponseSelectionParser(
                             fragmentMap = fragmentMap,
                             responseIdentity = responseIdentity,
                         ).fields.map { field ->
-                            field.copy(
+                            propagateApplicableTypes(
+                                field,
+                                outerScope,
+                            ).copy(
                                 condition = mergeConditions(
                                     field.condition,
                                     directivesToCondition(
                                         selection.directives,
                                     ),
-                                ),
-                                applicableTypes = composeApplicableTypes(
-                                    field.applicableTypes,
-                                    schemaIndex
-                                        .possibleTypesFor(fragmentTypeName)
-                                        .ifEmpty { setOf(fragmentTypeName) },
                                 ),
                             )
                         }
@@ -206,6 +206,9 @@ class ResponseSelectionParser(
                         resolveFragmentType(selection.typeCondition)
                     val inlineSelections =
                         selection.selectionSet?.selections.orEmpty()
+                    val outerScope = schemaIndex
+                        .possibleTypesFor(inlineTypeName)
+                        .ifEmpty { setOf(inlineTypeName) }
                     val inlineFields =
                         parseSelectionSet(
                             parentType = inlineType,
@@ -213,18 +216,15 @@ class ResponseSelectionParser(
                             fragmentMap = fragmentMap,
                             responseIdentity = responseIdentity,
                         ).fields.map { field ->
-                            field.copy(
+                            propagateApplicableTypes(
+                                field,
+                                outerScope,
+                            ).copy(
                                 condition = mergeConditions(
                                     field.condition,
                                     directivesToCondition(
                                         selection.directives,
                                     ),
-                                ),
-                                applicableTypes = composeApplicableTypes(
-                                    field.applicableTypes,
-                                    schemaIndex
-                                        .possibleTypesFor(inlineTypeName)
-                                        .ifEmpty { setOf(inlineTypeName) },
                                 ),
                             )
                         }
@@ -292,25 +292,36 @@ class ResponseSelectionParser(
                 else -> emptySet()
             }
 
-        // Compute response-path identity from parent identity + this field's response name
+        // Compute response-path identity from parent identity + this field's response name.
+        // A double-underscore separator ensures that nested paths cannot collide with
+        // flat field names (e.g. `foo__bar` ≠ `fooBar` since `__` never appears in a
+        // single GraphQL field name).
         val childIdentity =
-            parentIdentity + responseName.replaceFirstChar { it.uppercase() }
+            if (parentIdentity.isEmpty()) {
+                responseName.replaceFirstChar { it.uppercase() }
+            } else {
+                parentIdentity + "__" +
+                    responseName.replaceFirstChar { it.uppercase() }
+            }
 
         // Parse nested selections if present
         val childSelections = field.selectionSet?.selections.orEmpty()
         val nestedSet: ResponseSelectionSet? =
             if (childSelections.isNotEmpty()) {
-                val childTypeName =
-                    when (def) {
-                        is SchemaType.InterfaceType,
-                        is SchemaType.UnionType,
-                        -> possibleTypes.firstOrNull() ?: typeName
-                        else -> typeName
-                    }
-                val childType =
-                    resolveFragmentType(
-                        TypeName.newTypeName(childTypeName).build(),
+                // Use the field's declared return type as the parent for nested
+                // selections, not the first concrete implementor. This ensures
+                // that interface/union fields are resolved against the abstract
+                // type's own field list (which is the contract), rather than
+                // accidentally using a subtype that may have narrower types.
+                val childType = when (def) {
+                    is SchemaType.ObjectType,
+                    is SchemaType.InterfaceType,
+                    is SchemaType.UnionType,
+                    -> resolveFragmentType(
+                        TypeName.newTypeName(typeName).build(),
                     )
+                    else -> parentType
+                }
                 parseSelectionSet(
                     parentType = childType,
                     selections = childSelections,
@@ -470,6 +481,32 @@ class ResponseSelectionParser(
         existing.isEmpty() -> outerScope
         outerScope.isEmpty() -> existing
         else -> existing.intersect(outerScope)
+    }
+
+    /**
+     * Recursively propagates [outerScope] to a field and all fields
+     * nested within its selection set. This ensures that mutually
+     * exclusive subtype branches produce distinct response-path keys
+     * in the generator's [co.anitrend.retrofit.graphql.codegen.generate
+     * .ResponseModelGenerator.collectAndMergeObjectTypes] collector.
+     */
+    private fun propagateApplicableTypes(
+        field: ResponseField,
+        outerScope: Set<String>,
+    ): ResponseField {
+        val newApplicableTypes =
+            composeApplicableTypes(field.applicableTypes, outerScope)
+        val newSelectionSet = field.selectionSet?.let { selSet ->
+            selSet.copy(
+                fields = selSet.fields.map { child ->
+                    propagateApplicableTypes(child, outerScope)
+                },
+            )
+        }
+        return field.copy(
+            applicableTypes = newApplicableTypes,
+            selectionSet = newSelectionSet,
+        )
     }
 
     /**

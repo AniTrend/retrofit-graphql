@@ -398,11 +398,11 @@ class ResponseSelectionParserTest {
 
         // Each alias should have a distinct responseIdentity
         assertEquals(
-            "MediaEnglishTitle",
+            "Media__EnglishTitle",
             englishTitle.selectionSet!!.responseIdentity,
         )
         assertEquals(
-            "MediaNativeTitle",
+            "Media__NativeTitle",
             nativeTitle.selectionSet!!.responseIdentity,
         )
     }
@@ -711,6 +711,169 @@ class ResponseSelectionParserTest {
         // selection set since node returns Node (abstract).
         val typename = nodeFields.fields.find { it.schemaName == "__typename" }
         assertNotNull("Should have __typename auto-injected for abstract node", typename)
+    }
+
+    // --- Item 3: Initial abstract fields use declared type for parsing ---
+
+    @Test
+    fun `interface-returning field uses declared type as parentType not first concrete type`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        // node returns the Node interface. Before the fix, the parser
+        // would use User (the first concrete implementor) as the parent
+        // type for nested selections. After the fix, it uses Node itself.
+        val document = """
+            query InterfaceParentQuery {
+              node(id: "123") {
+                id
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "InterfaceParentQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val node = result.fields.first { it.responseName == "node" }
+        val nodeFields = node.selectionSet!!
+
+        // parentType should be "Node" (the declared interface), not "User"
+        assertEquals(
+            "parentType should be the declared interface name",
+            "Node",
+            nodeFields.parentType,
+        )
+
+        // id should still be resolvable from the Node interface
+        val idField = nodeFields.fields.find { it.responseName == "id" }
+        assertNotNull("Should have id field resolved from Node interface", idField)
+    }
+
+    @Test
+    fun `union-returning field uses declared type as parentType not first concrete type`() {
+        val parser = ResponseSelectionParser(anilistIndex)
+        // Activities returns ActivityUnion. parentType should be the
+        // union name, not the first concrete member.
+        val document = """
+            query UnionParentQuery {
+              Page {
+                activities {
+                  ... on ListActivity { status }
+                  ... on TextActivity { text }
+                }
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "UnionParentQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val page = result.fields.first { it.responseName == "Page" }
+        val activities = page.selectionSet!!.fields.first { it.responseName == "activities" }
+        val unionFields = activities.selectionSet!!
+
+        // parentType should be "ActivityUnion", not "ListActivity"
+        assertEquals(
+            "parentType should be the declared union name",
+            "ActivityUnion",
+            unionFields.parentType,
+        )
+
+        // Fields from inline fragments should still be scoped correctly
+        val statusField = unionFields.fields.find { it.responseName == "status" }!!
+        assertEquals(setOf("ListActivity"), statusField.applicableTypes)
+        val textField = unionFields.fields.find { it.responseName == "text" }!!
+        assertEquals(setOf("TextActivity"), textField.applicableTypes)
+    }
+
+    // --- Item 4: Collision-safe response-path identities ---
+
+    @Test
+    fun `response identities use double-underscore separator to prevent collisions`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        // Flat field 'fooBar' should produce identity "FooBar".
+        // Nested path 'foo.bar' should produce identity "Foo__Bar".
+        // Without the separator, both would collide on "FooBar".
+        val document = """
+            query FooBarFlat {
+              viewer {
+                login
+                name
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "FooBarFlat",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first { it.responseName == "viewer" }
+
+        // Root-level field uses just the response name, no separator
+        assertEquals("Viewer", viewer.selectionSet!!.responseIdentity)
+    }
+
+    @Test
+    fun `nested field identity includes separator from parent`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document = """
+            query NestedQuery {
+              viewer {
+                bio
+                name
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "NestedQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first { it.responseName == "viewer" }
+        val viewerFields = viewer.selectionSet!!
+
+        // viewer.bio -> bio is a scalar leaf, no nested identity
+        // viewer.name -> name is a scalar leaf, no nested identity
+        // But the viewer's own identity is root-level
+        assertEquals("Viewer", viewerFields.responseIdentity)
+    }
+
+    @Test
+    fun `nested object identity has separator in deeply nested path`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        // Use updateBio mutation which produces a nested path:
+        //   updateBio { user { id bio } }
+        // Identity chain:
+        //   root("") -> UpdateBio -> UpdateBio__User
+        val document = operationText(
+            "fixtures/simple/mutations/UpdateBio.graphql",
+        )
+        val operation = buildOperation(
+            name = "UpdateBio",
+            type = OperationType.MUTATION,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val updateBio = result.fields.first { it.responseName == "updateBio" }
+
+        // updateBio is root-level, no separator
+        assertEquals("UpdateBio", updateBio.selectionSet!!.responseIdentity)
+
+        val user = updateBio.selectionSet!!.fields.first { it.responseName == "user" }
+        // user is nested under updateBio, so separator appears
+        assertEquals(
+            "UpdateBio__User",
+            user.selectionSet!!.responseIdentity,
+        )
     }
 
     // --- Helpers ---
