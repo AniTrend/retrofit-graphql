@@ -39,6 +39,7 @@ import co.anitrend.retrofit.graphql.codegen.schema.TypenameInjector
 import co.anitrend.retrofit.graphql.codegen.validate.GraphQLTypeUsageValidator
 import graphql.language.OperationDefinition
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -170,13 +171,8 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         val typedOps = if (generateResponses.get() && schemaIndex != SchemaIndex.EMPTY) {
             val injector = TypenameInjector(schemaIndex)
             resolvedOperations.map { op ->
-                try {
-                    val transformedDoc = injector.injectTypename(op.document, op.type.toGraphQLOperation())
-                    op.copy(document = transformedDoc)
-                } catch (e: Exception) {
-                    logger.warn("Failed to inject __typename for '${op.name}': ${e.message}")
-                    op
-                }
+                val transformedDoc = injector.injectTypename(op.document, op.type.toGraphQLOperation())
+                op.copy(document = transformedDoc)
             }
         } else {
             resolvedOperations
@@ -185,30 +181,26 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         // Validate operations against the schema if both are available
         if (schemaIndex != SchemaIndex.EMPTY) {
             val compiler = SchemaCompiler(scalarMap)
-            try {
-                val schemaIdl = schemaFile.get().asFile.readText()
-                val compiledSchema = compiler.compile(schemaIdl)
+            val schemaIdl = schemaFile.get().asFile.readText()
+            val compiledSchema = compiler.compile(schemaIdl)
 
-                val validationErrors = mutableListOf<String>()
-                for (op in typedOps) {
-                    val result = compiler.validate(compiledSchema, op.document)
-                    if (!result.isValid) {
-                        validationErrors.add(
-                            "Operation '${op.name}': ${result.errors.joinToString("; ")}",
-                        )
-                    }
-                }
-
-                if (validationErrors.isNotEmpty()) {
-                    logger.error(
-                        "Schema validation failed for ${validationErrors.size} operation(s):\n" +
-                            validationErrors.joinToString("\n"),
+            val validationErrors = mutableListOf<String>()
+            for (op in typedOps) {
+                val result = compiler.validate(compiledSchema, op.document)
+                if (!result.isValid) {
+                    validationErrors.add(
+                        "Operation '${op.name}': ${result.errors.joinToString("; ")}",
                     )
-                } else {
-                    logger.info("Schema validation passed for ${typedOps.size} operation(s)")
                 }
-            } catch (e: Exception) {
-                logger.warn("Schema validation skipped: ${e.message}")
+            }
+
+            if (validationErrors.isNotEmpty()) {
+                throw GradleException(
+                    "Schema validation failed for ${validationErrors.size} operation(s):\n" +
+                        validationErrors.joinToString("\n"),
+                )
+            } else {
+                logger.info("Schema validation passed for ${typedOps.size} operation(s)")
             }
         }
 
@@ -261,9 +253,10 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         // Response model generation
         if (generateResponses.get()) {
             if (schemaIndex == SchemaIndex.EMPTY) {
-                logger.warn(
-                    "generateResponses is enabled but no schema file is set. " +
-                        "Response model generation will be skipped.",
+                throw GradleException(
+                    "generateResponses is enabled but no valid schema file is set. " +
+                        "Provide a schema file to generate response models, " +
+                        "or set generateResponses = false.",
                 )
             } else {
                 generateResponseArtifacts(
@@ -346,16 +339,10 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         generateEnumArtifacts(schemaIndex, pkg, outputDirectory, "responses")
 
         operations.forEach { operation ->
-            try {
-                val selectionSet = selectionParser.parse(operation)
-                val fileSpecs = modelGenerator.generate(operation, selectionSet, pkg)
-                fileSpecs.forEach { writeFile(it, outputDirectory) }
-                logger.info("Generated ${operation.name}Data response model")
-            } catch (e: Exception) {
-                logger.error(
-                    "Failed to generate response model for '${operation.name}': ${e.message}",
-                )
-            }
+            val selectionSet = selectionParser.parse(operation)
+            val fileSpecs = modelGenerator.generate(operation, selectionSet, pkg)
+            fileSpecs.forEach { writeFile(it, outputDirectory) }
+            logger.info("Generated ${operation.name}Data response model")
         }
     }
 

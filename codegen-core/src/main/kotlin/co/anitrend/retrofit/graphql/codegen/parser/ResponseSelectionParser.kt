@@ -170,8 +170,9 @@ class ResponseSelectionParser(
                         requireNotNull(fragmentMap[selection.name]) {
                             "Fragment '${selection.name}' not found."
                         }
+                    val fragmentTypeName = fragment.typeCondition.name!!
                     val fragmentType =
-                        resolveObjectType(fragment.typeCondition)
+                        resolveFragmentType(fragment.typeCondition)
                     val fragmentSelections =
                         fragment.selectionSet?.selections.orEmpty()
                     val spreadFields =
@@ -188,16 +189,17 @@ class ResponseSelectionParser(
                                         selection.directives,
                                     ),
                                 ),
-                                applicableTypes = setOf(
-                                    fragment.typeCondition.name!!,
-                                ),
+                                applicableTypes = schemaIndex
+                                    .possibleTypesFor(fragmentTypeName)
+                                    .ifEmpty { setOf(fragmentTypeName) },
                             )
                         }
                     rawFields.addAll(spreadFields)
                 }
                 is InlineFragment -> {
+                    val inlineTypeName = selection.typeCondition!!.name!!
                     val inlineType =
-                        resolveObjectType(selection.typeCondition)
+                        resolveFragmentType(selection.typeCondition)
                     val inlineSelections =
                         selection.selectionSet?.selections.orEmpty()
                     val inlineFields =
@@ -214,9 +216,9 @@ class ResponseSelectionParser(
                                         selection.directives,
                                     ),
                                 ),
-                                applicableTypes = setOf(
-                                    selection.typeCondition!!.name!!,
-                                ),
+                                applicableTypes = schemaIndex
+                                    .possibleTypesFor(inlineTypeName)
+                                    .ifEmpty { setOf(inlineTypeName) },
                             )
                         }
                     rawFields.addAll(inlineFields)
@@ -299,7 +301,7 @@ class ResponseSelectionParser(
                         else -> typeName
                     }
                 val childType =
-                    resolveObjectType(
+                    resolveFragmentType(
                         TypeName.newTypeName(childTypeName).build(),
                     )
                 parseSelectionSet(
@@ -313,9 +315,13 @@ class ResponseSelectionParser(
             }
 
         // Auto-inject __typename for abstract types when there is a
-        // selection set and __typename was not explicitly selected
+        // selection set and __typename was not explicitly selected.
+        // Only unaliased __typename satisfies the discriminator;
+        // an aliased `kind: __typename` does not suppress injection.
         val hasTypename =
-            nestedSet?.fields?.any { it.schemaName == "__typename" } ?: false
+            nestedSet?.fields?.any {
+                it.schemaName == "__typename" && it.responseName == "__typename"
+            } ?: false
         val finalSet =
             if (
                 !hasTypename &&
@@ -402,19 +408,52 @@ class ResponseSelectionParser(
     }
 
     /**
-     * Resolves a [TypeName] to an [SchemaType.ObjectType] in the
-     * schema index, throwing if the type is not found or is not an
-     * object type.
+     * Resolves a [TypeName] to a [SchemaType.ObjectType], handling
+     * fragment type conditions that may target interfaces or unions
+     * (not just concrete object types).
+     *
+     * For interface type conditions, returns the first possible
+     * concrete type (for field lookups). For union type conditions,
+     * returns the first member type. For object type conditions,
+     * returns the object type directly.
      */
-    private fun resolveObjectType(
+    private fun resolveFragmentType(
         typeName: TypeName?,
     ): SchemaType.ObjectType {
         val name =
             requireNotNull(typeName?.name) {
                 "Type condition must have a name."
             }
-        return requireNotNull(schemaIndex.objectType(name)) {
-            "Object type '$name' not found in schema."
+        val def =
+            requireNotNull(schemaIndex.definition(name)) {
+                "Type '$name' not found in schema."
+            }
+        return when (def) {
+            is SchemaType.ObjectType -> def
+            is SchemaType.InterfaceType -> {
+                val firstPossible = schemaIndex.possibleTypesFor(name).firstOrNull()
+                    ?: throw IllegalArgumentException(
+                        "Interface '$name' has no implementors",
+                    )
+                schemaIndex.objectType(firstPossible)
+                    ?: throw IllegalArgumentException(
+                        "Concrete type '$firstPossible' not found for interface '$name'",
+                    )
+            }
+            is SchemaType.UnionType -> {
+                val firstMember = def.memberTypes.firstOrNull()
+                    ?: throw IllegalArgumentException(
+                        "Union '$name' has no member types",
+                    )
+                schemaIndex.objectType(firstMember)
+                    ?: throw IllegalArgumentException(
+                        "Union member '$firstMember' not found",
+                    )
+            }
+            else -> throw IllegalArgumentException(
+                "Fragment type condition '$name' is not a composite type " +
+                    "(found ${def::class.simpleName})",
+            )
         }
     }
 

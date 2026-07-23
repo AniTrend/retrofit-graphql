@@ -601,13 +601,11 @@ class ResponseModelGeneratorTest {
             serialNameAnns.isNotEmpty(),
         )
 
-        // User subtype should have __typename field (auto-injected)
+        // User subtype should NOT have __typename field:
+        // discriminator is handled by @JsonClassDiscriminator on the
+        // sealed interface, not by a data class property.
         val typenameProp = userSubtype.propertySpecs.find { it.name == "__typename" }
-        assertNotNull("User subtype should have __typename property", typenameProp)
-        assertTrue(
-            "__typename should be non-null String",
-            !typenameProp!!.type.isNullable,
-        )
+        assertNull("User subtype should NOT have __typename property", typenameProp)
 
         // KDoc should NOT mention global classDiscriminator config
         val kdocText = nodeInterface.kdoc?.toString() ?: ""
@@ -635,29 +633,30 @@ class ResponseModelGeneratorTest {
             .filterIsInstance<TypeSpec>()
             .first { it.name == "ActivityQueryData" }
 
-        // Should have a sealed interface for ActivityUnion
-        val activityUnion = dataClass.typeSpecs.find { it.name == "ActivityUnion" }
-        assertNotNull("Should have sealed interface for ActivityUnion", activityUnion)
+        // Should have a sealed interface keyed by response-path identity
+        // ("PageActivities") instead of schema type name ("ActivityUnion")
+        val activityUnion = dataClass.typeSpecs.find { it.name == "PageActivities" }
+        assertNotNull("Should have sealed interface for PageActivities", activityUnion)
         assertTrue(
-            "ActivityUnion should be sealed",
+            "PageActivities should be sealed",
             activityUnion!!.modifiers.contains(KModifier.SEALED),
         )
 
-        // ListActivity should only have status, progress (and __typename)
+        // ListActivity should only have status, progress (no __typename)
         val listActivity = activityUnion.typeSpecs.find { it.name == "ListActivity" }
         assertNotNull("Should have ListActivity subtype", listActivity)
         val listFields = listActivity!!.propertySpecs.map { it.name }.toSet()
         assertTrue("ListActivity should have status", "status" in listFields)
         assertTrue("ListActivity should have progress", "progress" in listFields)
-        assertTrue("ListActivity should have __typename", "__typename" in listFields)
+        assertFalse("ListActivity should NOT have __typename", "__typename" in listFields)
         assertFalse("ListActivity should NOT have text", "text" in listFields)
 
-        // TextActivity should only have text (and __typename)
+        // TextActivity should only have text (no __typename)
         val textActivity = activityUnion.typeSpecs.find { it.name == "TextActivity" }
         assertNotNull("Should have TextActivity subtype", textActivity)
         val textFields = textActivity!!.propertySpecs.map { it.name }.toSet()
         assertTrue("TextActivity should have text", "text" in textFields)
-        assertTrue("TextActivity should have __typename", "__typename" in textFields)
+        assertFalse("TextActivity should NOT have __typename", "__typename" in textFields)
         assertFalse("TextActivity should NOT have status", "status" in textFields)
         assertFalse("TextActivity should NOT have progress", "progress" in textFields)
     }

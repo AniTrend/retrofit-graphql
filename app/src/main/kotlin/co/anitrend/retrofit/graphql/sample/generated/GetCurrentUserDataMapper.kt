@@ -16,10 +16,9 @@ package co.anitrend.retrofit.graphql.sample.generated
  * Generated response types use kotlinx serialization. Configure your
  * Retrofit instance with a kotlinx.serialization converter and ensure
  * the generated models are properly deserialized. For polymorphic
- * responses (interfaces/unions), configure:
- * ```kotlin
- * val json = Json { classDiscriminator = "__typename" }
- * ```
+ * responses (interfaces/unions), no global `Json` configuration is
+ * needed: generated sealed interfaces carry `@JsonClassDiscriminator("__typename")`
+ * which handles type discrimination automatically.
  */
 object GetCurrentUserDataMapper {
 

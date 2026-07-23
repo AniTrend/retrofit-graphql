@@ -222,7 +222,15 @@ class ResponseModelGenerator(
                 val def = schemaIndex.definition(typeName)
 
                 if (def is SchemaType.InterfaceType || def is SchemaType.UnionType) {
-                    val concreteEntries = result.getOrPut(typeName) { mutableListOf() }
+                    // Use response-path identity as the key so the same
+                    // abstract type appearing at different response paths
+                    // (e.g. aliased siblings) each gets its own sealed
+                    // hierarchy. Mirrors the fix in collectAndMergeObjectTypes().
+                    val identity =
+                        field.selectionSet?.responseIdentity
+                            ?.ifBlank { field.responseName }
+                            ?: typeName
+                    val concreteEntries = result.getOrPut(identity) { mutableListOf() }
 
                     // The parser merges inline fragment fields into the
                     // interface's selection set. Each possible concrete type
@@ -292,11 +300,17 @@ class ResponseModelGenerator(
         for ((concreteTypeName, selSet) in concreteTypes) {
             val className = resolvedNames[concreteTypeName] ?: concreteTypeName
 
-            // Filter fields to only those applicable to this concrete type
+            // Filter fields to only those applicable to this concrete type.
+            // Exclude __typename: the discriminator is handled by
+            // @JsonClassDiscriminator on the sealed interface, not by a
+            // data class property. Including it causes a collision.
             val sortedFields = selSet.fields.sortedBy { it.responseName }
             val applicableFields = sortedFields.filter { field ->
-                field.applicableTypes.isEmpty() ||
-                    concreteTypeName in field.applicableTypes
+                field.schemaName != "__typename" &&
+                    (
+                        field.applicableTypes.isEmpty() ||
+                            concreteTypeName in field.applicableTypes
+                        )
             }
             val properties =
                 applicableFields.map { field ->

@@ -224,10 +224,12 @@ retrofitGraphQL {
 
 **Consumer integration:**
 ```kotlin
-// Configure kotlinx Json for __typename polymorphism
-val json = Json { classDiscriminator = "__typename" }
-
-// Decode responses into generated types
+// No global Json configuration needed for __typename discrimination.
+// Generated sealed interfaces carry @JsonClassDiscriminator("__typename"),
+// so kotlinx.serialization automatically handles polymorphic deserialization
+// without any manual Json configuration.
+//
+// Decode responses into generated types as normal:
 @GET("graphql")
 suspend fun getMedia(@Body request: GraphQLRequest<GetMediaDetailVariables>): GraphContainer<GetMediaDetailData>
 ```

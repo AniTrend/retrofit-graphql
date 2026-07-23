@@ -132,7 +132,7 @@ class TypenameInjector(private val schemaIndex: SchemaIndex) {
                             if (isAbstract) {
                                 val selections = childSet.selections.toMutableList()
                                 val hasTypename = selections.any { s ->
-                                    s is Field && s.name == "__typename"
+                                    s is Field && s.name == "__typename" && s.alias == null
                                 }
                                 if (!hasTypename) {
                                     selections.add(0, Field.newField("__typename").build())

@@ -22,6 +22,7 @@ import co.anitrend.retrofit.graphql.codegen.model.OperationType
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import co.anitrend.retrofit.graphql.codegen.schema.SchemaCompiler
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -467,6 +468,160 @@ class ResponseSelectionParserTest {
             "Should have __typename field",
             unionFields.fields.any { it.schemaName == "__typename" },
         )
+    }
+
+    // --- Unaliased __typename for discriminator injection ---
+
+    @Test
+    fun `aliased __typename does not suppress auto-injection`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document =
+            """
+            query NodeQuery {
+              node(id: "123") {
+                kind: __typename
+                id
+                ... on User {
+                  login
+                }
+              }
+            }
+            """.trimIndent()
+        val operation = buildOperation(
+            name = "NodeQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val node = result.fields.first { it.responseName == "node" }
+        val nodeFields = node.selectionSet!!
+
+        // Aliased kind: __typename should be present
+        val kindField = nodeFields.fields.find { it.responseName == "kind" }
+        assertNotNull("Should have aliased kind field", kindField)
+        assertEquals("__typename", kindField!!.schemaName)
+
+        // Unaliased __typename should still be auto-injected
+        val typenameField = nodeFields.fields.find { it.responseName == "__typename" }
+        assertNotNull("Should have auto-injected __typename despite alias", typenameField)
+    }
+
+    @Test
+    fun `normal __typename suppresses auto-injection`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document =
+            """
+            query NodeQuery {
+              node(id: "123") {
+                __typename
+                id
+                ... on User {
+                  login
+                }
+              }
+            }
+            """.trimIndent()
+        val operation = buildOperation(
+            name = "NodeQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val node = result.fields.first { it.responseName == "node" }
+        val nodeFields = node.selectionSet!!
+
+        // Should have exactly one __typename field
+        val typenameFields = nodeFields.fields.filter { it.schemaName == "__typename" }
+        assertEquals(
+            "Should have exactly one __typename field",
+            1,
+            typenameFields.size,
+        )
+        assertEquals(
+            "The __typename field should have responseName __typename",
+            "__typename",
+            typenameFields.first().responseName,
+        )
+    }
+
+    // --- Fragment type conditions on interfaces and unions ---
+
+    @Test
+    fun `fragment spread on interface resolves applicableTypes to concrete types`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        // Fragment spread on Node interface (not a concrete object)
+        val document =
+            """
+            query NodeFragmentQuery {
+              node(id: "123") {
+                ... on Node {
+                  id
+                }
+                ... on User {
+                  login
+                  name
+                }
+              }
+            }
+            """.trimIndent()
+        val operation = buildOperation(
+            name = "NodeFragmentQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val node = result.fields.first { it.responseName == "node" }
+        val nodeFields = node.selectionSet!!
+
+        // The `id` field from the Node interface fragment should have
+        // applicableTypes = {"User"} (not {"Node"}), since only User
+        // implements Node in this schema.
+        val idField = nodeFields.fields.find { it.responseName == "id" }!!
+        assertTrue(
+            "id should be applicable to User (not Node itself)",
+            idField.applicableTypes.contains("User"),
+        )
+        assertFalse(
+            "id should NOT have Node in applicableTypes",
+            idField.applicableTypes.contains("Node"),
+        )
+    }
+
+    @Test
+    fun `inline fragment on union has applicableTypes with concrete member types`() {
+        val parser = ResponseSelectionParser(anilistIndex)
+        val document =
+            """
+            query ActivityQuery {
+              Page {
+                activities {
+                  ... on ListActivity { status progress }
+                  ... on TextActivity { text }
+                }
+              }
+            }
+            """.trimIndent()
+        val operation = buildOperation(
+            name = "ActivityQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val page = result.fields.first { it.responseName == "Page" }
+        val activities = page.selectionSet!!.fields.first { it.responseName == "activities" }
+        val unionFields = activities.selectionSet!!
+
+        val statusField = unionFields.fields.find { it.responseName == "status" }!!
+        val textField = unionFields.fields.find { it.responseName == "text" }!!
+
+        // For object types like ListActivity, possibleTypesFor returns empty,
+        // so applicableTypes falls back to just the type condition name.
+        assertEquals(setOf("ListActivity"), statusField.applicableTypes)
+        assertEquals(setOf("TextActivity"), textField.applicableTypes)
     }
 
     // --- Helpers ---
