@@ -19,12 +19,14 @@ fixtures/
 │   ├── aliases/          # Queries that alias field names
 │   ├── conditionals/     # Queries with `@include` / `@skip` directives
 │   ├── interfaces/       # Queries whose response shapes include connections
-│   ├── unions/           # Placeholder for union-type response tests
+│   ├── unions/           # Multi-member union queries, conditional fragments, notifications
 │   └── paging/           # Paginated queries with Page / PageInfo types
 │       └── responses/    # Sample paged JSON payloads
 ├── schemas/              # Multi-target schemas for cross-schema tests
 │   ├── anilist.graphqls  # Reduced AniList-like schema
-│   └── edge.graphqls     # Minimal second schema with a different shape
+│   ├── edge.graphqls     # Minimal second schema with a different shape
+│   ├── activity.graphqls # ActivityUnion with 3 concrete types for union tests
+│   └── notification.graphqls # NotificationUnion with 17 concrete types
 └── README.md             # This file
 ```
 
@@ -51,8 +53,17 @@ synthetic test data.
 | `advanced/interfaces/responses/MediaCharacters.json` | Deserializing connection-shaped payloads                    |
 | `advanced/paging/PagedMedia.graphql`        | Paginated query with `PageInfo`, list responses                        |
 | `advanced/paging/responses/PagedMedia.json` | Deserializing paginated payloads with `hasNextPage`                   |
+| `advanced/unions/GetActivities.graphql`     | Multi-member union with 3 concrete types, each with distinct fields    |
+| `advanced/unions/GetConditionalActivities.graphql` | `@include` on fragment spreads (anitrend-v2 pattern)           |
+| `advanced/unions/GetActivityFeed.graphql`   | Nested union access through a wrapper type                             |
+| `advanced/unions/GetNotifications.graphql`  | Stress test: 17 concrete notification types with varied field shapes   |
+| `advanced/unions/responses/GetActivities.json` | JSON payload with 4 mixed ActivityUnion items                        |
+| `advanced/unions/responses/GetActivityFeed.json` | JSON payload with nested feed wrapper and 3 mixed items              |
+| `advanced/unions/responses/GetNotifications.json` | JSON payload with 5 notification types                             |
 | `schemas/anilist.graphqls`                  | Reduced AniList schema for all advanced fixtures                       |
 | `schemas/edge.graphqls`                     | Second schema shape for multi-target / multi-schema tests              |
+| `schemas/activity.graphqls`                 | ActivityUnion schema for union tests                                   |
+| `schemas/notification.graphqls`             | NotificationUnion schema with 17 concrete types for stress testing     |
 
 ### Adding New Fixtures
 

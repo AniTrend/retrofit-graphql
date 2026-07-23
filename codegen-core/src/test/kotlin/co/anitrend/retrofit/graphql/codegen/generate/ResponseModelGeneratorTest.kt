@@ -28,7 +28,9 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -116,27 +118,27 @@ class ResponseModelGeneratorTest {
             viewerProp!!.modifiers.contains(KModifier.PUBLIC),
         )
 
-        // Check nested User class exists
-        val userClass = dataClass.typeSpecs.firstOrNull { it.name == "User" }
-        assertNotNull("Should contain nested User class", userClass)
+        // Check nested Viewer class exists (path-based name instead of "User")
+        val viewerClass = dataClass.typeSpecs.firstOrNull { it.name == "Viewer" }
+        assertNotNull("Should contain nested Viewer class", viewerClass)
         assertTrue(
-            "User should be a data class",
-            userClass!!.modifiers.contains(KModifier.DATA),
+            "Viewer should be a data class",
+            viewerClass!!.modifiers.contains(KModifier.DATA),
         )
         assertTrue(
-            "User should have @Serializable annotation",
-            userClass.annotations.any {
+            "Viewer should have @Serializable annotation",
+            viewerClass.annotations.any {
                 it is AnnotationSpec &&
                     it.typeName == ClassName("kotlinx.serialization", "Serializable")
             },
         )
 
-        // Check User has expected fields
-        val userFieldNames = userClass.propertySpecs.map { it.name }.toSet()
-        assertTrue("User should have id field", "id" in userFieldNames)
-        assertTrue("User should have login field", "login" in userFieldNames)
-        assertTrue("User should have name field", "name" in userFieldNames)
-        assertTrue("User should have bio field", "bio" in userFieldNames)
+        // Check Viewer has expected fields
+        val viewerFieldNames = viewerClass.propertySpecs.map { it.name }.toSet()
+        assertTrue("Viewer should have id field", "id" in viewerFieldNames)
+        assertTrue("Viewer should have login field", "login" in viewerFieldNames)
+        assertTrue("Viewer should have name field", "name" in viewerFieldNames)
+        assertTrue("Viewer should have bio field", "bio" in viewerFieldNames)
     }
 
     // --- Mutation model ---
@@ -166,20 +168,20 @@ class ResponseModelGeneratorTest {
         val updateBioProp = dataClass!!.propertySpecs.firstOrNull { it.name == "updateBio" }
         assertNotNull("Should have updateBio property", updateBioProp)
 
-        // Check nested UpdateBioPayload class
-        val payloadClass = dataClass.typeSpecs.firstOrNull { it.name == "UpdateBioPayload" }
-        assertNotNull("Should contain nested UpdateBioPayload class", payloadClass)
+        // Check nested UpdateBio class (path-based name)
+        val payloadClass = dataClass.typeSpecs.firstOrNull { it.name == "UpdateBio" }
+        assertNotNull("Should contain nested UpdateBio class", payloadClass)
 
-        // Check UpdateBioPayload has user property
+        // Check UpdateBio has user property
         val userProp = payloadClass!!.propertySpecs.firstOrNull { it.name == "user" }
-        assertNotNull("UpdateBioPayload should have user property", userProp)
+        assertNotNull("UpdateBio should have user property", userProp)
 
-        // Check nested User class
-        val userClass = dataClass.typeSpecs.firstOrNull { it.name == "User" }
-        assertNotNull("Should contain nested User class", userClass)
+        // Check nested UpdateBioUser class (path-based name)
+        val userClass = dataClass.typeSpecs.firstOrNull { it.name == "UpdateBioUser" }
+        assertNotNull("Should contain nested UpdateBioUser class", userClass)
         val userFieldNames = userClass!!.propertySpecs.map { it.name }.toSet()
-        assertTrue("User should have id field", "id" in userFieldNames)
-        assertTrue("User should have bio field", "bio" in userFieldNames)
+        assertTrue("UpdateBioUser should have id field", "id" in userFieldNames)
+        assertTrue("UpdateBioUser should have bio field", "bio" in userFieldNames)
     }
 
     // --- @SerialName for aliases ---
@@ -233,7 +235,7 @@ class ResponseModelGeneratorTest {
     // --- Nested object types ---
 
     @Test
-    fun `nested object types are generated as inner data classes`() {
+    fun `nested object types are generated as inner data classes with path-based names`() {
         val parser = ResponseSelectionParser(githubIndex)
         val operation = buildOperation(
             name = "GetUser",
@@ -249,17 +251,17 @@ class ResponseModelGeneratorTest {
             .filterIsInstance<TypeSpec>()
             .first { it.name == "GetUserData" }
 
-        // User is a nested class with its own fields
-        val userClass = dataClass.typeSpecs.firstOrNull { it.name == "User" }
-        assertNotNull("User should be a nested class", userClass)
-        assertEquals("User", userClass!!.name)
+        // Viewer is a nested class with its own fields (path-based name)
+        val viewerClass = dataClass.typeSpecs.firstOrNull { it.name == "Viewer" }
+        assertNotNull("Viewer should be a nested class", viewerClass)
+        assertEquals("Viewer", viewerClass!!.name)
         assertTrue(
-            "User should be a data class",
-            userClass.modifiers.contains(KModifier.DATA),
+            "Viewer should be a data class",
+            viewerClass.modifiers.contains(KModifier.DATA),
         )
 
-        // User should have the scalar fields from the query
-        val fieldNames = userClass.propertySpecs.map { it.name }
+        // Viewer should have the scalar fields from the query
+        val fieldNames = viewerClass.propertySpecs.map { it.name }
         assertTrue(fieldNames.contains("bio"))
         assertTrue(fieldNames.contains("id"))
         assertTrue(fieldNames.contains("login"))
@@ -333,12 +335,10 @@ class ResponseModelGeneratorTest {
     // --- Collision-safe naming ---
 
     @Test
-    fun `same object type referenced from multiple paths generates one merged class`() {
+    fun `same object type referenced from multiple paths generates separate per-path classes`() {
         val parser = ResponseSelectionParser(githubIndex)
         // Query that references User at two different response-name paths.
-        // The parser keeps both viewer and the aliased v as separate fields
-        // (different responseNames), but the generator collects "User" twice
-        // and merges the selections.
+        // With path-based identity, each unique path produces its own class.
         val document = """
             query DuplicateUser {
               viewer {
@@ -365,21 +365,22 @@ class ResponseModelGeneratorTest {
             .filterIsInstance<TypeSpec>()
             .first { it.name == "DuplicateUserData" }
 
-        // User type should appear exactly once as a nested class
-        val userClasses = dataClass.typeSpecs.filter { it.name == "User" }
-        assertEquals(
-            "User class should appear exactly once (merged)",
-            1,
-            userClasses.size,
-        )
+        // Two separate classes: Viewer (with id, login) and V (with name, bio)
+        val viewerClass = dataClass.typeSpecs.find { it.name == "Viewer" }
+        assertNotNull("Should contain Viewer class", viewerClass)
+        val viewerFieldNames = viewerClass!!.propertySpecs.map { it.name }
+        assertTrue("Viewer should have id", "id" in viewerFieldNames)
+        assertTrue("Viewer should have login", "login" in viewerFieldNames)
 
-        // The merged User class should have all fields from both selections
-        val userClass = userClasses.first()
-        val fieldNames = userClass.propertySpecs.map { it.name }
-        assertTrue("Merged User should have id", "id" in fieldNames)
-        assertTrue("Merged User should have login", "login" in fieldNames)
-        assertTrue("Merged User should have name", "name" in fieldNames)
-        assertTrue("Merged User should have bio", "bio" in fieldNames)
+        val vClass = dataClass.typeSpecs.find { it.name == "V" }
+        assertNotNull("Should contain V class", vClass)
+        val vFieldNames = vClass!!.propertySpecs.map { it.name }
+        assertTrue("V should have name", "name" in vFieldNames)
+        assertTrue("V should have bio", "bio" in vFieldNames)
+
+        // No merged "User" class
+        val userClasses = dataClass.typeSpecs.filter { it.name == "User" }
+        assertEquals("User class should NOT exist (path-based identity)", 0, userClasses.size)
     }
 
     // --- Properties sorted by responseName ---
@@ -404,10 +405,10 @@ class ResponseModelGeneratorTest {
         val rootPropNames = dataClass.propertySpecs.map { it.name }
         assertEquals(rootPropNames.sorted(), rootPropNames)
 
-        // Properties on nested User class should be sorted
-        val userClass = dataClass.typeSpecs.first { it.name == "User" }
-        val userPropNames = userClass.propertySpecs.map { it.name }
-        assertEquals(userPropNames.sorted(), userPropNames)
+        // Properties on nested Viewer class should be sorted (path-based name)
+        val viewerClass = dataClass.typeSpecs.first { it.name == "Viewer" }
+        val viewerPropNames = viewerClass.propertySpecs.map { it.name }
+        assertEquals(viewerPropNames.sorted(), viewerPropNames)
     }
 
     // --- Custom dataClassName override ---
@@ -471,9 +472,9 @@ class ResponseModelGeneratorTest {
     // --- Phase 4: Conditional Presence ---
 
     @Test
-    fun `conditional field gets nullable type with null default`() {
+    fun `conditional field gets nullable type with null default in primary constructor`() {
         val parser = ResponseSelectionParser(githubIndex)
-        // Create a query with a conditional @include directive using a literal
+        // Create a query with a conditional @include directive
         val document =
             """
             query CondQuery {
@@ -497,16 +498,30 @@ class ResponseModelGeneratorTest {
             .filterIsInstance<TypeSpec>()
             .first { it.name == "CondQueryData" }
 
-        val userType = dataClass.typeSpecs.find { it.name == "User" }!!
-        val nameProp = userType.propertySpecs.find { it.name == "name" }!!
-        val loginProp = userType.propertySpecs.find { it.name == "login" }!!
+        val viewerType = dataClass.typeSpecs.find { it.name == "Viewer" }!!
+        val nameProp = viewerType.propertySpecs.find { it.name == "name" }!!
+        val loginProp = viewerType.propertySpecs.find { it.name == "login" }!!
 
-        // Conditional field should be nullable with null default
+        // Conditional field should be nullable
         assertTrue("Conditional name should be nullable", nameProp.type.isNullable)
-        assertEquals(
-            "Conditional field should have null default",
-            "null",
-            nameProp.initializer?.toString(),
+
+        // The constructor parameter for 'name' should have a null default
+        val primaryCtor = viewerType.primaryConstructor!!
+        val nameParam = primaryCtor.parameters.find { it.name == "name" }!!
+        assertNotNull(
+            "Constructor param for 'name' should have default value",
+            nameParam.defaultValue,
+        )
+        assertTrue(
+            "Constructor param default should contain 'null'",
+            nameParam.defaultValue.toString().contains("null"),
+        )
+
+        // Non-conditional login param should NOT have a default
+        val loginParam = primaryCtor.parameters.find { it.name == "login" }!!
+        assertNull(
+            "Constructor param for 'login' should NOT have default value",
+            loginParam.defaultValue,
         )
 
         // Non-conditional field should NOT be nullable (String! in schema)
@@ -516,7 +531,7 @@ class ResponseModelGeneratorTest {
     // --- Phase 4: Polymorphism ---
 
     @Test
-    fun `generates sealed interface for interface fields`() {
+    fun `generates sealed interface for interface fields with hierarchy-local discriminator`() {
         val parser = ResponseSelectionParser(githubIndex)
         // github-simple has Node interface with User implementing it
         val document =
@@ -556,6 +571,20 @@ class ResponseModelGeneratorTest {
             nodeInterface.kind == TypeSpec.Kind.INTERFACE,
         )
 
+        // Should have @JsonClassDiscriminator("__typename") annotation
+        val hasDiscriminator = nodeInterface.annotations.any { ann ->
+            ann is AnnotationSpec &&
+                ann.typeName.toString() == "kotlinx.serialization.json.JsonClassDiscriminator"
+        }
+        assertTrue("Node should have @JsonClassDiscriminator", hasDiscriminator)
+
+        // Should have @OptIn(ExperimentalSerializationApi::class) annotation
+        val hasOptIn = nodeInterface.annotations.any { ann ->
+            ann is AnnotationSpec &&
+                ann.typeName.toString() == "kotlin.OptIn"
+        }
+        assertTrue("Node should have @OptIn", hasOptIn)
+
         // Should have a User concrete subtype
         val userSubtype = nodeInterface.typeSpecs.find { it.name == "User" }
         assertNotNull("Should have User subtype inside Node", userSubtype)
@@ -571,6 +600,135 @@ class ResponseModelGeneratorTest {
             "User subtype should have @SerialName(\"User\")",
             serialNameAnns.isNotEmpty(),
         )
+
+        // User subtype should have __typename field (auto-injected)
+        val typenameProp = userSubtype.propertySpecs.find { it.name == "__typename" }
+        assertNotNull("User subtype should have __typename property", typenameProp)
+        assertTrue(
+            "__typename should be non-null String",
+            !typenameProp!!.type.isNullable,
+        )
+
+        // KDoc should NOT mention global classDiscriminator config
+        val kdocText = nodeInterface.kdoc?.toString() ?: ""
+        assertTrue(
+            "KDoc should NOT mention global classDiscriminator config",
+            !kdocText.contains("classDiscriminator"),
+        )
+    }
+
+    // --- Union type with type-scoped fields ---
+
+    @Test
+    fun `union type generates sealed interface with type-scoped fields`() {
+        val parser = ResponseSelectionParser(anilistIndex)
+        val operation = buildOperation(
+            name = "ActivityQuery",
+            type = OperationType.QUERY,
+            document = fixtureText("fixtures/advanced/unions/ActivityQuery.graphql"),
+        )
+        val selectionSet = parser.parse(operation)
+        val generator = ResponseModelGenerator(anilistIndex)
+
+        val fileSpecs = generator.generate(operation, selectionSet, "com.example")
+        val dataClass = fileSpecs.first().members
+            .filterIsInstance<TypeSpec>()
+            .first { it.name == "ActivityQueryData" }
+
+        // Should have a sealed interface for ActivityUnion
+        val activityUnion = dataClass.typeSpecs.find { it.name == "ActivityUnion" }
+        assertNotNull("Should have sealed interface for ActivityUnion", activityUnion)
+        assertTrue(
+            "ActivityUnion should be sealed",
+            activityUnion!!.modifiers.contains(KModifier.SEALED),
+        )
+
+        // ListActivity should only have status, progress (and __typename)
+        val listActivity = activityUnion.typeSpecs.find { it.name == "ListActivity" }
+        assertNotNull("Should have ListActivity subtype", listActivity)
+        val listFields = listActivity!!.propertySpecs.map { it.name }.toSet()
+        assertTrue("ListActivity should have status", "status" in listFields)
+        assertTrue("ListActivity should have progress", "progress" in listFields)
+        assertTrue("ListActivity should have __typename", "__typename" in listFields)
+        assertFalse("ListActivity should NOT have text", "text" in listFields)
+
+        // TextActivity should only have text (and __typename)
+        val textActivity = activityUnion.typeSpecs.find { it.name == "TextActivity" }
+        assertNotNull("Should have TextActivity subtype", textActivity)
+        val textFields = textActivity!!.propertySpecs.map { it.name }.toSet()
+        assertTrue("TextActivity should have text", "text" in textFields)
+        assertTrue("TextActivity should have __typename", "__typename" in textFields)
+        assertFalse("TextActivity should NOT have status", "status" in textFields)
+        assertFalse("TextActivity should NOT have progress", "progress" in textFields)
+    }
+
+    // --- Explicit __typename ---
+
+    @Test
+    fun `explicit __typename selection works without crashing`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document =
+            """
+            query TypenameQuery {
+              viewer {
+                __typename
+                id
+                login
+              }
+            }
+            """.trimIndent()
+        val operation = buildOperation(
+            name = "TypenameQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        // Should not throw
+        val selectionSet = parser.parse(operation)
+
+        // viewer's selection set should include __typename
+        val viewer = selectionSet.fields.first { it.responseName == "viewer" }
+        val typenameField = viewer.selectionSet!!.fields.find { it.schemaName == "__typename" }
+        assertNotNull("Should have explicit __typename field", typenameField)
+    }
+
+    // --- Alias with path-based identity ---
+
+    @Test
+    fun `aliases produce separate per-path classes`() {
+        val parser = ResponseSelectionParser(anilistIndex)
+        val operation = buildOperation(
+            name = "AliasedFields",
+            type = OperationType.QUERY,
+            document = fixtureText("fixtures/advanced/aliases/AliasedFields.graphql"),
+        )
+        val selectionSet = parser.parse(operation)
+        val generator = ResponseModelGenerator(anilistIndex)
+
+        val fileSpecs = generator.generate(operation, selectionSet, "com.example")
+
+        assertEquals(1, fileSpecs.size)
+        val fileSpec = fileSpecs.first()
+
+        val dataClass = fileSpec.members
+            .filterIsInstance<TypeSpec>()
+            .firstOrNull { it.name == "AliasedFieldsData" }
+        assertNotNull("Should contain AliasedFieldsData class", dataClass)
+
+        // MediaEnglishTitle and MediaNativeTitle should be separate classes
+        val mediaEnglishTitle = dataClass!!.typeSpecs.find { it.name == "MediaEnglishTitle" }
+        assertNotNull("Should have MediaEnglishTitle class", mediaEnglishTitle)
+        val englishFields = mediaEnglishTitle!!.propertySpecs.map { it.name }
+        assertTrue("MediaEnglishTitle should have english", "english" in englishFields)
+
+        val mediaNativeTitle = dataClass.typeSpecs.find { it.name == "MediaNativeTitle" }
+        assertNotNull("Should have MediaNativeTitle class", mediaNativeTitle)
+        val nativeFields = mediaNativeTitle!!.propertySpecs.map { it.name }
+        assertTrue("MediaNativeTitle should have native", "native" in nativeFields)
+
+        // No merged MediaTitle class
+        val mergedTitleClass = dataClass.typeSpecs.find { it.name == "MediaTitle" }
+        assertNull("Should NOT have merged MediaTitle class", mergedTitleClass)
     }
 
     // --- Helpers ---

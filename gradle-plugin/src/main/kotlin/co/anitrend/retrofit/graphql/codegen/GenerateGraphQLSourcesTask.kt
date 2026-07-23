@@ -27,13 +27,17 @@ import co.anitrend.retrofit.graphql.codegen.generate.RegistryGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.VariableClassGenerator
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLFragmentInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
+import co.anitrend.retrofit.graphql.codegen.model.OperationType
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import co.anitrend.retrofit.graphql.codegen.parser.GraphQLDocumentParser
 import co.anitrend.retrofit.graphql.codegen.parser.ResponseSelectionParser
 import co.anitrend.retrofit.graphql.codegen.parser.SchemaParser
 import co.anitrend.retrofit.graphql.codegen.resolve.FragmentResolver
 import co.anitrend.retrofit.graphql.codegen.resolve.FragmentVariablePropagator
+import co.anitrend.retrofit.graphql.codegen.schema.SchemaCompiler
+import co.anitrend.retrofit.graphql.codegen.schema.TypenameInjector
 import co.anitrend.retrofit.graphql.codegen.validate.GraphQLTypeUsageValidator
+import graphql.language.OperationDefinition
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -162,41 +166,91 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                 SchemaIndex.EMPTY
             }
 
+        // Inject __typename into executable documents for abstract types
+        val typedOps = if (generateResponses.get() && schemaIndex != SchemaIndex.EMPTY) {
+            val injector = TypenameInjector(schemaIndex)
+            resolvedOperations.map { op ->
+                try {
+                    val transformedDoc = injector.injectTypename(op.document, op.type.toGraphQLOperation())
+                    op.copy(document = transformedDoc)
+                } catch (e: Exception) {
+                    logger.warn("Failed to inject __typename for '${op.name}': ${e.message}")
+                    op
+                }
+            }
+        } else {
+            resolvedOperations
+        }
+
+        // Validate operations against the schema if both are available
+        if (schemaIndex != SchemaIndex.EMPTY) {
+            val compiler = SchemaCompiler(scalarMap)
+            try {
+                val schemaIdl = schemaFile.get().asFile.readText()
+                val compiledSchema = compiler.compile(schemaIdl)
+
+                val validationErrors = mutableListOf<String>()
+                for (op in typedOps) {
+                    val result = compiler.validate(compiledSchema, op.document)
+                    if (!result.isValid) {
+                        validationErrors.add(
+                            "Operation '${op.name}': ${result.errors.joinToString("; ")}",
+                        )
+                    }
+                }
+
+                if (validationErrors.isNotEmpty()) {
+                    logger.error(
+                        "Schema validation failed for ${validationErrors.size} operation(s):\n" +
+                            validationErrors.joinToString("\n"),
+                    )
+                } else {
+                    logger.info("Schema validation passed for ${typedOps.size} operation(s)")
+                }
+            } catch (e: Exception) {
+                logger.warn("Schema validation skipped: ${e.message}")
+            }
+        }
+
         // Generate source files
         val pkg = packageName.get()
         val outputDirectory = outputDir.get().asFile
 
+        // Clean stale output before generation
+        outputDirectory.deleteRecursively()
+        outputDirectory.mkdirs()
+
         if (generateOperationConstants.get()) {
             writeFile(
-                OperationConstantsGenerator.generate(resolvedOperations, pkg),
+                OperationConstantsGenerator.generate(typedOps, pkg),
                 outputDirectory,
             )
         }
 
         if (generateDocuments.get()) {
             writeFile(
-                DocumentGenerator.generate(resolvedOperations, pkg),
+                DocumentGenerator.generate(typedOps, pkg),
                 outputDirectory,
             )
         }
 
         if (generateHashes.get()) {
             writeFile(
-                HashConstantsGenerator.generate(resolvedOperations, pkg),
+                HashConstantsGenerator.generate(typedOps, pkg),
                 outputDirectory,
             )
         }
 
         // Registry is always generated (needed by the runtime)
         writeFile(
-            RegistryGenerator.generate(resolvedOperations, pkg),
+            RegistryGenerator.generate(typedOps, pkg),
             outputDirectory,
         )
 
         // Variable / input / enum / request helper generation
         if (generateVariables.get()) {
             generateVariableArtifacts(
-                resolvedOperations,
+                typedOps,
                 schemaIndex,
                 scalarMap,
                 pkg,
@@ -213,7 +267,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                 )
             } else {
                 generateResponseArtifacts(
-                    resolvedOperations,
+                    typedOps,
                     schemaIndex,
                     scalarMap,
                     pkg,
@@ -223,7 +277,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         }
 
         logger.lifecycle(
-            "Generated GraphQL sources for ${resolvedOperations.size} operation(s) " +
+            "Generated GraphQL sources for ${typedOps.size} operation(s) " +
                 "in package '$pkg'",
         )
     }
@@ -262,11 +316,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         }
 
         // Generate enum classes from schema
-        val enums = schemaIndex.enums
-        if (enums.isNotEmpty()) {
-            EnumGenerator.generate(enums, pkg).forEach { writeFile(it, outputDirectory) }
-            logger.info("Generated ${enums.size} enum class(es)")
-        }
+        generateEnumArtifacts(schemaIndex, pkg, outputDirectory, "variables")
 
         // Generate per-operation request helpers
         operations.forEach { operation ->
@@ -292,6 +342,9 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         val selectionParser = ResponseSelectionParser(schemaIndex)
         val modelGenerator = ResponseModelGenerator(schemaIndex, scalarMap)
 
+        // Generate enum classes needed by response types (even if generateVariables is off)
+        generateEnumArtifacts(schemaIndex, pkg, outputDirectory, "responses")
+
         operations.forEach { operation ->
             try {
                 val selectionSet = selectionParser.parse(operation)
@@ -299,8 +352,8 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                 fileSpecs.forEach { writeFile(it, outputDirectory) }
                 logger.info("Generated ${operation.name}Data response model")
             } catch (e: Exception) {
-                logger.warn(
-                    "Skipping response model for '${operation.name}': ${e.message}",
+                logger.error(
+                    "Failed to generate response model for '${operation.name}': ${e.message}",
                 )
             }
         }
@@ -311,5 +364,30 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         outputDirectory: File,
     ) {
         fileSpec.writeTo(outputDirectory)
+    }
+
+    /**
+     * Generates Kotlin enum classes from the schema index.
+     */
+    private fun generateEnumArtifacts(
+        schemaIndex: SchemaIndex,
+        pkg: String,
+        outputDirectory: File,
+        logPrefix: String,
+    ) {
+        val enums = schemaIndex.enums
+        if (enums.isNotEmpty()) {
+            EnumGenerator.generate(enums, pkg).forEach { writeFile(it, outputDirectory) }
+            logger.info("[$logPrefix] Generated ${enums.size} enum class(es)")
+        }
+    }
+
+    /**
+     * Converts a codegen [OperationType] to a graphql-java [OperationDefinition.Operation].
+     */
+    private fun OperationType.toGraphQLOperation(): OperationDefinition.Operation = when (this) {
+        OperationType.QUERY -> OperationDefinition.Operation.QUERY
+        OperationType.MUTATION -> OperationDefinition.Operation.MUTATION
+        OperationType.SUBSCRIPTION -> OperationDefinition.Operation.SUBSCRIPTION
     }
 }

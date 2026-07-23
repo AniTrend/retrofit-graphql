@@ -50,6 +50,10 @@ data class SelectionCondition(
  * @param possibleTypes When the parent type is an interface or union,
  *   the set of concrete object type names that are possible at runtime.
  *   Empty for concrete object fields.
+ * @param applicableTypes When non-empty, this field only belongs to
+ *   the specified concrete types (used for inline fragment and
+ *   fragment spread scoping on abstract selections). Empty means
+ *   the field applies to all possible subtypes.
  * @param selectionSet Nested selections when this field returns an
  *   object, interface, or union type; null for leaf fields.
  */
@@ -59,6 +63,7 @@ data class ResponseField(
     val outputType: GraphQLType,
     val condition: SelectionCondition = SelectionCondition.UNCONDITIONAL,
     val possibleTypes: Set<String> = emptySet(),
+    val applicableTypes: Set<String> = emptySet(),
     val selectionSet: ResponseSelectionSet? = null,
 )
 
@@ -67,11 +72,17 @@ data class ResponseField(
  * type in the schema.
  *
  * @param parentType The schema type name that owns these fields.
+ * @param responseIdentity A path-based identifier for this selection
+ *   set, derived from the response names along the path from the root.
+ *   Used as the key for generating unique model classes per response
+ *   path (e.g. "Viewer", "MediaEnglishTitle") instead of merging by
+ *   schema type name. Empty for the top-level operation selection set.
  * @param fields The selected fields in deterministic order (sorted
  *   by [ResponseField.responseName]).
  */
 data class ResponseSelectionSet(
     val parentType: String,
+    val responseIdentity: String = "",
     val fields: List<ResponseField>,
 ) {
     companion object {
@@ -79,6 +90,10 @@ data class ResponseSelectionSet(
          * An empty selection set for a given [parentType].
          */
         fun empty(parentType: String): ResponseSelectionSet =
-            ResponseSelectionSet(parentType = parentType, fields = emptyList())
+            ResponseSelectionSet(
+                parentType = parentType,
+                responseIdentity = "",
+                fields = emptyList(),
+            )
     }
 }

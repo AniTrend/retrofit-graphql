@@ -50,6 +50,17 @@ import graphql.parser.ParserOptions
 class ResponseSelectionParser(
     private val schemaIndex: SchemaIndex,
 ) {
+    private companion object {
+        /** Synthetic `__typename` field auto-injected for abstract type selections. */
+        val TYPE_NAME_FIELD: ResponseField = ResponseField(
+            responseName = "__typename",
+            schemaName = "__typename",
+            outputType = GraphQLType.Named("String", nullable = false),
+            condition = SelectionCondition.UNCONDITIONAL,
+            // applicableTypes empty = applies to all concrete types
+        )
+    }
+
     init {
         val options =
             ParserOptions.newParserOptions()
@@ -129,11 +140,16 @@ class ResponseSelectionParser(
     /**
      * Parses a list of selections against a parent object type and
      * produces a normalized [ResponseSelectionSet].
+     *
+     * @param responseIdentity The path-based identity for this
+     *   selection set, used to produce unique class names per
+     *   response path. Empty for the root.
      */
     private fun parseSelectionSet(
         parentType: SchemaType.ObjectType,
         selections: List<Selection<*>>,
         fragmentMap: Map<String, FragmentDefinition>,
+        responseIdentity: String = "",
     ): ResponseSelectionSet {
         val rawFields = mutableListOf<ResponseField>()
 
@@ -145,6 +161,7 @@ class ResponseSelectionParser(
                             field = selection,
                             parentType = parentType,
                             fragmentMap = fragmentMap,
+                            parentIdentity = responseIdentity,
                         ),
                     )
                 }
@@ -162,6 +179,7 @@ class ResponseSelectionParser(
                             parentType = fragmentType,
                             selections = fragmentSelections,
                             fragmentMap = fragmentMap,
+                            responseIdentity = responseIdentity,
                         ).fields.map { field ->
                             field.copy(
                                 condition = mergeConditions(
@@ -169,6 +187,9 @@ class ResponseSelectionParser(
                                     directivesToCondition(
                                         selection.directives,
                                     ),
+                                ),
+                                applicableTypes = setOf(
+                                    fragment.typeCondition.name!!,
                                 ),
                             )
                         }
@@ -184,6 +205,7 @@ class ResponseSelectionParser(
                             parentType = inlineType,
                             selections = inlineSelections,
                             fragmentMap = fragmentMap,
+                            responseIdentity = responseIdentity,
                         ).fields.map { field ->
                             field.copy(
                                 condition = mergeConditions(
@@ -191,6 +213,9 @@ class ResponseSelectionParser(
                                     directivesToCondition(
                                         selection.directives,
                                     ),
+                                ),
+                                applicableTypes = setOf(
+                                    selection.typeCondition!!.name!!,
                                 ),
                             )
                         }
@@ -208,20 +233,34 @@ class ResponseSelectionParser(
         val mergedFields = mergeFields(rawFields).sortedBy { it.responseName }
         return ResponseSelectionSet(
             parentType = parentType.name,
+            responseIdentity = responseIdentity,
             fields = mergedFields,
         )
     }
 
     /**
      * Parses a single field selection against a parent object type.
+     *
+     * @param parentIdentity The path-based identity of the parent
+     *   selection set, used to build child identities.
      */
     private fun parseField(
         field: Field,
         parentType: SchemaType.ObjectType,
         fragmentMap: Map<String, FragmentDefinition>,
+        parentIdentity: String = "",
     ): ResponseField {
         val schemaName = field.name
         val responseName = field.alias ?: schemaName
+
+        // __typename is a meta-field — don't look it up in the schema
+        if (schemaName == "__typename") {
+            return ResponseField(
+                responseName = responseName,
+                schemaName = schemaName,
+                outputType = GraphQLType.Named("String", nullable = false),
+            )
+        }
 
         val fieldDef =
             requireNotNull(
@@ -244,6 +283,10 @@ class ResponseSelectionParser(
                 else -> emptySet()
             }
 
+        // Compute response-path identity from parent identity + this field's response name
+        val childIdentity =
+            parentIdentity + responseName.replaceFirstChar { it.uppercase() }
+
         // Parse nested selections if present
         val childSelections = field.selectionSet?.selections.orEmpty()
         val nestedSet: ResponseSelectionSet? =
@@ -263,9 +306,27 @@ class ResponseSelectionParser(
                     parentType = childType,
                     selections = childSelections,
                     fragmentMap = fragmentMap,
+                    responseIdentity = childIdentity,
                 )
             } else {
                 null
+            }
+
+        // Auto-inject __typename for abstract types when there is a
+        // selection set and __typename was not explicitly selected
+        val hasTypename =
+            nestedSet?.fields?.any { it.schemaName == "__typename" } ?: false
+        val finalSet =
+            if (
+                !hasTypename &&
+                (def is SchemaType.InterfaceType || def is SchemaType.UnionType) &&
+                nestedSet != null
+            ) {
+                nestedSet.copy(
+                    fields = listOf(TYPE_NAME_FIELD) + nestedSet.fields,
+                )
+            } else {
+                nestedSet
             }
 
         return ResponseField(
@@ -274,7 +335,7 @@ class ResponseSelectionParser(
             outputType = fieldDef.type,
             condition = condition,
             possibleTypes = possibleTypes,
-            selectionSet = nestedSet,
+            selectionSet = finalSet,
         )
     }
 
@@ -306,6 +367,15 @@ class ResponseSelectionParser(
                 }
             }
 
+            // Merge applicableTypes: if any field applies to all
+            // (empty set), the merged field also applies to all.
+            val mergedApplicableTypes =
+                if (group.any { it.applicableTypes.isEmpty() }) {
+                    emptySet<String>()
+                } else {
+                    group.fold(emptySet<String>()) { acc, f -> acc + f.applicableTypes }
+                }
+
             // Merge nested selection sets
             val mergedSelectionSet =
                 group
@@ -316,6 +386,7 @@ class ResponseSelectionParser(
                         } else {
                             ResponseSelectionSet(
                                 parentType = acc.parentType,
+                                responseIdentity = acc.responseIdentity,
                                 fields = mergeFields(
                                     acc.fields + set.fields,
                                 ),
@@ -323,7 +394,10 @@ class ResponseSelectionParser(
                         }
                     }
 
-            first.copy(selectionSet = mergedSelectionSet)
+            first.copy(
+                selectionSet = mergedSelectionSet,
+                applicableTypes = mergedApplicableTypes,
+            )
         }
     }
 

@@ -1,0 +1,47 @@
+{
+  "data": {
+    "Page": {
+      "notifications": [
+        {
+          "__typename": "AiringNotification",
+          "id": 101,
+          "episode": 12,
+          "contexts": [1, 2, 3],
+          "media": {
+            "id": 2001,
+            "title": {
+              "userPreferred": "Attack on Titan Final Season"
+            }
+          },
+          "airedAt": 1625094000
+        },
+        {
+          "__typename": "FollowingNotification",
+          "id": 102,
+          "userId": 5001,
+          "context": "started following you"
+        },
+        {
+          "__typename": "ActivityMessageNotification",
+          "id": 103,
+          "activityId": 3001,
+          "message": "Hey, check this out!",
+          "userId": 5002
+        },
+        {
+          "__typename": "ActivityLikeNotification",
+          "id": 104,
+          "activityId": 3002,
+          "userId": 5003
+        },
+        {
+          "__typename": "MediaDataChangeNotification",
+          "id": 105,
+          "mediaId": 2002,
+          "context": "Episode count updated",
+          "reason": "New episode released"
+        }
+      ]
+    }
+  }
+}

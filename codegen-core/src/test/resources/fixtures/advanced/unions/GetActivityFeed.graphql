@@ -1,0 +1,20 @@
+query GetActivityFeed {
+  feed {
+    items {
+      ... on ListActivity {
+        id
+        status
+        progress
+      }
+      ... on TextActivity {
+        id
+        text
+      }
+      ... on MessageActivity {
+        id
+        recipient
+        message
+      }
+    }
+  }
+}

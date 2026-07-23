@@ -1,0 +1,179 @@
+"""Notification union with many concrete types."""
+union NotificationUnion = AiringNotification | FollowingNotification | ActivityMessageNotification | ActivityMentionNotification | ActivityReplyNotification | ActivityReplySubscribedNotification | ActivityLikeNotification | ActivityReplyLikeNotification | ThreadCommentLikeNotification | ThreadCommentReplyNotification | ThreadCommentSubscribedNotification | ThreadCommentMentionNotification | ThreadLikeNotification | RelatedMediaAdditionNotification | MediaDataChangeNotification | MediaMergeNotification | MediaDeletionNotification
+
+"""Notification with airing schedule info."""
+type AiringNotification {
+  """The id of the notification."""
+  id: Int!
+  """The episode number."""
+  episode: Int!
+  """List of media IDs."""
+  contexts: [Int]
+  """The associated media."""
+  media: NotificationMedia
+  """The aired at time."""
+  airedAt: Int
+}
+
+"""Notification for new followers."""
+type FollowingNotification {
+  """The id of the notification."""
+  id: Int!
+  """The user who followed."""
+  userId: Int!
+  """The notification context."""
+  context: String
+}
+
+"""Notification for activity messages."""
+type ActivityMessageNotification {
+  """The id of the notification."""
+  id: Int!
+  """The activity id."""
+  activityId: Int!
+  """The message text."""
+  message: String
+  """The user who sent the message."""
+  userId: Int!
+}
+
+"""Notification for activity mentions."""
+type ActivityMentionNotification {
+  """The id of the notification."""
+  id: Int!
+  """The activity id."""
+  activityId: Int!
+  """The user who mentioned."""
+  userId: Int!
+}
+
+"""Notification for activity replies."""
+type ActivityReplyNotification {
+  """The id of the notification."""
+  id: Int!
+  """The activity id."""
+  activityId: Int!
+  """The user who replied."""
+  userId: Int!
+}
+
+"""Notification for activity reply subscriptions."""
+type ActivityReplySubscribedNotification {
+  """The id of the notification."""
+  id: Int!
+  """The activity id."""
+  activityId: Int!
+  """The user who replied."""
+  userId: Int!
+}
+
+"""Notification for activity likes."""
+type ActivityLikeNotification {
+  """The id of the notification."""
+  id: Int!
+  """The activity id."""
+  activityId: Int!
+  """The user who liked."""
+  userId: Int!
+}
+
+"""Notification for activity reply likes."""
+type ActivityReplyLikeNotification {
+  """The id of the notification."""
+  id: Int!
+  """The activity id."""
+  activityId: Int!
+  """The user who liked."""
+  userId: Int!
+}
+
+"""Notification for thread comment likes."""
+type ThreadCommentLikeNotification {
+  id: Int!
+  commentId: Int!
+  userId: Int!
+}
+
+"""Notification for thread comment replies."""
+type ThreadCommentReplyNotification {
+  id: Int!
+  commentId: Int!
+  userId: Int!
+}
+
+"""Notification for thread comment subscriptions."""
+type ThreadCommentSubscribedNotification {
+  id: Int!
+  commentId: Int!
+  userId: Int!
+}
+
+"""Notification for thread comment mentions."""
+type ThreadCommentMentionNotification {
+  id: Int!
+  commentId: Int!
+  userId: Int!
+}
+
+"""Notification for thread likes."""
+type ThreadLikeNotification {
+  id: Int!
+  threadId: Int!
+  userId: Int!
+}
+
+"""Notification for related media addition."""
+type RelatedMediaAdditionNotification {
+  id: Int!
+  mediaId: Int!
+}
+
+"""Notification for media data changes."""
+type MediaDataChangeNotification {
+  id: Int!
+  mediaId: Int!
+  context: String
+  reason: String
+}
+
+"""Notification for media merges."""
+type MediaMergeNotification {
+  id: Int!
+  mediaId: Int!
+  deletedMediaTitles: [String]
+  context: String
+  reason: String
+}
+
+"""Notification for media deletions."""
+type MediaDeletionNotification {
+  id: Int!
+  deletedMediaTitle: String
+  context: String
+  reason: String
+}
+
+"""Lightweight media reference for notifications."""
+type NotificationMedia {
+  id: Int!
+  title: NotificationMediaTitle
+}
+
+"""Media title type."""
+type NotificationMediaTitle {
+  userPreferred: String
+}
+
+"""Root query type for notifications."""
+type Query {
+  """Get a page of notifications."""
+  Page(
+    page: Int
+    perPage: Int
+  ): Page
+}
+
+"""Paginated result container."""
+type Page {
+  notifications: [NotificationUnion]
+}

@@ -1,0 +1,29 @@
+{
+  "data": {
+    "activities": [
+      {
+        "__typename": "ListActivity",
+        "id": 1,
+        "status": "completed",
+        "progress": "24/24"
+      },
+      {
+        "__typename": "TextActivity",
+        "id": 2,
+        "text": "Just finished watching this!"
+      },
+      {
+        "__typename": "MessageActivity",
+        "id": 3,
+        "recipient": "FriendUser",
+        "message": "Check out this anime!"
+      },
+      {
+        "__typename": "ListActivity",
+        "id": 4,
+        "status": "watching",
+        "progress": "8/12"
+      }
+    ]
+  }
+}

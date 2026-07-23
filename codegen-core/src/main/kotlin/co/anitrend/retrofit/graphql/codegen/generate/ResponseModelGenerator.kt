@@ -95,7 +95,7 @@ class ResponseModelGenerator(
         dataClassName: String = "${operation.name}Data",
     ): List<FileSpec> {
         // Collect all referenced object types and merge their selection sets
-        val mergedSelections = collectAndMergeObjectTypes(selectionSet)
+        val mergedSelections = collectAndMergeObjectTypes(selectionSet, dataClassName)
 
         // Collect all abstract types (interfaces/unions) and their concrete subtypes
         val abstractTypes = collectAbstractTypes(selectionSet)
@@ -166,11 +166,14 @@ class ResponseModelGenerator(
 
     /**
      * Walks the selection tree and collects all object types with their
-     * merged selection sets. If the same schema object type appears in
-     * multiple places, their field selections are merged.
+     * merged selection sets, keyed by response-path identity instead of
+     * schema type name. This ensures each unique response path produces
+     * its own model class rather than merging different selections of
+     * the same schema type.
      */
     private fun collectAndMergeObjectTypes(
         selectionSet: ResponseSelectionSet,
+        dataClassName: String,
     ): LinkedHashMap<String, ResponseSelectionSet> {
         val result = linkedMapOf<String, ResponseSelectionSet>()
 
@@ -180,17 +183,22 @@ class ResponseModelGenerator(
                 val def = schemaIndex.definition(typeName)
 
                 if (def is SchemaType.ObjectType && field.selectionSet != null) {
-                    val existing = result[typeName]
+                    val key = field.selectionSet.responseIdentity.ifBlank {
+                        dataClassName
+                    }
+                    val existing = result[key]
                     if (existing != null) {
-                        // Merge field selections: union of all fields
-                        result[typeName] = mergeSelectionSets(existing, field.selectionSet)
+                        result[key] = mergeSelectionSets(
+                            existing,
+                            field.selectionSet,
+                        )
                     } else {
-                        result[typeName] = field.selectionSet
+                        result[key] = field.selectionSet
                     }
                     walk(field.selectionSet)
                 }
 
-                // Skip interfaces and unions for now (Phase 4)
+                // Skip interfaces and unions for now (handled by collectAbstractTypes)
             }
         }
 
@@ -240,7 +248,8 @@ class ResponseModelGenerator(
 
     /**
      * Generates a sealed interface TypeSpec for an abstract type with concrete
-     * data class subtypes, using `@SerialName` as the discriminator.
+     * data class subtypes, using `@JsonClassDiscriminator` for automatic
+     * `__typename`-based deserialization.
      */
     private fun generateSealedInterface(
         abstractName: String,
@@ -253,21 +262,44 @@ class ResponseModelGenerator(
         val interfaceBuilder = TypeSpec.interfaceBuilder(interfaceName)
             .addModifiers(KModifier.PUBLIC, KModifier.SEALED)
             .addAnnotation(SERIALIZABLE)
+            .addAnnotation(
+                AnnotationSpec.builder(
+                    ClassName("kotlin", "OptIn"),
+                )
+                    .addMember(
+                        "%T::class",
+                        ClassName(
+                            "kotlinx.serialization",
+                            "ExperimentalSerializationApi",
+                        ),
+                    )
+                    .build(),
+            )
+            .addAnnotation(
+                AnnotationSpec.builder(
+                    ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"),
+                )
+                    .addMember("%S", "__typename")
+                    .build(),
+            )
             .addKdoc(
                 "Sealed interface for the GraphQL abstract type `%L`. " +
-                    "Concrete subtypes are discriminated by `__typename`. " +
-                    "Configure your Json instance with: " +
-                    "`Json { classDiscriminator = \"__typename\" }`",
+                    "Concrete subtypes are discriminated by `__typename` via " +
+                    "`@JsonClassDiscriminator` on this interface.",
                 abstractName,
             )
 
         for ((concreteTypeName, selSet) in concreteTypes) {
             val className = resolvedNames[concreteTypeName] ?: concreteTypeName
 
-            // Build properties for constructor params
+            // Filter fields to only those applicable to this concrete type
             val sortedFields = selSet.fields.sortedBy { it.responseName }
+            val applicableFields = sortedFields.filter { field ->
+                field.applicableTypes.isEmpty() ||
+                    concreteTypeName in field.applicableTypes
+            }
             val properties =
-                sortedFields.map { field ->
+                applicableFields.map { field ->
                     toPropertySpec(
                         field = field,
                         dataClassName = dataClassName,
@@ -276,10 +308,14 @@ class ResponseModelGenerator(
                     )
                 }
             val constructorParams =
-                properties.map { prop ->
-                    com.squareup.kotlinpoet.ParameterSpec
-                        .builder(prop.name, prop.type)
-                        .build()
+                applicableFields.zip(properties).map { (field, prop) ->
+                    val paramBuilder =
+                        com.squareup.kotlinpoet.ParameterSpec
+                            .builder(prop.name, prop.type)
+                    if (field.condition.isConditional && prop.type.isNullable) {
+                        paramBuilder.defaultValue("null")
+                    }
+                    paramBuilder.build()
                 }
 
             val subtypeSpec = TypeSpec.classBuilder(className)
@@ -301,9 +337,7 @@ class ResponseModelGenerator(
                 .apply {
                     properties.forEach { prop ->
                         val builder = prop.toBuilder()
-                        if (prop.initializer == null) {
-                            builder.initializer(prop.name)
-                        }
+                        builder.initializer(prop.name)
                         addProperty(builder.build())
                     }
                 }
@@ -335,6 +369,7 @@ class ResponseModelGenerator(
 
         return ResponseSelectionSet(
             parentType = base.parentType,
+            responseIdentity = base.responseIdentity,
             fields = mergedFields.values.sortedBy { it.responseName },
         )
     }
@@ -402,12 +437,19 @@ class ResponseModelGenerator(
                 )
             }
 
-        // Build constructor parameters from the properties
+        // Build constructor parameters from the properties, adding null
+        // defaults on the parameter (not the property body) for conditional
+        // fields so they become `val name: Type? = null` in the primary
+        // constructor instead of an invalid body initializer.
         val constructorParams =
-            properties.map { prop ->
-                com.squareup.kotlinpoet.ParameterSpec
-                    .builder(prop.name, prop.type)
-                    .build()
+            sortedFields.zip(properties).map { (field, prop) ->
+                val paramBuilder =
+                    com.squareup.kotlinpoet.ParameterSpec
+                        .builder(prop.name, prop.type)
+                if (field.condition.isConditional && prop.type.isNullable) {
+                    paramBuilder.defaultValue("null")
+                }
+                paramBuilder.build()
             }
 
         return TypeSpec.classBuilder(className)
@@ -421,10 +463,7 @@ class ResponseModelGenerator(
             .apply {
                 properties.forEach { prop ->
                     val builder = prop.toBuilder()
-                    // Preserve existing initializer (e.g. "null" for conditional fields)
-                    if (prop.initializer == null) {
-                        builder.initializer(prop.name)
-                    }
+                    builder.initializer(prop.name)
                     addProperty(builder.build())
                 }
             }
@@ -461,6 +500,7 @@ class ResponseModelGenerator(
             dataClassName = dataClassName,
             packageName = packageName,
             resolvedNames = resolvedNames,
+            selectionIdentity = field.selectionSet?.responseIdentity,
         )
 
         // Conditional fields (@include/@skip) may be absent from the response
@@ -473,10 +513,6 @@ class ResponseModelGenerator(
 
         val spec = PropertySpec.builder(field.responseName, kotlinType)
             .addModifiers(KModifier.PUBLIC)
-
-        if (isConditional && kotlinType.isNullable) {
-            spec.initializer("null")
-        }
 
         if (field.responseName != field.schemaName) {
             spec.addAnnotation(
@@ -494,12 +530,17 @@ class ResponseModelGenerator(
      * definition lookups to determine whether a named type corresponds to
      * a generated response class, a built-in scalar, a custom scalar mapping,
      * or an unsupported abstract type.
+     *
+     * @param selectionIdentity The response-path identity of the field's
+     *   selection set, used to look up the correct per-path generated class.
+     *   Null for leaf fields that have no nested selection set.
      */
     private fun resolveTypeName(
         graphQLType: GraphQLType,
         dataClassName: String,
         packageName: String,
         resolvedNames: Map<String, String>,
+        selectionIdentity: String? = null,
     ): TypeName {
         return when (graphQLType) {
             is GraphQLType.Named -> {
@@ -508,6 +549,7 @@ class ResponseModelGenerator(
                     dataClassName = dataClassName,
                     packageName = packageName,
                     resolvedNames = resolvedNames,
+                    selectionIdentity = selectionIdentity,
                 )
                 if (graphQLType.nullable) base.copy(nullable = true) else base
             }
@@ -517,6 +559,7 @@ class ResponseModelGenerator(
                     dataClassName = dataClassName,
                     packageName = packageName,
                     resolvedNames = resolvedNames,
+                    selectionIdentity = selectionIdentity,
                 )
                 val listType = ClassName("kotlin.collections", "List")
                     .parameterizedBy(elementType)
@@ -531,15 +574,22 @@ class ResponseModelGenerator(
      * Priority:
      * 1. Custom scalar mappings
      * 2. Built-in GraphQL scalars (String, Int, Float, Boolean, ID)
-     * 3. Generated response classes (object types present in [resolvedNames])
+     * 3. Generated response classes, looked up by response-path identity
+     *    first, then by schema type name as fallback
      * 4. Schema-defined types (interfaces, unions) — produces a TODO stub
      * 5. Unknown types — throws an error suggesting a scalar mapping
+     *
+     * @param selectionIdentity The response-path identity of the field's
+     *   own selection set, used as the primary lookup key for generated
+     *   classes. Falls back to [name] (schema type name) when null/blank
+     *   or not found.
      */
     private fun resolveNamedTypeName(
         name: String,
         dataClassName: String,
         packageName: String,
         resolvedNames: Map<String, String>,
+        selectionIdentity: String? = null,
     ): TypeName {
         // 1. Custom scalar mappings
         scalarMappings[name]?.let { return parseFqcnToTypeName(it) }
@@ -547,9 +597,20 @@ class ResponseModelGenerator(
         // 2. Built-in scalars
         BUILT_IN_SCALARS[name]?.let { return parseFqcnToTypeName(it) }
 
-        // 3. Generated response class (nested inside the root Data class)
-        resolvedNames[name]?.let { generatedName ->
+        // 3. Generated response class — look up by response-path identity
+        //    first, falling back to schema type name for abstract types
+        //    and backwards compatibility.
+        val lookupKey =
+            if (selectionIdentity.isNullOrBlank()) name else selectionIdentity
+        resolvedNames[lookupKey]?.let { generatedName ->
             return ClassName(packageName, dataClassName, generatedName)
+        }
+        // Fallback: schema type name (needed when selectionIdentity differs
+        // from the key used in resolvedNames, e.g. for abstract types)
+        if (lookupKey != name) {
+            resolvedNames[name]?.let { generatedName ->
+                return ClassName(packageName, dataClassName, generatedName)
+            }
         }
 
         // 4. Schema-defined type

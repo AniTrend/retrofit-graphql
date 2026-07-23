@@ -1,0 +1,13 @@
+query ActivityQuery {
+  Page {
+    activities {
+      ... on ListActivity {
+        status
+        progress
+      }
+      ... on TextActivity {
+        text
+      }
+    }
+  }
+}

@@ -295,6 +295,180 @@ class ResponseSelectionParserTest {
         assertNotNull(mediaFields.fields.find { it.responseName == "genres" })
     }
 
+    // --- __typename injection for abstract types ---
+
+    @Test
+    fun `auto-injects __typename into abstract type selections`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document =
+            """
+            query NodeQuery {
+              node(id: "123") {
+                id
+                ... on User {
+                  login
+                  name
+                }
+              }
+            }
+            """.trimIndent()
+        val operation = buildOperation(
+            name = "NodeQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val node = result.fields.first { it.responseName == "node" }
+        val nodeFields = node.selectionSet!!
+
+        // Should have __typename auto-injected
+        val typename = nodeFields.fields.find { it.schemaName == "__typename" }
+        assertNotNull("Should have __typename field", typename)
+        assertTrue(
+            "__typename should be first field",
+            nodeFields.fields.first().schemaName == "__typename",
+        )
+    }
+
+    // --- Union type with applicableTypes scoping ---
+
+    @Test
+    fun `union inline fragments tag fields with applicableTypes`() {
+        val parser = ResponseSelectionParser(anilistIndex)
+        val document =
+            """
+            query ActivityQuery {
+              Page {
+                activities {
+                  ... on ListActivity { status progress }
+                  ... on TextActivity { text }
+                }
+              }
+            }
+            """.trimIndent()
+        val operation = buildOperation(
+            name = "ActivityQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val page = result.fields.first { it.responseName == "Page" }
+        val activities = page.selectionSet!!.fields.first { it.responseName == "activities" }
+        val unionFields = activities.selectionSet!!
+
+        val statusField = unionFields.fields.find { it.responseName == "status" }!!
+        val textField = unionFields.fields.find { it.responseName == "text" }!!
+        val typenameField = unionFields.fields.find { it.responseName == "__typename" }!!
+
+        // status should be scoped to ListActivity
+        assertEquals(setOf("ListActivity"), statusField.applicableTypes)
+
+        // text should be scoped to TextActivity
+        assertEquals(setOf("TextActivity"), textField.applicableTypes)
+
+        // __typename should apply to all (empty applicableTypes)
+        assertTrue(
+            "__typename should apply to all types",
+            typenameField.applicableTypes.isEmpty(),
+        )
+    }
+
+    // --- Response identity tracking ---
+
+    @Test
+    fun `tracks response identity for aliased fields`() {
+        val parser = ResponseSelectionParser(anilistIndex)
+        val operation = buildOperation(
+            name = "AliasedFields",
+            type = OperationType.QUERY,
+            document = operationText(
+                "fixtures/advanced/aliases/AliasedFields.graphql",
+            ),
+        )
+
+        val result = parser.parse(operation)
+        val media = result.fields.first { it.responseName == "Media" }
+        val mediaFields = media.selectionSet!!
+
+        val englishTitle = mediaFields.fields.find { it.responseName == "englishTitle" }!!
+        val nativeTitle = mediaFields.fields.find { it.responseName == "nativeTitle" }!!
+
+        // Each alias should have a distinct responseIdentity
+        assertEquals(
+            "MediaEnglishTitle",
+            englishTitle.selectionSet!!.responseIdentity,
+        )
+        assertEquals(
+            "MediaNativeTitle",
+            nativeTitle.selectionSet!!.responseIdentity,
+        )
+    }
+
+    // --- Explicit __typename ---
+
+    @Test
+    fun `explicit __typename selection does not crash`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document =
+            """
+            query TypenameQuery {
+              viewer {
+                __typename
+                id
+                login
+              }
+            }
+            """.trimIndent()
+        val operation = buildOperation(
+            name = "TypenameQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first { it.responseName == "viewer" }
+
+        // __typename should be present as a field
+        val typename = viewer.selectionSet!!.fields.find { it.responseName == "__typename" }
+        assertNotNull("Should have __typename field", typename)
+    }
+
+    // --- Union __typename injection ---
+
+    @Test
+    fun `union type selections get auto-injected __typename`() {
+        val parser = ResponseSelectionParser(anilistIndex)
+        val document =
+            """
+            query ActivityQuery {
+              Page {
+                activities {
+                  ... on ListActivity { status }
+                  ... on TextActivity { text }
+                }
+              }
+            }
+            """.trimIndent()
+        val operation = buildOperation(
+            name = "ActivityQuery",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val page = result.fields.first { it.responseName == "Page" }
+        val activities = page.selectionSet!!.fields.first { it.responseName == "activities" }
+
+        // activities field has type ActivityUnion, so __typename should be injected
+        val unionFields = activities.selectionSet!!
+        assertTrue(
+            "Should have __typename field",
+            unionFields.fields.any { it.schemaName == "__typename" },
+        )
+    }
+
     // --- Helpers ---
 
     private fun fixtureFile(path: String): File {
