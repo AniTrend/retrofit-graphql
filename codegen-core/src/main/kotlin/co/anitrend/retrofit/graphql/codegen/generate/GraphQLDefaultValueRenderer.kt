@@ -117,7 +117,8 @@ object GraphQLDefaultValueRenderer {
             is SchemaType.ObjectType,
             is SchemaType.InterfaceType,
             is SchemaType.UnionType,
-            null -> {
+            null,
+            -> {
                 throw IllegalArgumentException(
                     "Cannot render $path for unknown type '$typeName'. " +
                         "Add a scalar mapping in the retrofitGraphQL {} extension, e.g.:\n" +

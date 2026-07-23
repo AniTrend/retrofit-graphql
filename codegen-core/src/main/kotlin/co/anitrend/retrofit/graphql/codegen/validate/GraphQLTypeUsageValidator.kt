@@ -120,7 +120,8 @@ object GraphQLTypeUsageValidator {
             }
             is SchemaType.ObjectType,
             is SchemaType.InterfaceType,
-            is SchemaType.UnionType -> return
+            is SchemaType.UnionType,
+            -> return
             null -> {
                 throw IllegalArgumentException(
                     "Unknown type '$name' at $path. " +

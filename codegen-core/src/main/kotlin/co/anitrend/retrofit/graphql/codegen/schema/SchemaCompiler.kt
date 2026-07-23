@@ -25,8 +25,8 @@ import graphql.schema.DataFetchingEnvironment
 import graphql.schema.GraphQLScalarType
 import graphql.schema.GraphQLSchema
 import graphql.schema.idl.RuntimeWiring
-import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.ScalarInfo
+import graphql.schema.idl.SchemaGenerator
 import graphql.validation.ValidationError
 import graphql.validation.Validator
 import java.util.Locale

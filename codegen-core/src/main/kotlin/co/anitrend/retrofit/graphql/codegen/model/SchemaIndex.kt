@@ -154,9 +154,9 @@ class SchemaIndex private constructor(
                 definitionsByName = definitionsByName,
                 interfaceImplementors = interfaceImplementors,
                 unionMembers =
-                    types.filterIsInstance<SchemaType.UnionType>().associate {
-                        it.name to it.memberTypes.toSet()
-                    },
+                types.filterIsInstance<SchemaType.UnionType>().associate {
+                    it.name to it.memberTypes.toSet()
+                },
             )
         }
     }
