@@ -118,6 +118,10 @@ object GraphQLTypeUsageValidator {
 
                 visitedInputObjects.remove(definition.name)
             }
+            is SchemaType.ObjectType,
+            is SchemaType.InterfaceType,
+            is SchemaType.UnionType,
+            -> return
             null -> {
                 throw IllegalArgumentException(
                     "Unknown type '$name' at $path. " +

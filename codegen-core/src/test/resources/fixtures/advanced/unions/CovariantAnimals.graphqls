@@ -1,0 +1,22 @@
+"""Standard Int scalar."""
+scalar Int
+
+"""Animal interface with covariant friend."""
+interface Animal { friend: Animal }
+
+"""Dog implements Animal with covariant friend."""
+type Dog implements Animal {
+  friend: Dog!
+  barkVolume: Int!
+}
+
+"""Cat implements Animal with covariant friend."""
+type Cat implements Animal {
+  friend: Cat!
+  livesRemaining: Int!
+}
+
+"""Root query type."""
+type Query {
+  animals: [Animal!]!
+}

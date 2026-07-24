@@ -1,0 +1,102 @@
+query GetNotifications($page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    notifications {
+      ... on AiringNotification {
+        id
+        episode
+        contexts
+        media {
+          id
+          title {
+            userPreferred
+          }
+        }
+        airedAt
+      }
+      ... on FollowingNotification {
+        id
+        userId
+        context
+      }
+      ... on ActivityMessageNotification {
+        id
+        activityId
+        message
+        userId
+      }
+      ... on ActivityMentionNotification {
+        id
+        activityId
+        userId
+      }
+      ... on ActivityReplyNotification {
+        id
+        activityId
+        userId
+      }
+      ... on ActivityReplySubscribedNotification {
+        id
+        activityId
+        userId
+      }
+      ... on ActivityLikeNotification {
+        id
+        activityId
+        userId
+      }
+      ... on ActivityReplyLikeNotification {
+        id
+        activityId
+        userId
+      }
+      ... on ThreadCommentLikeNotification {
+        id
+        commentId
+        userId
+      }
+      ... on ThreadCommentReplyNotification {
+        id
+        commentId
+        userId
+      }
+      ... on ThreadCommentSubscribedNotification {
+        id
+        commentId
+        userId
+      }
+      ... on ThreadCommentMentionNotification {
+        id
+        commentId
+        userId
+      }
+      ... on ThreadLikeNotification {
+        id
+        threadId
+        userId
+      }
+      ... on RelatedMediaAdditionNotification {
+        id
+        mediaId
+      }
+      ... on MediaDataChangeNotification {
+        id
+        mediaId
+        context
+        reason
+      }
+      ... on MediaMergeNotification {
+        id
+        mediaId
+        deletedMediaTitles
+        context
+        reason
+      }
+      ... on MediaDeletionNotification {
+        id
+        deletedMediaTitle
+        context
+        reason
+      }
+    }
+  }
+}

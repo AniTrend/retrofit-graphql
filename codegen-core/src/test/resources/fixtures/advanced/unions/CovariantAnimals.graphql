@@ -1,0 +1,6 @@
+query Animals {
+  animals {
+    ... on Dog { friend { barkVolume } }
+    ... on Cat { friend { livesRemaining } }
+  }
+}

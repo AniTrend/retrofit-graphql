@@ -1,0 +1,45 @@
+{
+  "data": {
+    "Media": {
+      "id": 1,
+      "characters": {
+        "nodes": [
+          {
+            "id": 101,
+            "name": {
+              "full": "Spike Spiegel"
+            }
+          },
+          {
+            "id": 102,
+            "name": {
+              "full": "Faye Valentine"
+            }
+          }
+        ]
+      },
+      "staff": {
+        "nodes": [
+          {
+            "id": 201,
+            "name": {
+              "full": "Shinichiro Watanabe"
+            }
+          },
+          {
+            "id": 202,
+            "name": {
+              "full": "Yoko Kanno"
+            }
+          },
+          {
+            "id": 203,
+            "name": {
+              "full": "Keiko Nobumoto"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

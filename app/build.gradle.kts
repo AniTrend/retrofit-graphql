@@ -98,6 +98,7 @@ dependencies {
 retrofitGraphQL {
     common {
         generateVariables.set(true)
+        generateResponses.set(true)
     }
     packageName.set("co.anitrend.retrofit.graphql.sample.generated")
     schema.set(file("src/main/graphql/schema.graphql"))

@@ -64,6 +64,7 @@ publishing {
 
 dependencies {
     api(project(":codegen-core"))
+    implementation(libs.graphql.java)
     implementation(libs.kotlinpoet)
     implementation(gradleApi())
     compileOnly(libs.android.gradle.plugin)

@@ -1,0 +1,17 @@
+query ThreeImplementors {
+  result {
+    detail {
+      id
+    }
+    ... on Success {
+      detail {
+        value
+      }
+    }
+    ... on Failure {
+      detail {
+        reason
+      }
+    }
+  }
+}

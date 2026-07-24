@@ -85,6 +85,13 @@ abstract class GraphQLTargetExtension @Inject constructor(val name: String) {
     abstract val generateVariables: Property<Boolean>
 
     //
+    // Whether to generate response model data classes from operation
+    // selection sets. Requires [schema] to be set.
+    // Falls back to the common {} block if not set on this target.
+    //
+    abstract val generateResponses: Property<Boolean>
+
+    //
     // The output directory for generated sources.
     // Defaults to "${buildDir}/generated/source/graphql/${targetName}".
     //
@@ -139,11 +146,18 @@ abstract class CommonExtension {
     //
     abstract val generateVariables: Property<Boolean>
 
+    //
+    // Whether to generate response model data classes from operation
+    // selection sets. Default false. Requires [schema] to be set.
+    //
+    abstract val generateResponses: Property<Boolean>
+
     init {
         generateOperationConstants.convention(true)
         generateDocuments.convention(true)
         generateHashes.convention(true)
         generateVariables.convention(false)
+        generateResponses.convention(false)
     }
 }
 
@@ -227,6 +241,9 @@ open class RetrofitGraphQLExtension @Inject constructor(objects: ObjectFactory) 
 
     @get:org.gradle.api.tasks.Input
     val generateVariables: Property<Boolean> = objects.property(Boolean::class.java)
+
+    @get:org.gradle.api.tasks.Input
+    val generateResponses: Property<Boolean> = objects.property(Boolean::class.java)
 
     @get:org.gradle.api.tasks.OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty()

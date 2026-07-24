@@ -1,0 +1,8 @@
+mutation UpdateBio($input: String!) {
+  updateBio(input: $input) {
+    user {
+      id
+      bio
+    }
+  }
+}

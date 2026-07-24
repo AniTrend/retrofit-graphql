@@ -1,0 +1,11 @@
+query AliasedFields($id: Int) {
+  Media(id: $id) {
+    id
+    englishTitle: title {
+      english
+    }
+    nativeTitle: title {
+      native
+    }
+  }
+}

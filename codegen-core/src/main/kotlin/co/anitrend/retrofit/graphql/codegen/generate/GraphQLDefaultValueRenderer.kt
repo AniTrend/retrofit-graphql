@@ -114,7 +114,11 @@ object GraphQLDefaultValueRenderer {
                     "Cannot render $path for schema scalar '$typeName' without an explicit scalar mapping.",
                 )
             }
-            null -> {
+            is SchemaType.ObjectType,
+            is SchemaType.InterfaceType,
+            is SchemaType.UnionType,
+            null,
+            -> {
                 throw IllegalArgumentException(
                     "Cannot render $path for unknown type '$typeName'. " +
                         "Add a scalar mapping in the retrofitGraphQL {} extension, e.g.:\n" +

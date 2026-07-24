@@ -1,0 +1,161 @@
+"""Standard String scalar per the GraphQL specification."""
+scalar String
+
+"""Standard Int scalar per the GraphQL specification."""
+scalar Int
+
+"""Standard Boolean scalar per the GraphQL specification."""
+scalar Boolean
+
+"""Standard Float scalar per the GraphQL specification."""
+scalar Float
+
+"""Standard ID scalar per the GraphQL specification."""
+scalar ID
+
+"""The official AniList page type."""
+type Page {
+  """The pagination information."""
+  pageInfo: PageInfo
+  """List of media on the page."""
+  media(
+    """Filter by media id."""
+    id: Int
+  ): [Media]
+  """List of activities on the page."""
+  activities(
+    """Filter by activity id."""
+    id: Int
+  ): [ActivityUnion]
+}
+
+"""Page information."""
+type PageInfo {
+  """The total number of items."""
+  total: Int
+  """The current page."""
+  currentPage: Int
+  """The last page."""
+  lastPage: Int
+  """If there is another page."""
+  hasNextPage: Boolean
+}
+
+"""Anime or Manga media entry."""
+type Media {
+  """The id of the media."""
+  id: Int!
+  """The official titles of the media in various languages."""
+  title: MediaTitle
+  """The cover images of the media."""
+  coverImage: MediaCoverImage
+  """Short description of the media's story and characters."""
+  description: String
+  """The genres of the media."""
+  genres: [String]
+  """The characters of the media."""
+  characters(
+    """The page."""
+    page: Int
+  ): CharacterConnection
+  """The staff who worked on the media."""
+  staff(
+    """The page."""
+    page: Int
+  ): StaffConnection
+}
+
+"""The official titles of the media in various languages."""
+type MediaTitle {
+  """The romanization of the native language title."""
+  romaji: String
+  """The official title in English."""
+  english: String
+  """Official title in its native language."""
+  native: String
+}
+
+"""The cover image of the media."""
+type MediaCoverImage {
+  """The cover image url of the media at a large size."""
+  large: String
+  """The cover image url of the media at a medium size."""
+  medium: String
+}
+
+"""Character connection."""
+type CharacterConnection {
+  nodes: [Character]
+}
+
+"""The name of a character."""
+type CharacterName {
+  """The character's first and last name."""
+  full: String
+}
+
+"""Character information."""
+type Character {
+  """The id of the character."""
+  id: Int!
+  """The name of the character."""
+  name: CharacterName
+}
+
+"""Staff connection."""
+type StaffConnection {
+  nodes: [Staff]
+}
+
+"""The name of a staff member."""
+type StaffName {
+  """The staff member's first and last name."""
+  full: String
+}
+
+"""Staff information."""
+type Staff {
+  """The id of the staff."""
+  id: Int!
+  """The name of the staff."""
+  name: StaffName
+}
+
+"""Activity union type."""
+union ActivityUnion = ListActivity | TextActivity
+
+"""List activity."""
+type ListActivity {
+  """The id of the activity."""
+  id: Int!
+  """The list item status."""
+  status: String
+  """The number of episodes/chapters consumed."""
+  progress: String
+  """The associated media."""
+  media: Media
+}
+
+"""Text activity."""
+type TextActivity {
+  """The id of the activity."""
+  id: Int!
+  """The text of the activity."""
+  text: String
+}
+
+"""Root query type for the AniList API."""
+type Query {
+  """Paginated media results."""
+  Page(
+    """The page number."""
+    page: Int
+    """The amount of entries per page (max 50)."""
+    perPage: Int
+  ): Page
+  """Look up a media entry by ID."""
+  Media(
+    """The media id."""
+    id: Int
+  ): Media
+}

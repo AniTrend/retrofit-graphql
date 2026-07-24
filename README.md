@@ -101,7 +101,49 @@ dependencies {
 
 > Root artifact coordinates use `com.github.AniTrend`, while module coordinates use `com.github.AniTrend.retrofit-graphql`.
 
-For code generation support, apply the Gradle plugin and add a `retrofitGraphQL { }` config block. The plugin generates operation constants, a document registry, enum classes, variable classes, and typed request helpers. See [MIGRATION.md](MIGRATION.md) for the full migration guide and the [wiki Code Generation page](https://github.com/AniTrend/retrofit-graphql/wiki/Codegen) for the DSL reference.
+For code generation support, apply the Gradle plugin and add a `retrofitGraphQL { }` config block. The plugin generates operation constants, a document registry, enum classes, variable classes, typed request helpers, and optionally response model data classes. See [MIGRATION.md](MIGRATION.md) for the full migration guide and the [wiki Code Generation page](https://github.com/AniTrend/retrofit-graphql/wiki/Codegen) for the DSL reference.
+
+### Response Model Generation (Opt-in)
+
+When `generateResponses` is enabled, the codegen plugin generates kotlinx-serializable response model data classes from the operation selection sets. Each operation produces a `{OperationName}Data` root class with nested data classes for every selected GraphQL object type.
+
+```kotlin
+retrofitGraphQL {
+    common {
+        generateResponses.set(true)  // default false
+    }
+    target("anilist") {
+        schema.set(file("src/main/graphql/schema.graphql"))
+        operations.from(fileTree("src/main/graphql"))
+    }
+}
+```
+
+Generated response models:
+- Use `@Serializable` and `@SerialName` annotations for kotlinx serialization
+- Preserve GraphQL aliases as distinct Kotlin properties
+- Handle list nullability (container + element)
+- Support conditional fields (`@include`/`@skip`) with nullable types
+- Generate sealed interfaces for GraphQL interfaces and unions with `__typename`-based polymorphism
+
+```kotlin
+// Generated example
+@Serializable
+data class GetUserData(
+    @SerialName("viewer")
+    val viewer: User?,
+) {
+    @Serializable
+    data class User(
+        val id: String,
+        val login: String,
+        val name: String?,
+        val bio: String?,
+    )
+}
+```
+
+Generated types are transport DTOs designed for the Retrofit/network boundary. Map them to your domain models rather than exposing generated classes throughout your application.
 
 ### Gradle Plugin Consumption
 

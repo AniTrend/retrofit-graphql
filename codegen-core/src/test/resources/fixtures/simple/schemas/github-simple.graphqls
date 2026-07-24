@@ -1,0 +1,37 @@
+"""An object with a globally unique ID."""
+interface Node {
+  """The ID of the object."""
+  id: ID!
+}
+
+"""A user account on GitHub."""
+type User implements Node {
+  """The ID of the user."""
+  id: ID!
+  """The username used to login."""
+  login: String!
+  """The user's public profile name."""
+  name: String
+  """The user's public profile bio."""
+  bio: String
+}
+
+"""Payload returned by the updateBio mutation."""
+type UpdateBioPayload {
+  """The updated user."""
+  user: User
+}
+
+"""Root query type for GitHub."""
+type Query {
+  """The currently authenticated user."""
+  viewer: User
+  """Look up a node by its ID."""
+  node(id: ID!): Node
+}
+
+"""Root mutation type for GitHub."""
+type Mutation {
+  """Update the authenticated user's bio."""
+  updateBio(input: String!): UpdateBioPayload
+}

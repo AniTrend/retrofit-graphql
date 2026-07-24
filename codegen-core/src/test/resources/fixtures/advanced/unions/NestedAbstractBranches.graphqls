@@ -1,0 +1,46 @@
+"""Standard String scalar per the GraphQL specification."""
+scalar String
+
+"""An outer union type for testing nested abstract branches."""
+union Outer = OuterA | OuterB
+
+"""An inner union type for testing nested abstract branches."""
+union Inner = InnerX | InnerY
+
+"""OuterA type --- has inner field returning Inner union."""
+type OuterA {
+  """The inner abstract field."""
+  inner: Inner
+}
+
+"""OuterB type --- has inner field returning Inner union."""
+type OuterB {
+  """The inner abstract field."""
+  inner: Inner
+}
+
+"""InnerX type --- has detail field with type-specific sub-selection."""
+type InnerX {
+  """The detail object."""
+  detail: Detail
+}
+
+"""InnerY type --- not selected in the test query but part of the union."""
+type InnerY {
+  """The detail object."""
+  detail: Detail
+}
+
+"""Detail type with scoped fields."""
+type Detail {
+  """Field from OuterA.InnerX branch."""
+  fromA: String
+  """Field from OuterB.InnerX branch."""
+  fromB: String
+}
+
+"""Root query type."""
+type Query {
+  """Get the outer union result."""
+  outer: Outer
+}

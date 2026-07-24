@@ -1,0 +1,4 @@
+union SearchResult = User | Repository
+type User { displayName: String! }
+type Repository { repositoryName: String! }
+type Query { search: SearchResult! }

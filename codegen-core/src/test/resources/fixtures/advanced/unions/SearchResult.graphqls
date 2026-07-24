@@ -1,0 +1,27 @@
+"""Standard String scalar per the GraphQL specification."""
+scalar String
+
+"""A union type for search results."""
+union SearchResult = User | Repository
+
+"""A user account."""
+type User {
+  """The user's display name."""
+  displayName: String
+  """The user's ID."""
+  id: String
+}
+
+"""A code repository."""
+type Repository {
+  """The repository's name."""
+  repositoryName: String
+  """The repository's ID."""
+  id: String
+}
+
+"""Root query type."""
+type Query {
+  """Search for users and repositories."""
+  search: [SearchResult]
+}

@@ -1,0 +1,25 @@
+{
+  "data": {
+    "feed": {
+      "items": [
+        {
+          "__typename": "ListActivity",
+          "id": 1,
+          "status": "planning",
+          "progress": "0/12"
+        },
+        {
+          "__typename": "TextActivity",
+          "id": 2,
+          "text": "Can't wait for the next episode"
+        },
+        {
+          "__typename": "MessageActivity",
+          "id": 3,
+          "recipient": "AnimeFan99",
+          "message": "We should watch this together"
+        }
+      ]
+    }
+  }
+}

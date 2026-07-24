@@ -1,0 +1,16 @@
+query GetMediaPaged($page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo {
+      total
+      currentPage
+      lastPage
+      hasNextPage
+    }
+    media {
+      id
+      title {
+        romaji
+      }
+    }
+  }
+}

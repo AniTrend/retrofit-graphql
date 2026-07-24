@@ -1,0 +1,25 @@
+query GetConditionalActivities(
+  $hasRepliesOrTypeText: Boolean = false
+  $hasMediaTitle: Boolean = false
+) {
+  activities {
+    ... on ListActivity {
+      id
+      status
+      progress
+    }
+    ... FeedText @include(if: $hasRepliesOrTypeText)
+    ... MediaTitle @include(if: $hasMediaTitle)
+  }
+}
+
+fragment FeedText on TextActivity {
+  id
+  text
+}
+
+fragment MediaTitle on MessageActivity {
+  id
+  recipient
+  message
+}

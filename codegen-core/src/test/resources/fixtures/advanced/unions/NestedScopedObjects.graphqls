@@ -1,0 +1,37 @@
+"""Standard String scalar per the GraphQL specification."""
+scalar String
+
+"""A union type where both members have nested objects with different sub-selections."""
+union Result = Success | Failure
+
+"""Success type."""
+type Success {
+  """The detail object (scoped to Success)."""
+  detail: Detail
+}
+
+"""Failure type."""
+type Failure {
+  """The detail object (scoped to Failure)."""
+  detail: Detail
+}
+
+"""Detail type with a nested child object."""
+type Detail {
+  """Child detail with type-specific fields."""
+  child: ChildDetail
+}
+
+"""Child detail type with mutually exclusive fields."""
+type ChildDetail {
+  """Value from success branch."""
+  value: String
+  """Reason from failure branch."""
+  reason: String
+}
+
+"""Root query type."""
+type Query {
+  """Get the union result with 3-level nesting."""
+  result: Result
+}

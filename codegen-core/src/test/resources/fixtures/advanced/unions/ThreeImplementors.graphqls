@@ -1,0 +1,38 @@
+"""Standard String scalar per the GraphQL specification."""
+scalar String
+
+"""Standard ID scalar per the GraphQL specification."""
+scalar ID
+
+"""Result interface with a detail field."""
+interface Result {
+  detail: Detail!
+}
+
+"""Success type implements Result."""
+type Success implements Result {
+  detail: Detail!
+}
+
+"""Failure type implements Result."""
+type Failure implements Result {
+  detail: Detail!
+}
+
+"""Pending type implements Result."""
+type Pending implements Result {
+  detail: Detail!
+}
+
+"""Detail type with id, value, and reason fields."""
+type Detail {
+  id: ID!
+  value: String
+  reason: String
+}
+
+"""Root query type."""
+type Query {
+  """Get the union result."""
+  result: Result
+}

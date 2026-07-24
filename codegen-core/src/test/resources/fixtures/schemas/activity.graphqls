@@ -1,0 +1,58 @@
+"""Standard String scalar per the GraphQL specification."""
+scalar String
+
+"""Standard Int scalar per the GraphQL specification."""
+scalar Int
+
+"""Standard Boolean scalar per the GraphQL specification."""
+scalar Boolean
+
+"""Activity union type with mutually exclusive fields."""
+union ActivityUnion = ListActivity | TextActivity | MessageActivity
+
+"""List activity - has status and progress."""
+type ListActivity {
+  """The id of the activity."""
+  id: Int!
+  """The list item status."""
+  status: String
+  """The number of episodes/chapters consumed."""
+  progress: String
+}
+
+"""Text activity - has text content."""
+type TextActivity {
+  """The id of the activity."""
+  id: Int!
+  """The text content of the activity."""
+  text: String
+}
+
+"""Message activity - has message content."""
+type MessageActivity {
+  """The id of the activity."""
+  id: Int!
+  """The recipient of the message."""
+  recipient: String
+  """The message body."""
+  message: String
+}
+
+"""An activity container."""
+type ActivityFeed {
+  """List of activities."""
+  items: [ActivityUnion]
+}
+
+"""Root query type."""
+type Query {
+  """Get the activity feed."""
+  feed: ActivityFeed
+  """Test conditional fragments."""
+  activities(
+    """Include replies or text-type activities."""
+    hasRepliesOrTypeText: Boolean
+    """Include media title info."""
+    hasMediaTitle: Boolean
+  ): [ActivityUnion]
+}
