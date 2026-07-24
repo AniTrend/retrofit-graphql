@@ -1,0 +1,760 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>ResponseSelectionParserTest</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    retrofit-graphql
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":codegen-core/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":codegen-core/main" data-filter=":codegen-core/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    retrofit-graphql
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="retrofit-graphql-codegen-core::co.anitrend.retrofit.graphql.codegen.parser/ResponseSelectionParserTest///PointingToDeclaration//-166212119">
+  <div class="breadcrumbs"><a href="../../index.html">retrofit-graphql-codegen-core</a><span class="delimiter">/</span><a href="../index.html">co.anitrend.retrofit.graphql.codegen.parser</a><span class="delimiter">/</span><span class="current">ResponseSelectionParserTest</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Response</span><wbr><span>Selection</span><wbr><span>Parser</span><wbr><span><span>Test</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">ResponseSelectionParserTest</a></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="-930937148%2FConstructors%2F-166212119" anchor-label="ResponseSelectionParserTest" id="-930937148%2FConstructors%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-response-selection-parser-test.html"><span>Response</span><wbr><span>Selection</span><wbr><span>Parser</span><wbr><span><span>Test</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-930937148%2FConstructors%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-481867418%2FFunctions%2F-166212119" anchor-label="aliased __typename does not suppress auto-injection" id="-481867418%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="aliased __typename does not suppress auto-injection.html"><span>aliased _</span><wbr><span>_</span><wbr><span><span>typename</span></span> <span><span>does</span></span> <span><span>not</span></span> <span><span>suppress</span></span> <span><span>auto-injection</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-481867418%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="aliased __typename does not suppress auto-injection.html"><span class="token function">aliased __typename does not suppress auto-injection</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="165236496%2FFunctions%2F-166212119" anchor-label="auto-injects __typename into abstract type selections" id="165236496%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="auto-injects __typename into abstract type selections.html"><span><span>auto-injects</span></span> <span>_</span><wbr><span>_</span><wbr><span><span>typename</span></span> <span><span>into</span></span> <span><span>abstract</span></span> <span><span>type</span></span> <span><span>selections</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="165236496%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="auto-injects __typename into abstract type selections.html"><span class="token function">auto-injects __typename into abstract type selections</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1149572267%2FFunctions%2F-166212119" anchor-label="composeRuntimePaths Cartesian product with non-conflicting paths" id="-1149572267%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="compose-runtime-paths -cartesian product with non-conflicting paths.html"><span>compose</span><wbr><span>Runtime</span><wbr><span><span>Paths</span></span> <span><span>Cartesian</span></span> <span><span>product</span></span> <span><span>with</span></span> <span><span>non-conflicting</span></span> <span><span>paths</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1149572267%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="compose-runtime-paths -cartesian product with non-conflicting paths.html"><span class="token function">composeRuntimePaths Cartesian product with non-conflicting paths</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-115101641%2FFunctions%2F-166212119" anchor-label="composeRuntimePaths discards conflicting assignments" id="-115101641%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="compose-runtime-paths discards conflicting assignments.html"><span>compose</span><wbr><span>Runtime</span><wbr><span><span>Paths</span></span> <span><span>discards</span></span> <span><span>conflicting</span></span> <span><span>assignments</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-115101641%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="compose-runtime-paths discards conflicting assignments.html"><span class="token function">composeRuntimePaths discards conflicting assignments</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="514202387%2FFunctions%2F-166212119" anchor-label="composeRuntimePaths empty enclosing returns fragment unchanged" id="514202387%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="compose-runtime-paths empty enclosing returns fragment unchanged.html"><span>compose</span><wbr><span>Runtime</span><wbr><span><span>Paths</span></span> <span><span>empty</span></span> <span><span>enclosing</span></span> <span><span>returns</span></span> <span><span>fragment</span></span> <span><span>unchanged</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="514202387%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="compose-runtime-paths empty enclosing returns fragment unchanged.html"><span class="token function">composeRuntimePaths empty enclosing returns fragment unchanged</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1283742443%2FFunctions%2F-166212119" anchor-label="composeRuntimePaths empty fragment returns enclosing unchanged" id="-1283742443%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="compose-runtime-paths empty fragment returns enclosing unchanged.html"><span>compose</span><wbr><span>Runtime</span><wbr><span><span>Paths</span></span> <span><span>empty</span></span> <span><span>fragment</span></span> <span><span>returns</span></span> <span><span>enclosing</span></span> <span><span>unchanged</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1283742443%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="compose-runtime-paths empty fragment returns enclosing unchanged.html"><span class="token function">composeRuntimePaths empty fragment returns enclosing unchanged</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-364834300%2FFunctions%2F-166212119" anchor-label="explicit __typename selection does not crash" id="-364834300%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="explicit __typename selection does not crash.html"><span>explicit _</span><wbr><span>_</span><wbr><span><span>typename</span></span> <span><span>selection</span></span> <span><span>does</span></span> <span><span>not</span></span> <span><span>crash</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-364834300%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="explicit __typename selection does not crash.html"><span class="token function">explicit __typename selection does not crash</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1356536661%2FFunctions%2F-166212119" anchor-label="fields are ordered by responseName" id="-1356536661%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="fields are ordered by response-name.html"><span><span>fields</span></span> <span><span>are</span></span> <span><span>ordered</span></span> <span><span>by</span></span> <span>response</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1356536661%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="fields are ordered by response-name.html"><span class="token function">fields are ordered by responseName</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="869811815%2FFunctions%2F-166212119" anchor-label="fragment on interface resolves fields from the interface definition" id="869811815%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="fragment on interface resolves fields from the interface definition.html"><span><span>fragment</span></span> <span><span>on</span></span> <span><span>interface</span></span> <span><span>resolves</span></span> <span><span>fields</span></span> <span><span>from</span></span> <span><span>the</span></span> <span><span>interface</span></span> <span><span>definition</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="869811815%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="fragment on interface resolves fields from the interface definition.html"><span class="token function">fragment on interface resolves fields from the interface definition</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1932764115%2FFunctions%2F-166212119" anchor-label="fragment spread on interface resolves runtimePaths to concrete types" id="1932764115%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="fragment spread on interface resolves runtime-paths to concrete types.html"><span><span>fragment</span></span> <span><span>spread</span></span> <span><span>on</span></span> <span><span>interface</span></span> <span><span>resolves</span></span> <span>runtime</span><wbr><span><span>Paths</span></span> <span><span>to</span></span> <span><span>concrete</span></span> <span><span>types</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1932764115%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="fragment spread on interface resolves runtime-paths to concrete types.html"><span class="token function">fragment spread on interface resolves runtimePaths to concrete types</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1327543211%2FFunctions%2F-166212119" anchor-label="inline fragment on union has runtimePaths with concrete member types" id="1327543211%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="inline fragment on union has runtime-paths with concrete member types.html"><span><span>inline</span></span> <span><span>fragment</span></span> <span><span>on</span></span> <span><span>union</span></span> <span><span>has</span></span> <span>runtime</span><wbr><span><span>Paths</span></span> <span><span>with</span></span> <span><span>concrete</span></span> <span><span>member</span></span> <span><span>types</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1327543211%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="inline fragment on union has runtime-paths with concrete member types.html"><span class="token function">inline fragment on union has runtimePaths with concrete member types</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="197426241%2FFunctions%2F-166212119" anchor-label="inline fragment without type condition uses parent type and has no additional runtimePaths" id="197426241%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="inline fragment without type condition uses parent type and has no additional runtime-paths.html"><span><span>inline</span></span> <span><span>fragment</span></span> <span><span>without</span></span> <span><span>type</span></span> <span><span>condition</span></span> <span><span>uses</span></span> <span><span>parent</span></span> <span><span>type</span></span> <span><span>and</span></span> <span><span>has</span></span> <span><span>no</span></span> <span><span>additional</span></span> <span>runtime</span><wbr><span><span>Paths</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="197426241%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="inline fragment without type condition uses parent type and has no additional runtime-paths.html"><span class="token function">inline fragment without type condition uses parent type and has no additional runtimePaths</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1747281116%2FFunctions%2F-166212119" anchor-label="interface-returning field uses declared type as parentType not first concrete type" id="1747281116%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="interface-returning field uses declared type as parent-type not first concrete type.html"><span><span>interface-returning</span></span> <span><span>field</span></span> <span><span>uses</span></span> <span><span>declared</span></span> <span><span>type</span></span> <span><span>as</span></span> <span>parent</span><wbr><span><span>Type</span></span> <span><span>not</span></span> <span><span>first</span></span> <span><span>concrete</span></span> <span><span>type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1747281116%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="interface-returning field uses declared type as parent-type not first concrete type.html"><span class="token function">interface-returning field uses declared type as parentType not first concrete type</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-40057954%2FFunctions%2F-166212119" anchor-label="invalid field throws path-aware error" id="-40057954%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="invalid field throws path-aware error.html"><span><span>invalid</span></span> <span><span>field</span></span> <span><span>throws</span></span> <span><span>path-aware</span></span> <span><span>error</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-40057954%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="invalid field throws path-aware error.html"><span class="token function">invalid field throws path-aware error</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-337111794%2FFunctions%2F-166212119" anchor-label="missing mutation root type throws" id="-337111794%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="missing mutation root type throws.html"><span><span>missing</span></span> <span><span>mutation</span></span> <span><span>root</span></span> <span><span>type</span></span> <span><span>throws</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-337111794%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="missing mutation root type throws.html"><span class="token function">missing mutation root type throws</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1648081241%2FFunctions%2F-166212119" anchor-label="named fragment spread fields have correct runtimePaths" id="1648081241%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="named fragment spread fields have correct runtime-paths.html"><span><span>named</span></span> <span><span>fragment</span></span> <span><span>spread</span></span> <span><span>fields</span></span> <span><span>have</span></span> <span><span>correct</span></span> <span>runtime</span><wbr><span><span>Paths</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1648081241%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="named fragment spread fields have correct runtime-paths.html"><span class="token function">named fragment spread fields have correct runtimePaths</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1323939926%2FFunctions%2F-166212119" anchor-label="nested inline fragments compose runtimePaths via Cartesian product" id="1323939926%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="nested inline fragments compose runtime-paths via -cartesian product.html"><span><span>nested</span></span> <span><span>inline</span></span> <span><span>fragments</span></span> <span><span>compose</span></span> <span>runtime</span><wbr><span><span>Paths</span></span> <span><span>via</span></span> <span><span>Cartesian</span></span> <span><span>product</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1323939926%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="nested inline fragments compose runtime-paths via -cartesian product.html"><span class="token function">nested inline fragments compose runtimePaths via Cartesian product</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1422047579%2FFunctions%2F-166212119" anchor-label="nested inline fragments preserve local runtimePaths for inner abstract type" id="-1422047579%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="nested inline fragments preserve local runtime-paths for inner abstract type.html"><span><span>nested</span></span> <span><span>inline</span></span> <span><span>fragments</span></span> <span><span>preserve</span></span> <span><span>local</span></span> <span>runtime</span><wbr><span><span>Paths</span></span> <span><span>for</span></span> <span><span>inner</span></span> <span><span>abstract</span></span> <span><span>type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1422047579%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="nested inline fragments preserve local runtime-paths for inner abstract type.html"><span class="token function">nested inline fragments preserve local runtimePaths for inner abstract type</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-852615899%2FFunctions%2F-166212119" anchor-label="nested object path has correct response path segments" id="-852615899%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="nested object path has correct response path segments.html"><span><span>nested</span></span> <span><span>object</span></span> <span><span>path</span></span> <span><span>has</span></span> <span><span>correct</span></span> <span><span>response</span></span> <span><span>path</span></span> <span><span>segments</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-852615899%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="nested object path has correct response path segments.html"><span class="token function">nested object path has correct response path segments</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="396811244%2FFunctions%2F-166212119" anchor-label="normal __typename suppresses auto-injection" id="396811244%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="normal __typename suppresses auto-injection.html"><span>normal _</span><wbr><span>_</span><wbr><span><span>typename</span></span> <span><span>suppresses</span></span> <span><span>auto-injection</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="396811244%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="normal __typename suppresses auto-injection.html"><span class="token function">normal __typename suppresses auto-injection</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1726582429%2FFunctions%2F-166212119" anchor-label="parses aliased fields with correct response names" id="1726582429%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parses aliased fields with correct response names.html"><span><span>parses</span></span> <span><span>aliased</span></span> <span><span>fields</span></span> <span><span>with</span></span> <span><span>correct</span></span> <span><span>response</span></span> <span><span>names</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1726582429%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="parses aliased fields with correct response names.html"><span class="token function">parses aliased fields with correct response names</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1878515089%2FFunctions%2F-166212119" anchor-label="parses list field types" id="-1878515089%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parses list field types.html"><span><span>parses</span></span> <span><span>list</span></span> <span><span>field</span></span> <span><span>types</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1878515089%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="parses list field types.html"><span class="token function">parses list field types</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-478901101%2FFunctions%2F-166212119" anchor-label="parses mutation with nested response" id="-478901101%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parses mutation with nested response.html"><span><span>parses</span></span> <span><span>mutation</span></span> <span><span>with</span></span> <span><span>nested</span></span> <span><span>response</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-478901101%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="parses mutation with nested response.html"><span class="token function">parses mutation with nested response</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1909699822%2FFunctions%2F-166212119" anchor-label="parses nested fragment selections" id="-1909699822%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parses nested fragment selections.html"><span><span>parses</span></span> <span><span>nested</span></span> <span><span>fragment</span></span> <span><span>selections</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1909699822%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="parses nested fragment selections.html"><span class="token function">parses nested fragment selections</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1639536639%2FFunctions%2F-166212119" anchor-label="parses simple query with scalar fields" id="-1639536639%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parses simple query with scalar fields.html"><span><span>parses</span></span> <span><span>simple</span></span> <span><span>query</span></span> <span><span>with</span></span> <span><span>scalar</span></span> <span><span>fields</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1639536639%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="parses simple query with scalar fields.html"><span class="token function">parses simple query with scalar fields</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2001191079%2FFunctions%2F-166212119" anchor-label="repeated compatible fields are merged" id="2001191079%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="repeated compatible fields are merged.html"><span><span>repeated</span></span> <span><span>compatible</span></span> <span><span>fields</span></span> <span><span>are</span></span> <span><span>merged</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2001191079%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="repeated compatible fields are merged.html"><span class="token function">repeated compatible fields are merged</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1811608682%2FFunctions%2F-166212119" anchor-label="response paths use list to prevent collisions" id="1811608682%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="response paths use list to prevent collisions.html"><span><span>response</span></span> <span><span>paths</span></span> <span><span>use</span></span> <span><span>list</span></span> <span><span>to</span></span> <span><span>prevent</span></span> <span><span>collisions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1811608682%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="response paths use list to prevent collisions.html"><span class="token function">response paths use list to prevent collisions</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1309396323%2FFunctions%2F-166212119" anchor-label="setUp" id="1309396323%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set-up.html"><span>set</span><wbr><span><span>Up</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1309396323%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="set-up.html"><span class="token function">setUp</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-437693281%2FFunctions%2F-166212119" anchor-label="testA common interface field parsed as separate variants" id="-437693281%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="test-a common interface field parsed as separate variants.html"><span>test</span><wbr><span><span>A</span></span> <span><span>common</span></span> <span><span>interface</span></span> <span><span>field</span></span> <span><span>parsed</span></span> <span><span>as</span></span> <span><span>separate</span></span> <span><span>variants</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-437693281%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="test-a common interface field parsed as separate variants.html"><span class="token function">testA common interface field parsed as separate variants</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="940372896%2FFunctions%2F-166212119" anchor-label="testB nested abstract paths parsed with composed runtime paths" id="940372896%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="test-b nested abstract paths parsed with composed runtime paths.html"><span>test</span><wbr><span><span>B</span></span> <span><span>nested</span></span> <span><span>abstract</span></span> <span><span>paths</span></span> <span><span>parsed</span></span> <span><span>with</span></span> <span><span>composed</span></span> <span><span>runtime</span></span> <span><span>paths</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="940372896%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="test-b nested abstract paths parsed with composed runtime paths.html"><span class="token function">testB nested abstract paths parsed with composed runtime paths</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1929679524%2FFunctions%2F-166212119" anchor-label="testC alias alternatives produces separate variants not alternatives list" id="-1929679524%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="test-c alias alternatives produces separate variants not alternatives list.html"><span>test</span><wbr><span><span>C</span></span> <span><span>alias</span></span> <span><span>alternatives</span></span> <span><span>produces</span></span> <span><span>separate</span></span> <span><span>variants</span></span> <span><span>not</span></span> <span><span>alternatives</span></span> <span><span>list</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1929679524%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="test-c alias alternatives produces separate variants not alternatives list.html"><span class="token function">testC alias alternatives produces separate variants not alternatives list</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1896525038%2FFunctions%2F-166212119" anchor-label="testD covariant object return parsed correctly" id="1896525038%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="test-d covariant object return parsed correctly.html"><span>test</span><wbr><span><span>D</span></span> <span><span>covariant</span></span> <span><span>object</span></span> <span><span>return</span></span> <span><span>parsed</span></span> <span><span>correctly</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1896525038%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="test-d covariant object return parsed correctly.html"><span class="token function">testD covariant object return parsed correctly</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1922802444%2FFunctions%2F-166212119" anchor-label="testE directive composition case1 excluded by include false skip true" id="1922802444%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="test-e directive composition case1 excluded by include false skip true.html"><span>test</span><wbr><span><span>E</span></span> <span><span>directive</span></span> <span><span>composition</span></span> <span><span>case1</span></span> <span><span>excluded</span></span> <span><span>by</span></span> <span><span>include</span></span> <span><span>false</span></span> <span><span>skip</span></span> <span><span>true</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1922802444%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="test-e directive composition case1 excluded by include false skip true.html"><span class="token function">testE directive composition case1 excluded by include false skip true</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="460992654%2FFunctions%2F-166212119" anchor-label="testE directive composition case2 include true skip variable yields mayBeAbsent" id="460992654%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="test-e directive composition case2 include true skip variable yields may-be-absent.html"><span>test</span><wbr><span><span>E</span></span> <span><span>directive</span></span> <span><span>composition</span></span> <span><span>case2</span></span> <span><span>include</span></span> <span><span>true</span></span> <span><span>skip</span></span> <span><span>variable</span></span> <span><span>yields</span></span> <span>may</span><wbr><span>Be</span><wbr><span><span>Absent</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="460992654%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="test-e directive composition case2 include true skip variable yields may-be-absent.html"><span class="token function">testE directive composition case2 include true skip variable yields mayBeAbsent</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2019178672%2FFunctions%2F-166212119" anchor-label="testE directive composition case3 include variable skip false yields mayBeAbsent" id="-2019178672%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="test-e directive composition case3 include variable skip false yields may-be-absent.html"><span>test</span><wbr><span><span>E</span></span> <span><span>directive</span></span> <span><span>composition</span></span> <span><span>case3</span></span> <span><span>include</span></span> <span><span>variable</span></span> <span><span>skip</span></span> <span><span>false</span></span> <span><span>yields</span></span> <span>may</span><wbr><span>Be</span><wbr><span><span>Absent</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2019178672%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="test-e directive composition case3 include variable skip false yields may-be-absent.html"><span class="token function">testE directive composition case3 include variable skip false yields mayBeAbsent</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-37256134%2FFunctions%2F-166212119" anchor-label="testE directive composition case4 include variable skip variable yields mayBeAbsent" id="-37256134%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="test-e directive composition case4 include variable skip variable yields may-be-absent.html"><span>test</span><wbr><span><span>E</span></span> <span><span>directive</span></span> <span><span>composition</span></span> <span><span>case4</span></span> <span><span>include</span></span> <span><span>variable</span></span> <span><span>skip</span></span> <span><span>variable</span></span> <span><span>yields</span></span> <span>may</span><wbr><span>Be</span><wbr><span><span>Absent</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-37256134%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="test-e directive composition case4 include variable skip variable yields may-be-absent.html"><span class="token function">testE directive composition case4 include variable skip variable yields mayBeAbsent</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="472782699%2FFunctions%2F-166212119" anchor-label="tracks response path for aliased fields" id="472782699%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="tracks response path for aliased fields.html"><span><span>tracks</span></span> <span><span>response</span></span> <span><span>path</span></span> <span><span>for</span></span> <span><span>aliased</span></span> <span><span>fields</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="472782699%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="tracks response path for aliased fields.html"><span class="token function">tracks response path for aliased fields</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-695250306%2FFunctions%2F-166212119" anchor-label="union inline fragments tag fields with runtimePaths" id="-695250306%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="union inline fragments tag fields with runtime-paths.html"><span><span>union</span></span> <span><span>inline</span></span> <span><span>fragments</span></span> <span><span>tag</span></span> <span><span>fields</span></span> <span><span>with</span></span> <span>runtime</span><wbr><span><span>Paths</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-695250306%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="union inline fragments tag fields with runtime-paths.html"><span class="token function">union inline fragments tag fields with runtimePaths</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-890570379%2FFunctions%2F-166212119" anchor-label="union type selections get auto-injected __typename" id="-890570379%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="union type selections get auto-injected __typename.html"><span><span>union</span></span> <span><span>type</span></span> <span><span>selections</span></span> <span><span>get</span></span> <span><span>auto-injected</span></span> <span>_</span><wbr><span>_</span><wbr><span>typename</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-890570379%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="union type selections get auto-injected __typename.html"><span class="token function">union type selections get auto-injected __typename</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-121905294%2FFunctions%2F-166212119" anchor-label="union-returning field uses declared type as parentType not first concrete type" id="-121905294%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="union-returning field uses declared type as parent-type not first concrete type.html"><span><span>union-returning</span></span> <span><span>field</span></span> <span><span>uses</span></span> <span><span>declared</span></span> <span><span>type</span></span> <span><span>as</span></span> <span>parent</span><wbr><span><span>Type</span></span> <span><span>not</span></span> <span><span>first</span></span> <span><span>concrete</span></span> <span><span>type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-121905294%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="union-returning field uses declared type as parent-type not first concrete type.html"><span class="token function">union-returning field uses declared type as parentType not first concrete type</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2041330810%2FFunctions%2F-166212119" anchor-label="valid operation passes schema validation" id="-2041330810%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="valid operation passes schema validation.html"><span><span>valid</span></span> <span><span>operation</span></span> <span><span>passes</span></span> <span><span>schema</span></span> <span><span>validation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2041330810%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="valid operation passes schema validation.html"><span class="token function">valid operation passes schema validation</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
