@@ -192,7 +192,6 @@ class ResponseModelGenerator(
                 dataClassName = dataClassName,
                 packageName = packageName,
                 identityToClassName = identityToClassName,
-                collected = collected,
                 currentIdentity = rootIdentity,
             )
         }
@@ -494,7 +493,6 @@ class ResponseModelGenerator(
                     dataClassName = dataClassName,
                     packageName = packageName,
                     identityToClassName = identityToClassName,
-                    collected = collected,
                     currentIdentity = currentIdentity,
                 )
             }
@@ -570,7 +568,6 @@ class ResponseModelGenerator(
                 dataClassName = dataClassName,
                 packageName = packageName,
                 identityToClassName = identityToClassName,
-                collected = collected,
                 currentIdentity = currentIdentity,
             )
         }
@@ -603,13 +600,11 @@ class ResponseModelGenerator(
 
     // --- Property spec ---
 
-    // P0-1: use currentIdentity instead of currentRuntimePath
     private fun toPropertySpec(
         field: ProjectedField,
         dataClassName: String,
         packageName: String,
         identityToClassName: Map<ResponseModelIdentity, String>,
-        collected: LinkedHashMap<ResponseModelIdentity, ProjectedSelectionSet>,
         currentIdentity: ResponseModelIdentity,
     ): PropertySpec {
         var kotlinType = resolveTypeName(
@@ -617,7 +612,6 @@ class ResponseModelGenerator(
             dataClassName = dataClassName,
             packageName = packageName,
             identityToClassName = identityToClassName,
-            collected = collected,
             fieldName = field.responseName,
             currentIdentity = currentIdentity,
         )
@@ -646,7 +640,6 @@ class ResponseModelGenerator(
         dataClassName: String,
         packageName: String,
         identityToClassName: Map<ResponseModelIdentity, String>,
-        collected: LinkedHashMap<ResponseModelIdentity, ProjectedSelectionSet>,
         fieldName: String,
         currentIdentity: ResponseModelIdentity,
     ): TypeName {
@@ -657,7 +650,6 @@ class ResponseModelGenerator(
                     dataClassName = dataClassName,
                     packageName = packageName,
                     identityToClassName = identityToClassName,
-                    collected = collected,
                     fieldName = fieldName,
                     currentIdentity = currentIdentity,
                 )
@@ -669,7 +661,6 @@ class ResponseModelGenerator(
                     dataClassName = dataClassName,
                     packageName = packageName,
                     identityToClassName = identityToClassName,
-                    collected = collected,
                     fieldName = fieldName,
                     currentIdentity = currentIdentity,
                 )
@@ -692,7 +683,6 @@ class ResponseModelGenerator(
         dataClassName: String,
         packageName: String,
         identityToClassName: Map<ResponseModelIdentity, String>,
-        collected: LinkedHashMap<ResponseModelIdentity, ProjectedSelectionSet>,
         fieldName: String,
         currentIdentity: ResponseModelIdentity,
     ): TypeName {
@@ -712,69 +702,30 @@ class ResponseModelGenerator(
                 childResponsePath.subList(0, path.size) == path
         }
 
-        // Try exact identity first
-        val exactChildRuntimePath = RuntimePath(assignments = relevantAssignments)
-        val exactChildIdentity = ResponseModelIdentity(
-            responsePath = childResponsePath,
-            runtimePath = exactChildRuntimePath,
-        )
-        identityToClassName[exactChildIdentity]?.let { generatedName ->
-            return ClassName(packageName, dataClassName, generatedName)
-        }
-
-        // Try compatible identity: any identity at childResponsePath whose
-        // runtime path assignments are compatible with currentIdentity's
-        val compatibleIdentity = collected.keys.find { id ->
-            id.responsePath == childResponsePath &&
-                id.runtimePath.assignments.all { (path, type) ->
-                    val currentType = currentIdentity.runtimePath.assignments[path]
-                    currentType == null || currentType == type
-                } &&
-                currentIdentity.runtimePath.assignments.all { (path, type) ->
-                    val idType = id.runtimePath.assignments[path]
-                    idType == null || idType == type
-                }
-        }
-        if (compatibleIdentity != null) {
-            identityToClassName[compatibleIdentity]?.let { generatedName ->
-                return ClassName(packageName, dataClassName, generatedName)
-            }
-        }
-
-        // 4. Schema-defined type fallback
+        // 3. Schema-defined enums and input objects — no identity lookup needed
         val def = schemaIndex.definition(name)
         when (def) {
-            is SchemaType.ObjectType -> {
-                error(
-                    "Object type '$name' for field '$fieldName' at path " +
-                        "'$childResponsePath' has no generated model. " +
-                        "This indicates a missing projection.",
-                )
-            }
-            is SchemaType.InterfaceType,
-            is SchemaType.UnionType,
-            -> {
-                // For abstract types, look up the abstract identity
-                val absIdentity = collected.keys.find { id ->
-                    id.responsePath == childResponsePath &&
-                        id.runtimePath.assignments.isEmpty()
-                }
-                if (absIdentity != null) {
-                    identityToClassName[absIdentity]?.let { generatedName ->
-                        return ClassName(packageName, dataClassName, generatedName)
-                    }
-                }
-                error(
-                    "Abstract type '$name' for field '$fieldName' was not collected. " +
-                        "This indicates a processing error.",
-                )
-            }
             is SchemaType.InputObject,
             is SchemaType.Enum,
             -> return ClassName(packageName, name)
             is SchemaType.Scalar -> error("Unknown scalar type '$name'. Add a scalar mapping.")
             null -> error("Unknown type '$name' is not defined in the schema.")
+            else -> { /* continue to identity lookup */ }
         }
+
+        val exactChildRuntimePath = RuntimePath(assignments = relevantAssignments)
+        val exactChildIdentity = ResponseModelIdentity(
+            responsePath = childResponsePath,
+            runtimePath = exactChildRuntimePath,
+        )
+
+        val generatedName = requireNotNull(identityToClassName[exactChildIdentity]) {
+            val typeLabel = def?.let { it::class.simpleName } ?: "unknown"
+            "No generated model for $exactChildIdentity " +
+                "(schema type '$name' is $typeLabel). " +
+                "This indicates a missing projection."
+        }
+        return ClassName(packageName, dataClassName, generatedName)
     }
 
     // --- Naming helpers ---

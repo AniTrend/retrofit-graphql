@@ -684,6 +684,29 @@ class ResponseModelGeneratorTest {
         val pendingFields = pendingSubtype!!.propertySpecs.map { it.name }.toSet()
         assertTrue("Pending should have detail property. All subtypes: $allSubtypeNames, fields: $pendingFields", "detail" in pendingFields)
 
+        // Exact property type assertions
+        val successDetailProp = successSubtype.propertySpecs.find { it.name == "detail" }
+        assertNotNull("Success should have detail property with type", successDetailProp)
+        assertEquals(
+            "Success.detail should reference SuccessResultDetail",
+            "com.example.ThreeImplementorsData.SuccessResultDetail",
+            successDetailProp!!.type.toString(),
+        )
+        val failureDetailProp = failureSubtype.propertySpecs.find { it.name == "detail" }
+        assertNotNull("Failure should have detail property with type", failureDetailProp)
+        assertEquals(
+            "Failure.detail should reference FailureResultDetail",
+            "com.example.ThreeImplementorsData.FailureResultDetail",
+            failureDetailProp!!.type.toString(),
+        )
+        val pendingDetailProp = pendingSubtype.propertySpecs.find { it.name == "detail" }
+        assertNotNull("Pending should have detail property with type", pendingDetailProp)
+        assertEquals(
+            "Pending.detail should reference PendingResultDetail",
+            "com.example.ThreeImplementorsData.PendingResultDetail",
+            pendingDetailProp!!.type.toString(),
+        )
+
         // Verify detail classes - exact class name assertions
         // Success.detail -> SuccessResultDetail (exact)
         val successDetail = dataClass.typeSpecs.find { it.name == "SuccessResultDetail" }
@@ -794,6 +817,46 @@ class ResponseModelGeneratorTest {
 
         val obFields = outerBDetail!!.propertySpecs.map { it.name }.toSet()
         assertEquals("OuterBInnerXDetail = {fromB} only", setOf("fromB"), obFields)
+
+        // Assert the complete inner hierarchy chain:
+        // OuterAInner.InnerX.detail -> OuterAOuterInnerDetail
+        // OuterBInner.InnerX.detail -> OuterBOuterInnerDetail
+        // Navigate from the inner property type to the generated TypeSpec
+        val outerAInnerProp = outerASubtype.propertySpecs.find { it.name == "inner" }
+        assertNotNull("OuterA should have inner property", outerAInnerProp)
+        val outerAInnerTypeName = outerAInnerProp!!.type as? ClassName
+        assertNotNull("OuterA.inner should be a generated type", outerAInnerTypeName)
+        val outerAInnerSimpleName = outerAInnerTypeName!!.simpleName
+        val outerAInnerIface = dataClass.typeSpecs.find { it.name == outerAInnerSimpleName }
+        assertNotNull("Should find OuterA's inner interface: $outerAInnerSimpleName", outerAInnerIface)
+        assertTrue("OuterA's inner should be sealed", outerAInnerIface!!.modifiers.contains(KModifier.SEALED))
+        val outerAInnerX = outerAInnerIface.typeSpecs.find { it.name == "InnerX" }
+        assertNotNull("OuterAInner should have InnerX subtype", outerAInnerX)
+        val outerAInnerXDetailProp = outerAInnerX!!.propertySpecs.find { it.name == "detail" }
+        assertNotNull("OuterAInner.InnerX should have detail property", outerAInnerXDetailProp)
+        assertEquals(
+            "OuterAInner.InnerX.detail should reference OuterAOuterInnerDetail",
+            "com.example.NestedAbstractBranchesData.OuterAOuterInnerDetail?",
+            outerAInnerXDetailProp!!.type.toString(),
+        )
+
+        val outerBInnerProp = outerBSubtype.propertySpecs.find { it.name == "inner" }
+        assertNotNull("OuterB should have inner property", outerBInnerProp)
+        val outerBInnerTypeName = outerBInnerProp!!.type as? ClassName
+        assertNotNull("OuterB.inner should be a generated type", outerBInnerTypeName)
+        val outerBInnerSimpleName = outerBInnerTypeName!!.simpleName
+        val outerBInnerIface = dataClass.typeSpecs.find { it.name == outerBInnerSimpleName }
+        assertNotNull("Should find OuterB's inner interface: $outerBInnerSimpleName", outerBInnerIface)
+        assertTrue("OuterB's inner should be sealed", outerBInnerIface!!.modifiers.contains(KModifier.SEALED))
+        val outerBInnerX = outerBInnerIface.typeSpecs.find { it.name == "InnerX" }
+        assertNotNull("OuterBInner should have InnerX subtype", outerBInnerX)
+        val outerBInnerXDetailProp = outerBInnerX!!.propertySpecs.find { it.name == "detail" }
+        assertNotNull("OuterBInner.InnerX should have detail property", outerBInnerXDetailProp)
+        assertEquals(
+            "OuterBInner.InnerX.detail should reference OuterBOuterInnerDetail",
+            "com.example.NestedAbstractBranchesData.OuterBOuterInnerDetail?",
+            outerBInnerXDetailProp!!.type.toString(),
+        )
     }
 
     // ============================================================
