@@ -25,6 +25,7 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
+import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -34,7 +35,10 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.PrintStream
+import java.nio.file.Files
 
 class ResponseModelGeneratorTest {
 
@@ -965,6 +969,94 @@ class ResponseModelGeneratorTest {
         val viewer = selectionSet.fields.first { it.responseName == "viewer" }
         val typenameField = viewer.selectionSet!!.fields.find { it.schemaName == "__typename" }
         assertNotNull("Should have explicit __typename field", typenameField)
+    }
+
+    // --- Test F: generated source compilation ---
+
+    @Test
+    fun `testF generated source compiles for fixtures A through D`() {
+        // Fixture definitions: (operationName, schemaFile, queryFile)
+        val fixtures = listOf(
+            Triple(
+                "ThreeImplementors",
+                "ThreeImplementors.graphqls",
+                "ThreeImplementors.graphql",
+            ),
+            Triple(
+                "NestedAbstractBranches",
+                "NestedAbstractBranches.graphqls",
+                "NestedAbstractBranches.graphql",
+            ),
+            Triple(
+                "SearchQuery",
+                "AliasAlternatives.graphqls",
+                "AliasAlternatives.graphql",
+            ),
+            Triple(
+                "Animals",
+                "CovariantAnimals.graphqls",
+                "CovariantAnimals.graphql",
+            ),
+        )
+
+        for ((opName, schemaFile, queryFile) in fixtures) {
+            val schemaFileHandle = fixtureFile(
+                "fixtures/advanced/unions/$schemaFile",
+            )
+            val schemaResult = SchemaParser().parseWithRootTypes(schemaFileHandle)
+            val schemaIndex = SchemaIndex.from(
+                types = schemaResult.types,
+                queryTypeName = schemaResult.queryTypeName,
+                mutationTypeName = schemaResult.mutationTypeName,
+                subscriptionTypeName = schemaResult.subscriptionTypeName,
+            )
+
+            val parser = ResponseSelectionParser(schemaIndex)
+            val generator = ResponseModelGenerator(schemaIndex)
+
+            val operation = buildOperation(
+                name = opName,
+                type = OperationType.QUERY,
+                document = fixtureText("fixtures/advanced/unions/$queryFile"),
+            )
+            val selectionSet = parser.parse(operation)
+            val fileSpecs = generator.generate(
+                operation,
+                selectionSet,
+                "com.example.test",
+            )
+
+            // Compile generated sources using K2JVMCompiler
+            val tmpDir = Files.createTempDirectory("kct-").toFile()
+            tmpDir.deleteOnExit()
+            try {
+                val sourceDir = File(tmpDir, "sources").apply { mkdirs() }
+                val outputDir = File(tmpDir, "output").apply { mkdirs() }
+
+                for (spec in fileSpecs) {
+                    val sourceFile = File(sourceDir, "${spec.name}.kt")
+                    sourceFile.parentFile?.mkdirs()
+                    sourceFile.writeText(spec.toString())
+                }
+
+                val classpath = System.getProperty("java.class.path")
+                val errorStream = ByteArrayOutputStream()
+                val exitCode = K2JVMCompiler().exec(
+                    PrintStream(errorStream),
+                    "-classpath", classpath,
+                    "-d", outputDir.absolutePath,
+                    sourceDir.absolutePath,
+                )
+
+                assertEquals(
+                    "Compilation failed for $opName: $errorStream",
+                    org.jetbrains.kotlin.cli.common.ExitCode.OK,
+                    exitCode,
+                )
+            } finally {
+                tmpDir.deleteRecursively()
+            }
+        }
     }
 
     // --- Helpers ---
