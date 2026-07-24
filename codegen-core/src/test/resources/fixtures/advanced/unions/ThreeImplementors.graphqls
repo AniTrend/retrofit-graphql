@@ -1,34 +1,33 @@
 """Standard String scalar per the GraphQL specification."""
 scalar String
 
-"""A union type with three members, only two of which have type-specific fields."""
-union Result = Success | Failure | Pending
+"""Standard ID scalar per the GraphQL specification."""
+scalar ID
 
-"""Success type --- has type-specific nested detail with a value field."""
-type Success {
-  """The detail object."""
-  detail: Detail
+"""Result interface with a detail field."""
+interface Result {
+  detail: Detail!
 }
 
-"""Failure type --- has type-specific nested detail with a reason field."""
-type Failure {
-  """The detail object."""
-  detail: Detail
+"""Success type implements Result."""
+type Success implements Result {
+  detail: Detail!
 }
 
-"""Pending type --- has a common detail field with no type-specific sub-selection."""
-type Pending {
-  """The detail object."""
-  detail: Detail
+"""Failure type implements Result."""
+type Failure implements Result {
+  detail: Detail!
 }
 
-"""Detail type with mutually exclusive fields."""
+"""Pending type implements Result."""
+type Pending implements Result {
+  detail: Detail!
+}
+
+"""Detail type with id, value, and reason fields."""
 type Detail {
-  """Identifier shared across all subtypes."""
-  id: String!
-  """Value from success branch."""
+  id: ID!
   value: String
-  """Reason from failure branch."""
   reason: String
 }
 

@@ -1,14 +1,15 @@
 query ThreeImplementors {
   result {
+    detail {
+      id
+    }
     ... on Success {
       detail {
-        id
         value
       }
     }
     ... on Failure {
       detail {
-        id
         reason
       }
     }

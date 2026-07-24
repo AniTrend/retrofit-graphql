@@ -1,0 +1,6 @@
+query SearchQuery {
+  search {
+    ... on User { value: displayName }
+    ... on Repository { value: repositoryName }
+  }
+}

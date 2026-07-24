@@ -19,7 +19,9 @@ package co.anitrend.retrofit.graphql.codegen.parser
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
 import co.anitrend.retrofit.graphql.codegen.model.OperationType
+import co.anitrend.retrofit.graphql.codegen.model.RuntimePath
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
+import co.anitrend.retrofit.graphql.codegen.model.SchemaType
 import co.anitrend.retrofit.graphql.codegen.schema.SchemaCompiler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -332,10 +334,10 @@ class ResponseSelectionParserTest {
         )
     }
 
-    // --- Union type with applicableTypes scoping ---
+    // --- Union type with runtimePaths scoping ---
 
     @Test
-    fun `union inline fragments tag fields with applicableTypes`() {
+    fun `union inline fragments tag fields with runtimePaths`() {
         val parser = ResponseSelectionParser(anilistIndex)
         val document =
             """
@@ -363,23 +365,33 @@ class ResponseSelectionParserTest {
         val textField = unionFields.fields.find { it.responseName == "text" }!!
         val typenameField = unionFields.fields.find { it.responseName == "__typename" }!!
 
-        // status should be scoped to ListActivity
-        assertEquals(setOf("ListActivity"), statusField.applicableTypes)
+        // status should be scoped to ListActivity via runtimePaths
+        assertTrue(
+            "status should have runtimePaths for ListActivity",
+            statusField.runtimePaths.any { rp ->
+                rp.assignments.values.contains("ListActivity")
+            },
+        )
 
         // text should be scoped to TextActivity
-        assertEquals(setOf("TextActivity"), textField.applicableTypes)
+        assertTrue(
+            "text should have runtimePaths for TextActivity",
+            textField.runtimePaths.any { rp ->
+                rp.assignments.values.contains("TextActivity")
+            },
+        )
 
-        // __typename should apply to all (empty applicableTypes)
+        // __typename should apply to all (empty runtimePaths)
         assertTrue(
             "__typename should apply to all types",
-            typenameField.applicableTypes.isEmpty(),
+            typenameField.runtimePaths.isEmpty(),
         )
     }
 
-    // --- Response identity tracking ---
+    // --- Response path tracking ---
 
     @Test
-    fun `tracks response identity for aliased fields`() {
+    fun `tracks response path for aliased fields`() {
         val parser = ResponseSelectionParser(anilistIndex)
         val operation = buildOperation(
             name = "AliasedFields",
@@ -396,14 +408,14 @@ class ResponseSelectionParserTest {
         val englishTitle = mediaFields.fields.find { it.responseName == "englishTitle" }!!
         val nativeTitle = mediaFields.fields.find { it.responseName == "nativeTitle" }!!
 
-        // Each alias should have a distinct responseIdentity
+        // Each alias should have a distinct responsePath
         assertEquals(
-            "Media.englishTitle",
-            englishTitle.selectionSet!!.responseIdentity,
+            listOf("Media", "englishTitle"),
+            englishTitle.selectionSet!!.responsePath,
         )
         assertEquals(
-            "Media.nativeTitle",
-            nativeTitle.selectionSet!!.responseIdentity,
+            listOf("Media", "nativeTitle"),
+            nativeTitle.selectionSet!!.responsePath,
         )
     }
 
@@ -462,7 +474,6 @@ class ResponseSelectionParserTest {
         val page = result.fields.first { it.responseName == "Page" }
         val activities = page.selectionSet!!.fields.first { it.responseName == "activities" }
 
-        // activities field has type ActivityUnion, so __typename should be injected
         val unionFields = activities.selectionSet!!
         assertTrue(
             "Should have __typename field",
@@ -549,9 +560,8 @@ class ResponseSelectionParserTest {
     // --- Fragment type conditions on interfaces and unions ---
 
     @Test
-    fun `fragment spread on interface resolves applicableTypes to concrete types`() {
+    fun `fragment spread on interface resolves runtimePaths to concrete types`() {
         val parser = ResponseSelectionParser(githubIndex)
-        // Fragment spread on Node interface (not a concrete object)
         val document =
             """
             query NodeFragmentQuery {
@@ -577,21 +587,23 @@ class ResponseSelectionParserTest {
         val nodeFields = node.selectionSet!!
 
         // The `id` field from the Node interface fragment should have
-        // applicableTypes = {"User"} (not {"Node"}), since only User
-        // implements Node in this schema.
+        // runtimePaths containing "User" (not "Node")
         val idField = nodeFields.fields.find { it.responseName == "id" }!!
+        val idConcreteTypes = idField.runtimePaths
+            .flatMap { it.assignments.values }
+            .toSet()
         assertTrue(
             "id should be applicable to User (not Node itself)",
-            idField.applicableTypes.contains("User"),
+            idConcreteTypes.contains("User"),
         )
         assertFalse(
-            "id should NOT have Node in applicableTypes",
-            idField.applicableTypes.contains("Node"),
+            "id should NOT have Node in runtimePaths",
+            idConcreteTypes.contains("Node"),
         )
     }
 
     @Test
-    fun `inline fragment on union has applicableTypes with concrete member types`() {
+    fun `inline fragment on union has runtimePaths with concrete member types`() {
         val parser = ResponseSelectionParser(anilistIndex)
         val document =
             """
@@ -618,20 +630,22 @@ class ResponseSelectionParserTest {
         val statusField = unionFields.fields.find { it.responseName == "status" }!!
         val textField = unionFields.fields.find { it.responseName == "text" }!!
 
-        // For object types like ListActivity, possibleTypesFor returns empty,
-        // so applicableTypes falls back to just the type condition name.
-        assertEquals(setOf("ListActivity"), statusField.applicableTypes)
-        assertEquals(setOf("TextActivity"), textField.applicableTypes)
+        val statusTypes = statusField.runtimePaths
+            .flatMap { it.assignments.values }
+            .toSet()
+        assertEquals(setOf("ListActivity"), statusTypes)
+
+        val textTypes = textField.runtimePaths
+            .flatMap { it.assignments.values }
+            .toSet()
+        assertEquals(setOf("TextActivity"), textTypes)
     }
 
-    // --- Item 3: Outer abstract fragments overwrite nested concrete scopes ---
+    // --- Nested inline fragments compose runtimePaths ---
 
     @Test
-    fun `nested inline fragments compose applicableTypes via intersection`() {
+    fun `nested inline fragments compose runtimePaths via Cartesian product`() {
         val parser = ResponseSelectionParser(githubIndex)
-        // github-simple has Node interface with User as implementor.
-        // Test that the outer Node fragment's scope is intersected with
-        // the inner User fragment's scope rather than overwriting it.
         val document = """
             query NestedNodeQuery {
               node(id: "123") {
@@ -654,33 +668,34 @@ class ResponseSelectionParserTest {
         val node = result.fields.first { it.responseName == "node" }
         val nodeFields = node.selectionSet!!
 
-        // id comes from the outer Node fragment; applicableTypes should be
-        // narrowed by the outer scope (all Node implementors: {User})
+        // id comes from outer Node fragment
         val idField = nodeFields.fields.find { it.responseName == "id" }!!
+        val idTypes = idField.runtimePaths
+            .flatMap { it.assignments.values }
+            .toSet()
         assertEquals(
-            "id should have Node implementors as applicableTypes",
+            "id should have Node implementors as concrete types",
             setOf("User"),
-            idField.applicableTypes,
+            idTypes,
         )
 
-        // login comes from the nested User fragment. Without composition
-        // it would incorrectly expand to all Node implementors.
+        // login comes from nested User fragment
         val loginField = nodeFields.fields.find { it.responseName == "login" }!!
+        val loginTypes = loginField.runtimePaths
+            .flatMap { it.assignments.values }
+            .toSet()
         assertEquals(
-            "login should be scoped to User only via intersection",
+            "login should be scoped to User only",
             setOf("User"),
-            loginField.applicableTypes,
+            loginTypes,
         )
     }
 
-    // --- Item 4: Fragment type condition on interface resolves fields from the interface ---
+    // --- Fragment type condition on interface resolves fields from the interface ---
 
     @Test
     fun `fragment on interface resolves fields from the interface definition`() {
         val parser = ResponseSelectionParser(githubIndex)
-        // Node is an interface with an `id` field. The parser should resolve
-        // it from the Node interface directly, not from an arbitrary concrete
-        // implementor.
         val document = """
             query InterfaceFragmentQuery {
               node(id: "123") {
@@ -700,27 +715,19 @@ class ResponseSelectionParserTest {
         val node = result.fields.first { it.responseName == "node" }
         val nodeFields = node.selectionSet!!
 
-        // id should be present and resolved from the Node interface
         val idField = nodeFields.fields.find { it.responseName == "id" }
         assertNotNull("Should have id field resolved from Node interface", idField)
         assertEquals("id", idField!!.schemaName)
 
-        // The parentType of the response selection set should reflect the
-        // fragment type condition (Node), not an arbitrary concrete type.
-        // The __typename auto-injection would be in the node field's
-        // selection set since node returns Node (abstract).
         val typename = nodeFields.fields.find { it.schemaName == "__typename" }
         assertNotNull("Should have __typename auto-injected for abstract node", typename)
     }
 
-    // --- Item 3: Initial abstract fields use declared type for parsing ---
+    // --- Declared type used as parentType ---
 
     @Test
     fun `interface-returning field uses declared type as parentType not first concrete type`() {
         val parser = ResponseSelectionParser(githubIndex)
-        // node returns the Node interface. Before the fix, the parser
-        // would use User (the first concrete implementor) as the parent
-        // type for nested selections. After the fix, it uses Node itself.
         val document = """
             query InterfaceParentQuery {
               node(id: "123") {
@@ -738,23 +745,16 @@ class ResponseSelectionParserTest {
         val node = result.fields.first { it.responseName == "node" }
         val nodeFields = node.selectionSet!!
 
-        // parentType should be "Node" (the declared interface), not "User"
         assertEquals(
             "parentType should be the declared interface name",
             "Node",
             nodeFields.parentType,
         )
-
-        // id should still be resolvable from the Node interface
-        val idField = nodeFields.fields.find { it.responseName == "id" }
-        assertNotNull("Should have id field resolved from Node interface", idField)
     }
 
     @Test
     fun `union-returning field uses declared type as parentType not first concrete type`() {
         val parser = ResponseSelectionParser(anilistIndex)
-        // Activities returns ActivityUnion. parentType should be the
-        // union name, not the first concrete member.
         val document = """
             query UnionParentQuery {
               Page {
@@ -776,29 +776,18 @@ class ResponseSelectionParserTest {
         val activities = page.selectionSet!!.fields.first { it.responseName == "activities" }
         val unionFields = activities.selectionSet!!
 
-        // parentType should be "ActivityUnion", not "ListActivity"
         assertEquals(
             "parentType should be the declared union name",
             "ActivityUnion",
             unionFields.parentType,
         )
-
-        // Fields from inline fragments should still be scoped correctly
-        val statusField = unionFields.fields.find { it.responseName == "status" }!!
-        assertEquals(setOf("ListActivity"), statusField.applicableTypes)
-        val textField = unionFields.fields.find { it.responseName == "text" }!!
-        assertEquals(setOf("TextActivity"), textField.applicableTypes)
     }
 
-    // --- Item 4: Collision-safe response-path identities ---
+    // --- Response path collision safety ---
 
     @Test
-    fun `response identities use dot separator to prevent collisions`() {
+    fun `response paths use list to prevent collisions`() {
         val parser = ResponseSelectionParser(githubIndex)
-        // Flat field 'fooBar' should produce identity "fooBar".
-        // Nested path 'foo.bar' should produce identity "foo.bar".
-        // Dot separator prevents collisions since '.' is invalid in
-        // GraphQL field names.
         val document = """
             query FooBarFlat {
               viewer {
@@ -816,44 +805,12 @@ class ResponseSelectionParserTest {
         val result = parser.parse(operation)
         val viewer = result.fields.first { it.responseName == "viewer" }
 
-        // Root-level field uses just the response name, no separator
-        assertEquals("viewer", viewer.selectionSet!!.responseIdentity)
+        assertEquals(listOf("viewer"), viewer.selectionSet!!.responsePath)
     }
 
     @Test
-    fun `nested field identity includes separator from parent`() {
+    fun `nested object path has correct response path segments`() {
         val parser = ResponseSelectionParser(githubIndex)
-        val document = """
-            query NestedQuery {
-              viewer {
-                bio
-                name
-              }
-            }
-        """.trimIndent()
-        val operation = buildOperation(
-            name = "NestedQuery",
-            type = OperationType.QUERY,
-            document = document,
-        )
-
-        val result = parser.parse(operation)
-        val viewer = result.fields.first { it.responseName == "viewer" }
-        val viewerFields = viewer.selectionSet!!
-
-        // viewer.bio -> bio is a scalar leaf, no nested identity
-        // viewer.name -> name is a scalar leaf, no nested identity
-        // But the viewer's own identity is root-level
-        assertEquals("viewer", viewerFields.responseIdentity)
-    }
-
-    @Test
-    fun `nested object identity has separator in deeply nested path`() {
-        val parser = ResponseSelectionParser(githubIndex)
-        // Use updateBio mutation which produces a nested path:
-        //   updateBio { user { id bio } }
-        // Identity chain (dot-separated):
-        //   root("") -> updateBio -> updateBio.user
         val document = operationText(
             "fixtures/simple/mutations/UpdateBio.graphql",
         )
@@ -866,133 +823,20 @@ class ResponseSelectionParserTest {
         val result = parser.parse(operation)
         val updateBio = result.fields.first { it.responseName == "updateBio" }
 
-        // updateBio is root-level, no separator
-        assertEquals("updateBio", updateBio.selectionSet!!.responseIdentity)
+        assertEquals(listOf("updateBio"), updateBio.selectionSet!!.responsePath)
 
         val user = updateBio.selectionSet!!.fields.first { it.responseName == "user" }
-        // user is nested under updateBio, so dot separator appears
         assertEquals(
-            "updateBio.user",
-            user.selectionSet!!.responseIdentity,
+            listOf("updateBio", "user"),
+            user.selectionSet!!.responsePath,
         )
     }
 
-    // --- Item 4: Collision-safe dot-separated identities ---
+    // --- Inline fragments without type conditions ---
 
     @Test
-    fun `foo and Foo produce different dot-path identities`() {
+    fun `inline fragment without type condition uses parent type and has no additional runtimePaths`() {
         val parser = ResponseSelectionParser(githubIndex)
-        // Fields 'foo' and 'Foo' (different case) are both valid GraphQL
-        // names, and produce different dot-path identities since the parser
-        // preserves the original response name.
-        val document = """
-            query FooCaseQuery {
-              viewer {
-                login
-                name
-              }
-            }
-        """.trimIndent()
-        val operation = buildOperation(
-            name = "FooCaseQuery",
-            type = OperationType.QUERY,
-            document = document,
-        )
-
-        val result = parser.parse(operation)
-        val viewer = result.fields.first { it.responseName == "viewer" }
-        // viewer's identity is "viewer" (lowercase, as in the query)
-        assertEquals("viewer", viewer.selectionSet!!.responseIdentity)
-    }
-
-    @Test
-    fun `fooDotBar and fooBar produce different dot-path identities`() {
-        val parser = ResponseSelectionParser(githubIndex)
-        // Nested path 'foo.bar' (two levels) produces identity "foo.bar"
-        // Flat field 'fooBar' (one level) produces identity "fooBar"
-        // These are always distinct because '.' is invalid in field names.
-        val document = """
-            query NestedFlatQuery {
-              viewer {
-                login
-                name
-              }
-            }
-        """.trimIndent()
-        val operation = buildOperation(
-            name = "NestedFlatQuery",
-            type = OperationType.QUERY,
-            document = document,
-        )
-
-        val result = parser.parse(operation)
-        val viewer = result.fields.first { it.responseName == "viewer" }
-
-        // viewer is a single-level field, identity = "viewer"
-        assertEquals("viewer", viewer.selectionSet!!.responseIdentity)
-        // No nested objects, so no dot-separated identity
-    }
-
-    // --- Item 3: Nested abstract types preserve local applicableTypes ---
-
-    @Test
-    fun `nested inline fragments preserve local applicableTypes for inner abstract type`() {
-        val parser = ResponseSelectionParser(githubIndex)
-        // Two levels of abstract type: node(id) returns Node (interface).
-        // Inner inline fragments on User are nested inside the outer
-        // Node fragment. The inner applicableTypes should be local to
-        // the User type, not propagated from the outer Node scope.
-        val document = """
-            query NestedNodeQuery2 {
-              node(id: "123") {
-                ... on Node {
-                  id
-                  ... on User {
-                    login
-                    name
-                  }
-                }
-              }
-            }
-        """.trimIndent()
-        val operation = buildOperation(
-            name = "NestedNodeQuery2",
-            type = OperationType.QUERY,
-            document = document,
-        )
-
-        val result = parser.parse(operation)
-        val node = result.fields.first { it.responseName == "node" }
-        val nodeFields = node.selectionSet!!
-
-        // login from the inner User fragment should have applicableTypes
-        // narrowed to User via intersection. Outer Node scope is {User},
-        // inner User scope is {User}, intersection = {User}.
-        val loginField = nodeFields.fields.find { it.responseName == "login" }!!
-        assertEquals(
-            "login should be scoped to User",
-            setOf("User"),
-            loginField.applicableTypes,
-        )
-
-        // id from outer Node fragment should also be narrowed to {User}
-        val idField = nodeFields.fields.find { it.responseName == "id" }!!
-        assertEquals(
-            "id should have Node implementors as applicableTypes",
-            setOf("User"),
-            idField.applicableTypes,
-        )
-    }
-
-    // --- Item 5: Inline fragments without type conditions ---
-
-    @Test
-    fun `inline fragment without type condition uses parent type and has no additional applicableTypes`() {
-        val parser = ResponseSelectionParser(githubIndex)
-        // Type-condition-less inline fragment with @include directive
-        // referencing a variable. Using a variable preserves the
-        // conditional behavior; literal true/false are now folded
-        // at parse time.
         val document = """
             query ConditionalFragmentQuery(${'$'}includeName: Boolean!) {
               viewer {
@@ -1016,96 +860,470 @@ class ResponseSelectionParserTest {
         // name should be present and conditional
         val nameField = viewerFields.fields.find { it.responseName == "name" }
         assertNotNull("Should have name field", nameField)
-        assertTrue("name should be conditional", nameField!!.condition.isConditional)
+        assertTrue("name should be conditional", nameField!!.condition.mayBeAbsent)
 
         // bio should be present and conditional
         val bioField = viewerFields.fields.find { it.responseName == "bio" }
         assertNotNull("Should have bio field", bioField)
-        assertTrue("bio should be conditional", bioField!!.condition.isConditional)
+        assertTrue("bio should be conditional", bioField!!.condition.mayBeAbsent)
 
-        // applicableTypes should be empty (no type condition = no scope)
+        // runtimePaths should be empty (no type condition = no scope)
         assertTrue(
-            "name applicableTypes should be empty",
-            nameField.applicableTypes.isEmpty(),
+            "name runtimePaths should be empty",
+            nameField.runtimePaths.isEmpty(),
         )
         assertTrue(
-            "bio applicableTypes should be empty",
-            bioField.applicableTypes.isEmpty(),
+            "bio runtimePaths should be empty",
+            bioField.runtimePaths.isEmpty(),
         )
     }
 
-    // --- Item 3: Field alternatives for mutually exclusive type scopes ---
+    // --- Nested abstract types preserve local runtimePaths ---
 
     @Test
-    fun `aliased fields from disjoint union branches are kept as alternatives`() {
-        // Use a schema with a SearchResult union (User | Repository)
-        // where each member has a different field name under the same alias.
-        val searchSchemaFile = fixtureFile(
-            "fixtures/advanced/unions/SearchResult.graphqls",
-        )
-        val searchTypes = SchemaParser().parseWithRootTypes(searchSchemaFile)
-        val searchIndex = SchemaIndex.from(
-            types = searchTypes.types,
-            queryTypeName = searchTypes.queryTypeName,
-            mutationTypeName = searchTypes.mutationTypeName,
-            subscriptionTypeName = searchTypes.subscriptionTypeName,
-        )
-
-        val parser = ResponseSelectionParser(searchIndex)
+    fun `nested inline fragments preserve local runtimePaths for inner abstract type`() {
+        val parser = ResponseSelectionParser(githubIndex)
         val document = """
-            query SearchQuery {
-              search {
-                ... on User { value: displayName }
-                ... on Repository { value: repositoryName }
+            query NestedNodeQuery2 {
+              node(id: "123") {
+                ... on Node {
+                  id
+                  ... on User {
+                    login
+                    name
+                  }
+                }
               }
             }
         """.trimIndent()
         val operation = buildOperation(
-            name = "SearchQuery",
+            name = "NestedNodeQuery2",
             type = OperationType.QUERY,
             document = document,
+        )
+
+        val result = parser.parse(operation)
+        val node = result.fields.first { it.responseName == "node" }
+        val nodeFields = node.selectionSet!!
+
+        val loginField = nodeFields.fields.find { it.responseName == "login" }!!
+        val loginTypes = loginField.runtimePaths
+            .flatMap { it.assignments.values }
+            .toSet()
+        assertEquals(
+            "login should be scoped to User",
+            setOf("User"),
+            loginTypes,
+        )
+
+        val idField = nodeFields.fields.find { it.responseName == "id" }!!
+        val idTypes = idField.runtimePaths
+            .flatMap { it.assignments.values }
+            .toSet()
+        assertEquals(
+            "id should have Node implementors as concrete types",
+            setOf("User"),
+            idTypes,
+        )
+    }
+
+    // ============================================================
+    // Test A: common interface field (parser)
+    // ============================================================
+
+    @Test
+    fun `testA common interface field parsed as separate variants`() {
+        val schemaFile = fixtureFile(
+            "fixtures/advanced/unions/ThreeImplementors.graphqls",
+        )
+        val schemaResult = SchemaParser().parseWithRootTypes(schemaFile)
+        val schemaIndex = SchemaIndex.from(
+            types = schemaResult.types,
+            queryTypeName = schemaResult.queryTypeName,
+            mutationTypeName = schemaResult.mutationTypeName,
+            subscriptionTypeName = schemaResult.subscriptionTypeName,
+        )
+
+        val parser = ResponseSelectionParser(schemaIndex)
+        val operation = buildOperation(
+            name = "ThreeImplementors",
+            type = OperationType.QUERY,
+            document = operationText(
+                "fixtures/advanced/unions/ThreeImplementors.graphql",
+            ),
+        )
+
+        val result = parser.parse(operation)
+        val resultField = result.fields.first { it.responseName == "result" }
+        val resultFields = resultField.selectionSet!!
+
+        // detail field should have variants from Success and Failure fragments
+        val detailVariants = resultFields.fields.filter { it.responseName == "detail" }
+        assertTrue(
+            "Should have multiple detail field variants",
+            detailVariants.size >= 2,
+        )
+
+        // Verify that value and reason fields are present in the nested
+        // selections appropriately
+        val allNestedFields = detailVariants
+            .mapNotNull { it.selectionSet }
+            .flatMap { it.fields }
+        val nestedResponseNames = allNestedFields.map { it.responseName }.toSet()
+        assertTrue("Should have id field", "id" in nestedResponseNames)
+        assertTrue("Should have value field", "value" in nestedResponseNames)
+        assertTrue("Should have reason field", "reason" in nestedResponseNames)
+    }
+
+    // ============================================================
+    // Test B: nested abstract paths (parser)
+    // ============================================================
+
+    @Test
+    fun `testB nested abstract paths parsed with composed runtime paths`() {
+        val schemaFile = fixtureFile(
+            "fixtures/advanced/unions/NestedAbstractBranches.graphqls",
+        )
+        val schemaResult = SchemaParser().parseWithRootTypes(schemaFile)
+        val schemaIndex = SchemaIndex.from(
+            types = schemaResult.types,
+            queryTypeName = schemaResult.queryTypeName,
+            mutationTypeName = schemaResult.mutationTypeName,
+            subscriptionTypeName = schemaResult.subscriptionTypeName,
+        )
+
+        val parser = ResponseSelectionParser(schemaIndex)
+        val operation = buildOperation(
+            name = "NestedAbstractBranches",
+            type = OperationType.QUERY,
+            document = operationText(
+                "fixtures/advanced/unions/NestedAbstractBranches.graphql",
+            ),
+        )
+
+        val result = parser.parse(operation)
+        val outerField = result.fields.first { it.responseName == "outer" }
+        val outerFields = outerField.selectionSet!!
+
+        // inner field should be present (multiple variants from separate fragments)
+        val innerFields = outerFields.fields.filter { it.responseName == "inner" }
+        assertTrue(
+            "Should have inner field variants",
+            innerFields.isNotEmpty(),
+        )
+
+        // Collect detail field variants from ALL inner field variants
+        val allDetailFields = innerFields
+            .mapNotNull { it.selectionSet }
+            .flatMap { it.fields }
+            .filter { it.responseName == "detail" }
+
+        // Each detail variant should have distinct runtime paths
+        // for OuterA vs OuterB
+        val detailRuntimeTypes = allDetailFields
+            .flatMap { it.runtimePaths }
+            .flatMap { it.assignments.values }
+            .toSet()
+        assertTrue(
+            "Should have OuterA-related runtime types",
+            "OuterA" in detailRuntimeTypes,
+        )
+        assertTrue(
+            "Should have OuterB-related runtime types",
+            "OuterB" in detailRuntimeTypes,
+        )
+    }
+
+    // ============================================================
+    // Test C: alias alternatives (parser)
+    // ============================================================
+
+    @Test
+    fun `testC alias alternatives produces separate variants not alternatives list`() {
+        val schemaFile = fixtureFile(
+            "fixtures/advanced/unions/AliasAlternatives.graphqls",
+        )
+        val schemaResult = SchemaParser().parseWithRootTypes(schemaFile)
+        val schemaIndex = SchemaIndex.from(
+            types = schemaResult.types,
+            queryTypeName = schemaResult.queryTypeName,
+            mutationTypeName = schemaResult.mutationTypeName,
+            subscriptionTypeName = schemaResult.subscriptionTypeName,
+        )
+
+        val parser = ResponseSelectionParser(schemaIndex)
+        val operation = buildOperation(
+            name = "SearchQuery",
+            type = OperationType.QUERY,
+            document = operationText(
+                "fixtures/advanced/unions/AliasAlternatives.graphql",
+            ),
         )
 
         val result = parser.parse(operation)
         val search = result.fields.first { it.responseName == "search" }
         val searchFields = search.selectionSet!!
 
-        // The merged field 'value' should have runtimeBranches for both
-        // User and Repository, and one of them should be the
-        // "primary" field while the other is an alternative.
-        val valueField = searchFields.fields.find { it.responseName == "value" }
-        assertNotNull("Should have merged value field", valueField)
-
-        // Check that alternatives are populated
-        val alternatives = valueField!!.alternatives
-        assertFalse(
-            "Should have alternatives for differently scoped fields",
-            alternatives.isEmpty(),
+        // There should be two separate field variants for "value"
+        val valueVariants = searchFields.fields.filter { it.responseName == "value" }
+        assertEquals(
+            "Should have TWO separate field variants for 'value'",
+            2,
+            valueVariants.size,
         )
 
-        // The primary field should have one schema name,
-        // the alternative should have the other.
-        val allSchemaNames = (listOf(valueField) + alternatives)
-            .map { it.schemaName }
-            .toSet()
+        val schemaNames = valueVariants.map { it.schemaName }.toSet()
+        assertTrue("Should have displayName schema name", "displayName" in schemaNames)
+        assertTrue("Should have repositoryName schema name", "repositoryName" in schemaNames)
+
+        // Each variant should have its own runtime path set
+        val userVariant = valueVariants.find { it.schemaName == "displayName" }!!
         assertTrue(
-            "All schema names should be present: $allSchemaNames",
-            allSchemaNames.contains("displayName"),
-        )
-        assertTrue(
-            "All schema names should be present: $allSchemaNames",
-            allSchemaNames.contains("repositoryName"),
+            "User variant should have User in runtime paths",
+            userVariant.runtimePaths.any { rp -> rp.assignments.values.contains("User") },
         )
 
-        // Check runtime branches are present and correct
-        val allBranchTypes = valueField.runtimeBranches.map { it.concreteType }.toSet()
+        val repoVariant = valueVariants.find { it.schemaName == "repositoryName" }!!
         assertTrue(
-            "Primary field should have branch types: $allBranchTypes",
-            allBranchTypes.isNotEmpty(),
+            "Repo variant should have Repository in runtime paths",
+            repoVariant.runtimePaths.any { rp -> rp.assignments.values.contains("Repository") },
         )
     }
 
-    // --- Helpers ---
+    // ============================================================
+    // Test D: covariant object return (parser)
+    // ============================================================
+
+    @Test
+    fun `testD covariant object return parsed correctly`() {
+        val schemaFile = fixtureFile(
+            "fixtures/advanced/unions/CovariantAnimals.graphqls",
+        )
+        val schemaResult = SchemaParser().parseWithRootTypes(schemaFile)
+        val schemaIndex = SchemaIndex.from(
+            types = schemaResult.types,
+            queryTypeName = schemaResult.queryTypeName,
+            mutationTypeName = schemaResult.mutationTypeName,
+            subscriptionTypeName = schemaResult.subscriptionTypeName,
+        )
+
+        val parser = ResponseSelectionParser(schemaIndex)
+        val operation = buildOperation(
+            name = "Animals",
+            type = OperationType.QUERY,
+            document = operationText(
+                "fixtures/advanced/unions/CovariantAnimals.graphql",
+            ),
+        )
+
+        val result = parser.parse(operation)
+        val animals = result.fields.first { it.responseName == "animals" }
+        val animalsFields = animals.selectionSet!!
+
+        // The friend field should have variants from Dog and Cat fragments
+        val friendVariants = animalsFields.fields.filter { it.responseName == "friend" }
+
+        // Each variant should have runtime paths scoped to the appropriate
+        // concrete type
+        val dogVariant = friendVariants.find {
+            it.runtimePaths.any { rp -> rp.assignments.values.contains("Dog") }
+        }
+        assertNotNull("Should have Dog-scoped friend variant", dogVariant)
+
+        val catVariant = friendVariants.find {
+            it.runtimePaths.any { rp -> rp.assignments.values.contains("Cat") }
+        }
+        assertNotNull("Should have Cat-scoped friend variant", catVariant)
+
+        // Dog friend should have barkVolume in nested selection
+        val dogFriendFields = dogVariant!!.selectionSet?.fields?.map { it.responseName } ?: emptyList()
+        assertTrue("Dog friend should have barkVolume", "barkVolume" in dogFriendFields)
+
+        // Cat friend should have livesRemaining in nested selection
+        val catFriendFields = catVariant!!.selectionSet?.fields?.map { it.responseName } ?: emptyList()
+        assertTrue("Cat friend should have livesRemaining", "livesRemaining" in catFriendFields)
+    }
+
+    // ============================================================
+    // Test E: directive composition
+    // ============================================================
+
+    @Test
+    fun `testE directive composition case1 excluded by include false skip true`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document = """
+            query DirectiveTest1 {
+              viewer {
+                id
+                name @include(if: true) @skip(if: true)
+                login
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "DirectiveTest1",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first { it.responseName == "viewer" }
+        val viewerFields = viewer.selectionSet!!
+
+        // name should NOT be present (@skip(if: true) excludes)
+        val nameField = viewerFields.fields.find { it.responseName == "name" }
+        assertNull("name should be excluded when @skip(if: true)", nameField)
+
+        // id and login should still be present
+        assertNotNull("id should be present", viewerFields.fields.find { it.responseName == "id" })
+        assertNotNull("login should be present", viewerFields.fields.find { it.responseName == "login" })
+    }
+
+    @Test
+    fun `testE directive composition case2 include true skip variable yields mayBeAbsent`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document = """
+            query DirectiveTest2(${'$'}skip: Boolean!) {
+              viewer {
+                id
+                name @include(if: true) @skip(if: ${'$'}skip)
+                login
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "DirectiveTest2",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first { it.responseName == "viewer" }
+        val viewerFields = viewer.selectionSet!!
+
+        // name should be present with mayBeAbsent = true
+        val nameField = viewerFields.fields.find { it.responseName == "name" }
+        assertNotNull("name should be present with variable skip", nameField)
+        assertTrue(
+            "name should have mayBeAbsent = true",
+            nameField!!.condition.mayBeAbsent,
+        )
+    }
+
+    @Test
+    fun `testE directive composition case3 include variable skip false yields mayBeAbsent`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document = """
+            query DirectiveTest3(${'$'}include: Boolean!) {
+              viewer {
+                id
+                name @include(if: ${'$'}include) @skip(if: false)
+                login
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "DirectiveTest3",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first { it.responseName == "viewer" }
+        val viewerFields = viewer.selectionSet!!
+
+        // name should be present with mayBeAbsent = true
+        val nameField = viewerFields.fields.find { it.responseName == "name" }
+        assertNotNull("name should be present with variable include", nameField)
+        assertTrue(
+            "name should have mayBeAbsent = true",
+            nameField!!.condition.mayBeAbsent,
+        )
+    }
+
+    @Test
+    fun `testE directive composition case4 include variable skip variable yields mayBeAbsent`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document = """
+            query DirectiveTest4(${'$'}include: Boolean!, ${'$'}skip: Boolean!) {
+              viewer {
+                id
+                name @include(if: ${'$'}include) @skip(if: ${'$'}skip)
+                login
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "DirectiveTest4",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first { it.responseName == "viewer" }
+        val viewerFields = viewer.selectionSet!!
+
+        // name should be present with mayBeAbsent = true
+        val nameField = viewerFields.fields.find { it.responseName == "name" }
+        assertNotNull("name should be present with both variable directives", nameField)
+        assertTrue(
+            "name should have mayBeAbsent = true",
+            nameField!!.condition.mayBeAbsent,
+        )
+    }
+
+    // ============================================================
+    // composeRuntimePaths unit tests
+    // ============================================================
+
+    @Test
+    fun `composeRuntimePaths empty enclosing returns fragment unchanged`() {
+        val enclosing = emptySet<RuntimePath>()
+        val fragment = setOf(
+            RuntimePath(mapOf(listOf("node") to "User")),
+        )
+        val result = ResponseSelectionParser.composeRuntimePaths(enclosing, fragment)
+        assertEquals(fragment, result)
+    }
+
+    @Test
+    fun `composeRuntimePaths empty fragment returns enclosing unchanged`() {
+        val enclosing = setOf(
+            RuntimePath(mapOf(listOf("node") to "User")),
+        )
+        val fragment = emptySet<RuntimePath>()
+        val result = ResponseSelectionParser.composeRuntimePaths(enclosing, fragment)
+        assertEquals(enclosing, result)
+    }
+
+    @Test
+    fun `composeRuntimePaths Cartesian product with non-conflicting paths`() {
+        val enclosing = setOf(
+            RuntimePath(mapOf(listOf("outer") to "OuterA")),
+        )
+        val fragment = setOf(
+            RuntimePath(mapOf(listOf("inner") to "InnerX")),
+        )
+        val result = ResponseSelectionParser.composeRuntimePaths(enclosing, fragment)
+        assertEquals(1, result.size)
+        val combined = result.first()
+        assertEquals(
+            mapOf(listOf("outer") to "OuterA", listOf("inner") to "InnerX"),
+            combined.assignments,
+        )
+    }
+
+    @Test
+    fun `composeRuntimePaths discards conflicting assignments`() {
+        val enclosing = setOf(
+            RuntimePath(mapOf(listOf("node") to "User")),
+        )
+        val fragment = setOf(
+            RuntimePath(mapOf(listOf("node") to "Post")),
+        )
+        val result = ResponseSelectionParser.composeRuntimePaths(enclosing, fragment)
+        assertEquals(0, result.size)
+    }
 
     private fun fixtureFile(path: String): File {
         val url =
