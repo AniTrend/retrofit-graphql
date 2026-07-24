@@ -28,6 +28,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -679,48 +680,33 @@ class ResponseModelGeneratorTest {
         val pendingFields = pendingSubtype!!.propertySpecs.map { it.name }.toSet()
         assertTrue("Pending should have detail property. All subtypes: $allSubtypeNames, fields: $pendingFields", "detail" in pendingFields)
 
-        // Verify detail classes - use exact class name assertions
-        // Success detail should have id and value
-        val successDetail = dataClass.typeSpecs.find {
-            it.name != null && it.name!!.contains("Success") &&
-                it.name!!.contains("Detail")
-        }
+        // Verify detail classes - exact class name assertions
+        // Success.detail -> SuccessResultDetail (exact)
+        val successDetail = dataClass.typeSpecs.find { it.name == "SuccessResultDetail" }
         assertNotNull(
             "Should have SuccessResultDetail class. Names: $allNestedNames",
             successDetail,
         )
         val sdFields = successDetail!!.propertySpecs.map { it.name }.toSet()
-        assertTrue("Success detail should have id", "id" in sdFields)
-        assertTrue("Success detail should have value", "value" in sdFields)
-        assertFalse("Success detail should NOT have reason", "reason" in sdFields)
+        assertEquals("SuccessResultDetail = {id, value} only", setOf("id", "value"), sdFields)
 
-        // Failure detail should have id and reason
-        val failureDetail = dataClass.typeSpecs.find {
-            it.name != null && it.name!!.contains("Failure") &&
-                it.name!!.contains("Detail")
-        }
+        // Failure.detail -> FailureResultDetail (exact)
+        val failureDetail = dataClass.typeSpecs.find { it.name == "FailureResultDetail" }
         assertNotNull(
             "Should have FailureResultDetail class. Names: $allNestedNames",
             failureDetail,
         )
         val fdFields = failureDetail!!.propertySpecs.map { it.name }.toSet()
-        assertTrue("Failure detail should have id", "id" in fdFields)
-        assertTrue("Failure detail should have reason", "reason" in fdFields)
-        assertFalse("Failure detail should NOT have value", "value" in fdFields)
+        assertEquals("FailureResultDetail = {id, reason} only", setOf("id", "reason"), fdFields)
 
-        // Pending detail should have id only
-        val pendingDetail = dataClass.typeSpecs.find {
-            it.name != null && it.name!!.contains("Pending") &&
-                it.name!!.contains("Detail")
-        }
+        // Pending.detail -> PendingResultDetail (exact)
+        val pendingDetail = dataClass.typeSpecs.find { it.name == "PendingResultDetail" }
         assertNotNull(
             "Should have PendingResultDetail class. Names: $allNestedNames",
             pendingDetail,
         )
         val pdFields = pendingDetail!!.propertySpecs.map { it.name }.toSet()
-        assertTrue("Pending detail should have id", "id" in pdFields)
-        assertFalse("Pending detail should NOT have value", "value" in pdFields)
-        assertFalse("Pending detail should NOT have reason", "reason" in pdFields)
+        assertEquals("PendingResultDetail = {id} only", setOf("id"), pdFields)
     }
 
     // ============================================================
@@ -774,23 +760,22 @@ class ResponseModelGeneratorTest {
         val obInnerProp = outerBSubtype!!.propertySpecs.find { it.name == "inner" }
         assertNotNull("OuterA should have inner property", oaInnerProp)
         assertNotNull("OuterB should have inner property", obInnerProp)
+        assertNotEquals(
+            "OuterA.inner type != OuterB.inner type",
+            oaInnerProp!!.type,
+            obInnerProp!!.type,
+        )
 
-        // Find detail classes - one for OuterA, one for OuterB
-        val outerADetail = dataClass.typeSpecs.find {
-            it.name != null && it.name!!.contains("OuterA") &&
-                it.name!!.contains("Detail")
-        }
+        // Find detail classes - exact class names
+        val outerADetail = dataClass.typeSpecs.find { it.name == "OuterAOuterInnerDetail" }
         assertNotNull(
-            "Should have Detail class for OuterA branch. Names: $allNestedNames",
+            "Should have OuterAOuterInnerDetail class. Names: $allNestedNames",
             outerADetail,
         )
 
-        val outerBDetail = dataClass.typeSpecs.find {
-            it.name != null && it.name!!.contains("OuterB") &&
-                it.name!!.contains("Detail")
-        }
+        val outerBDetail = dataClass.typeSpecs.find { it.name == "OuterBOuterInnerDetail" }
         assertNotNull(
-            "Should have Detail class for OuterB branch. Names: $allNestedNames",
+            "Should have OuterBOuterInnerDetail class. Names: $allNestedNames",
             outerBDetail,
         )
 
@@ -801,12 +786,10 @@ class ResponseModelGeneratorTest {
         )
 
         val oaFields = outerADetail!!.propertySpecs.map { it.name }.toSet()
-        assertTrue("OuterA.InnerX detail should have fromA", "fromA" in oaFields)
-        assertFalse("OuterA.InnerX detail should NOT have fromB", "fromB" in oaFields)
+        assertEquals("OuterAInnerXDetail = {fromA} only", setOf("fromA"), oaFields)
 
         val obFields = outerBDetail!!.propertySpecs.map { it.name }.toSet()
-        assertTrue("OuterB.InnerX detail should have fromB", "fromB" in obFields)
-        assertFalse("OuterB.InnerX detail should NOT have fromA", "fromA" in obFields)
+        assertEquals("OuterBInnerXDetail = {fromB} only", setOf("fromB"), obFields)
     }
 
     // ============================================================
@@ -850,18 +833,30 @@ class ResponseModelGeneratorTest {
         // User subtype should have value property (from displayName alias)
         val userSubtype = searchIface!!.typeSpecs.find { it.name == "User" }
         assertNotNull("Should have User subtype", userSubtype)
-        val userFields = userSubtype!!.propertySpecs.map { it.name }.toSet()
-        assertTrue("User should have value property", "value" in userFields)
+        val userValueProp = userSubtype!!.propertySpecs.find { it.name == "value" }
+        assertNotNull("User should have value property", userValueProp)
+        assertEquals("kotlin.String", userValueProp!!.type.toString())
+        val hasUserSerialName = userValueProp.annotations.any {
+            it is AnnotationSpec &&
+                it.typeName == ClassName("kotlinx.serialization", "SerialName") &&
+                it.members.any { m -> m.toString().contains("\"value\"") }
+        }
+        assertTrue("User value should have @SerialName(\"value\")", hasUserSerialName)
 
         // Repository subtype should have value property (from repositoryName alias)
         val repoSubtype = searchIface.typeSpecs.find { it.name == "Repository" }
         assertNotNull("Should have Repository subtype", repoSubtype)
-        val repoFields = repoSubtype!!.propertySpecs.map { it.name }.toSet()
-        assertTrue("Repository should have value property", "value" in repoFields)
-
-        // Both subtypes should have at least one property (not empty)
-        assertTrue("User should not be empty", userFields.isNotEmpty())
-        assertTrue("Repository should not be empty", repoFields.isNotEmpty())
+        val repoValueProp = repoSubtype!!.propertySpecs.find { it.name == "value" }
+        assertNotNull("Repository should have value property", repoValueProp)
+        assertEquals("kotlin.String", repoValueProp!!.type.toString())
+        val hasRepoSerialName = repoValueProp.annotations.any {
+            it is AnnotationSpec &&
+                it.typeName == ClassName("kotlinx.serialization", "SerialName") &&
+                it.members.any { m -> m.toString().contains("\"value\"") }
+        }
+        assertTrue("Repository value should have @SerialName(\"value\")", hasRepoSerialName)
+        assertTrue("User should not be empty", userSubtype.propertySpecs.isNotEmpty())
+        assertTrue("Repository should not be empty", repoSubtype.propertySpecs.isNotEmpty())
     }
 
     // ============================================================
@@ -922,11 +917,25 @@ class ResponseModelGeneratorTest {
 
         // Dog.friend type should be different from Cat.friend type
         if (dogFriendProp != null && catFriendProp != null) {
-            assertNotSame(
+            assertNotEquals(
                 "Dog.friend type should differ from Cat.friend type",
-                dogFriendProp.type,
-                catFriendProp.type,
+                dogFriendProp.type.toString(),
+                catFriendProp.type.toString(),
             )
+            // Verify the referenced classes exist with correct fields
+            val dogFriendTypeName = dogFriendProp.type.toString().substringAfterLast(".")
+            val catFriendTypeName = catFriendProp.type.toString().substringAfterLast(".")
+            val dogFriendClass = dataClass.typeSpecs.find { it.name == dogFriendTypeName }
+            assertNotNull("Should have generated class for Dog.friend: $dogFriendTypeName", dogFriendClass)
+            val dogFriendFields = dogFriendClass!!.propertySpecs.map { it.name }.toSet()
+            assertTrue("Dog.friend should have barkVolume", "barkVolume" in dogFriendFields)
+            assertFalse("Dog.friend should NOT have livesRemaining", "livesRemaining" in dogFriendFields)
+
+            val catFriendClass = dataClass.typeSpecs.find { it.name == catFriendTypeName }
+            assertNotNull("Should have generated class for Cat.friend: $catFriendTypeName", catFriendClass)
+            val catFriendFields = catFriendClass!!.propertySpecs.map { it.name }.toSet()
+            assertTrue("Cat.friend should have livesRemaining", "livesRemaining" in catFriendFields)
+            assertFalse("Cat.friend should NOT have barkVolume", "barkVolume" in catFriendFields)
         }
     }
 

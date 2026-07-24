@@ -50,7 +50,6 @@ class ResponseSelectionParser(
     private val schemaIndex: SchemaIndex,
 ) {
     internal companion object {
-        /** Synthetic `__typename` field auto-injected for abstract type selections. */
         val TYPE_NAME_FIELD: ResponseFieldVariant = ResponseFieldVariant(
             responseName = "__typename",
             schemaName = "__typename",
@@ -58,11 +57,6 @@ class ResponseSelectionParser(
             condition = SelectionCondition.UNCONDITIONAL,
         )
 
-        /**
-         * Creates a set of [RuntimePath] values for a type-conditioned
-         * fragment at the given response path, expanding interface type
-         * conditions into their concrete implementors.
-         */
         fun fragmentRuntimePaths(
             responsePath: ResponsePath,
             typeName: String,
@@ -72,17 +66,10 @@ class ResponseSelectionParser(
                 schemaIndex.possibleTypesFor(typeName)
                     .ifEmpty { setOf(typeName) }
             return concreteTypes.map { concreteType ->
-                RuntimePath(
-                    assignments = mapOf(responsePath to concreteType),
-                )
+                RuntimePath(assignments = mapOf(responsePath to concreteType))
             }.toSet()
         }
 
-        /**
-         * Composes enclosing and fragment runtime paths using Cartesian
-         * product with conflict detection. Conflicting pairs (same path,
-         * different types) are discarded.
-         */
         fun composeRuntimePaths(
             enclosing: Set<RuntimePath>,
             fragment: Set<RuntimePath>,
@@ -98,42 +85,57 @@ class ResponseSelectionParser(
                             rightType != null && rightType != type
                         }
                         if (!conflict) {
-                            add(
-                                RuntimePath(
-                                    assignments = left.assignments + right.assignments,
-                                ),
-                            )
+                            add(RuntimePath(assignments = left.assignments + right.assignments))
                         }
                     }
                 }
             }
         }
+
+        /**
+         * Recursively applies [runtimePaths] to fields and their nested
+         * selection sets. If a field already has runtime paths, composes
+         * them via [composeRuntimePaths]; otherwise inherits the
+         * provided paths directly.
+         */
+        fun applyRuntimePaths(
+            fields: List<ResponseFieldVariant>,
+            runtimePaths: Set<RuntimePath>,
+        ): List<ResponseFieldVariant> = fields.map { field ->
+            field.copy(
+                runtimePaths = if (field.runtimePaths.isEmpty()) {
+                    runtimePaths
+                } else {
+                    composeRuntimePaths(runtimePaths, field.runtimePaths)
+                },
+                selectionSet = field.selectionSet?.let { childSet ->
+                    childSet.copy(
+                        fields = applyRuntimePaths(childSet.fields, runtimePaths),
+                    )
+                },
+            )
+        }
     }
 
     init {
-        val options =
-            ParserOptions.newParserOptions()
-                .maxTokens(Int.MAX_VALUE)
-                .build()
+        val options = ParserOptions.newParserOptions()
+            .maxTokens(Int.MAX_VALUE)
+            .build()
         ParserOptions.setDefaultParserOptions(options)
     }
 
     fun parse(operation: GraphQLOperationInfo): ResponseSelectionSet {
         val rootTypeName = resolveRootTypeName(operation.type)
-        val rootObjectType =
-            requireNotNull(schemaIndex.objectType(rootTypeName)) {
-                "Root operation type '$rootTypeName' not found in schema."
-            }
+        val rootObjectType = requireNotNull(schemaIndex.objectType(rootTypeName)) {
+            "Root operation type '$rootTypeName' not found in schema."
+        }
 
         val document = Parser().parseDocument(operation.document)
-        val operationDef =
-            requireNotNull(
-                document.definitions
-                    .filterIsInstance<OperationDefinition>()
-                    .firstOrNull { it.name == operation.name },
-            ) {
-                "Operation '${operation.name}' not found in document."
-            }
+        val operationDef = requireNotNull(
+            document.definitions
+                .filterIsInstance<OperationDefinition>()
+                .firstOrNull { it.name == operation.name },
+        ) { "Operation '${operation.name}' not found in document." }
 
         val fragmentMap = buildFragmentMap(document)
 
@@ -145,27 +147,24 @@ class ResponseSelectionParser(
         )
     }
 
-    private fun resolveRootTypeName(type: OperationType): String {
-        return when (type) {
-            OperationType.QUERY ->
-                schemaIndex.queryTypeName
-                    ?: throw IllegalArgumentException("Schema has no query root type.")
-            OperationType.MUTATION ->
-                schemaIndex.mutationTypeName
-                    ?: throw IllegalArgumentException("Schema has no mutation root type.")
-            OperationType.SUBSCRIPTION ->
-                schemaIndex.subscriptionTypeName
-                    ?: throw IllegalArgumentException("Schema has no subscription root type.")
-        }
+    private fun resolveRootTypeName(type: OperationType): String = when (type) {
+        OperationType.QUERY ->
+            schemaIndex.queryTypeName
+                ?: throw IllegalArgumentException("Schema has no query root type.")
+        OperationType.MUTATION ->
+            schemaIndex.mutationTypeName
+                ?: throw IllegalArgumentException("Schema has no mutation root type.")
+        OperationType.SUBSCRIPTION ->
+            schemaIndex.subscriptionTypeName
+                ?: throw IllegalArgumentException("Schema has no subscription root type.")
     }
 
     private fun buildFragmentMap(
         document: graphql.language.Document,
-    ): Map<String, FragmentDefinition> {
-        return document.definitions
+    ): Map<String, FragmentDefinition> =
+        document.definitions
             .filterIsInstance<FragmentDefinition>()
             .associateBy { it.name }
-    }
 
     private fun parseSelectionSet(
         parentType: SchemaType,
@@ -191,14 +190,12 @@ class ResponseSelectionParser(
                     }
                 }
                 is FragmentSpread -> {
-                    val fragment =
-                        requireNotNull(fragmentMap[selection.name]) {
-                            "Fragment '${selection.name}' not found."
-                        }
+                    val fragment = requireNotNull(fragmentMap[selection.name]) {
+                        "Fragment '${selection.name}' not found."
+                    }
                     val fragmentTypeName = fragment.typeCondition.name!!
                     val fragmentType = resolveFragmentType(fragment.typeCondition)
-                    val fragmentSelections =
-                        fragment.selectionSet.selections
+                    val fragmentSelections = fragment.selectionSet.selections
 
                     val dirCond = directivesToCondition(selection.directives)
                     if (dirCond == null) continue
@@ -208,79 +205,65 @@ class ResponseSelectionParser(
                         typeName = fragmentTypeName,
                         schemaIndex = schemaIndex,
                     )
-                    val composedPaths = composeRuntimePaths(
-                        enclosingRuntimePaths,
-                        fragPaths,
-                    )
+                    val composedPaths = composeRuntimePaths(enclosingRuntimePaths, fragPaths)
 
-                    val spreadFields =
-                        parseSelectionSet(
-                            parentType = fragmentType,
-                            selections = fragmentSelections,
-                            fragmentMap = fragmentMap,
-                            responsePath = responsePath,
-                            enclosingRuntimePaths = composedPaths,
-                        ).fields.map { field ->
-                            field.copy(
-                                condition = mergeConditions(field.condition, dirCond),
-                            )
+                    // P0-3: parse fragment body with composedPaths as enclosing,
+                    // then applyRuntimePaths to recursively stamp all fields
+                    val fragmentFields = parseSelectionSet(
+                        parentType = fragmentType,
+                        selections = fragmentSelections,
+                        fragmentMap = fragmentMap,
+                        responsePath = responsePath,
+                        enclosingRuntimePaths = composedPaths,
+                    ).fields
+
+                    val scopedFields = applyRuntimePaths(fragmentFields, composedPaths)
+                        .map { field ->
+                            field.copy(condition = mergeConditions(field.condition, dirCond))
                         }
-                    rawFields.addAll(spreadFields)
+                    rawFields.addAll(scopedFields)
                 }
                 is InlineFragment -> {
-                    val inlineTypeName = selection.typeCondition?.name
-                        ?: parentType.name
-                    val inlineType =
-                        if (selection.typeCondition != null) {
-                            resolveFragmentType(selection.typeCondition)
-                        } else {
-                            parentType
-                        }
+                    val inlineTypeName = selection.typeCondition?.name ?: parentType.name
+                    val inlineType = if (selection.typeCondition != null) {
+                        resolveFragmentType(selection.typeCondition)
+                    } else {
+                        parentType
+                    }
                     val inlineSelections = selection.selectionSet.selections
 
                     val dirCond = directivesToCondition(selection.directives)
                     if (dirCond == null) continue
 
-                    val fragPaths =
-                        if (selection.typeCondition != null) {
-                            fragmentRuntimePaths(
-                                responsePath = responsePath,
-                                typeName = inlineTypeName,
-                                schemaIndex = schemaIndex,
-                            )
-                        } else {
-                            emptySet()
-                        }
-
-                    val composedPaths = composeRuntimePaths(
-                        enclosingRuntimePaths,
-                        fragPaths,
-                    )
-
-                    val inlineFields =
-                        parseSelectionSet(
-                            parentType = inlineType,
-                            selections = inlineSelections,
-                            fragmentMap = fragmentMap,
+                    val fragPaths = if (selection.typeCondition != null) {
+                        fragmentRuntimePaths(
                             responsePath = responsePath,
-                            enclosingRuntimePaths = composedPaths,
-                        ).fields.map { field ->
-                            val childRuntimePaths = composeRuntimePaths(
-                                composedPaths,
-                                field.runtimePaths,
-                            )
-                            field.copy(
-                                runtimePaths = childRuntimePaths,
-                                condition = mergeConditions(field.condition, dirCond),
-                            )
-                        }
+                            typeName = inlineTypeName,
+                            schemaIndex = schemaIndex,
+                        )
+                    } else {
+                        emptySet()
+                    }
+
+                    val composedPaths = composeRuntimePaths(enclosingRuntimePaths, fragPaths)
+
+                    // P0-3: parse fragment body with composedPaths as enclosing.
+                    // parseField already stamps runtimePaths via enclosingRuntimePaths,
+                    // so NO post-processing compose needed here.
+                    val inlineFields = parseSelectionSet(
+                        parentType = inlineType,
+                        selections = inlineSelections,
+                        fragmentMap = fragmentMap,
+                        responsePath = responsePath,
+                        enclosingRuntimePaths = composedPaths,
+                    ).fields.map { field ->
+                        field.copy(condition = mergeConditions(field.condition, dirCond))
+                    }
                     rawFields.addAll(inlineFields)
                 }
-                else -> {
-                    throw IllegalArgumentException(
-                        "Unsupported selection type: ${selection::class.simpleName}",
-                    )
-                }
+                else -> throw IllegalArgumentException(
+                    "Unsupported selection type: ${selection::class.simpleName}",
+                )
             }
         }
 
@@ -303,6 +286,7 @@ class ResponseSelectionParser(
         val schemaName = field.name
         val responseName = field.alias ?: schemaName
 
+        // P0-3: __typename always has empty runtimePaths
         if (schemaName == "__typename") {
             return ResponseFieldVariant(
                 responseName = responseName,
@@ -314,9 +298,7 @@ class ResponseSelectionParser(
 
         val fieldDef = requireNotNull(
             getOutputFields(parentType).find { it.name == schemaName },
-        ) {
-            "Field '$schemaName' not found on type '${parentType.name}'."
-        }
+        ) { "Field '$schemaName' not found on type '${parentType.name}'." }
 
         val condition = directivesToCondition(field.directives)
         if (condition == null) return null
@@ -348,21 +330,20 @@ class ResponseSelectionParser(
                 null
             }
 
-        val hasTypename =
-            nestedSet?.fields?.any {
-                it.schemaName == "__typename" && it.responseName == "__typename"
-            } ?: false
-        val finalSet =
-            if (
-                !hasTypename &&
-                (def is SchemaType.InterfaceType || def is SchemaType.UnionType) &&
-                nestedSet != null
-            ) {
-                nestedSet.copy(fields = listOf(TYPE_NAME_FIELD) + nestedSet.fields)
-            } else {
-                nestedSet
-            }
+        val hasTypename = nestedSet?.fields?.any {
+            it.schemaName == "__typename" && it.responseName == "__typename"
+        } ?: false
+        val finalSet = if (
+            !hasTypename &&
+            (def is SchemaType.InterfaceType || def is SchemaType.UnionType) &&
+            nestedSet != null
+        ) {
+            nestedSet.copy(fields = listOf(TYPE_NAME_FIELD) + nestedSet.fields)
+        } else {
+            nestedSet
+        }
 
+        // P0-3: use enclosingRuntimePaths instead of emptySet()
         return ResponseFieldVariant(
             responseName = responseName,
             schemaName = schemaName,
@@ -370,18 +351,11 @@ class ResponseSelectionParser(
             argumentsIdentity = argsIdentity,
             condition = condition,
             selectionSet = finalSet,
-            runtimePaths = emptySet(),
+            runtimePaths = enclosingRuntimePaths,
         )
     }
 
-    /**
-     * Normalizes raw fields: merges compatible variants, keeps
-     * incompatible ones separate. Variants with empty runtimePaths
-     * are never merged (they represent "applies to all").
-     */
-    private fun normalizeFields(
-        fields: List<ResponseFieldVariant>,
-    ): List<ResponseFieldVariant> {
+    private fun normalizeFields(fields: List<ResponseFieldVariant>): List<ResponseFieldVariant> {
         val grouped = linkedMapOf<String, MutableList<ResponseFieldVariant>>()
         for (field in fields) {
             grouped.getOrPut(field.responseName) { mutableListOf() }.add(field)
@@ -410,10 +384,6 @@ class ResponseSelectionParser(
         }
     }
 
-    /**
-     * Tests whether two variants can be merged. Two variants with
-     * empty runtimePaths are never merged (preserves "applies to all").
-     */
     private fun canMergeCompactly(
         left: ResponseFieldVariant,
         right: ResponseFieldVariant,
@@ -423,28 +393,21 @@ class ResponseSelectionParser(
         if (left.outputType != right.outputType) return false
         if (left.condition.mayBeAbsent != right.condition.mayBeAbsent) return false
         if (!runtimePathsOverlap(left.runtimePaths, right.runtimePaths)) return false
-        // Prevent merging when one side is empty (applies-to-all) and
-        // the other is scoped. When both are empty or both scoped, merge
-        // is allowed if all other conditions pass.
         val oneEmpty = left.runtimePaths.isEmpty() != right.runtimePaths.isEmpty()
         if (oneEmpty) return false
         return true
     }
 
-    private fun runtimePathsOverlap(
-        left: Set<RuntimePath>,
-        right: Set<RuntimePath>,
-    ): Boolean {
+    private fun runtimePathsOverlap(left: Set<RuntimePath>, right: Set<RuntimePath>): Boolean {
         if (left.isEmpty() || right.isEmpty()) return true
         return left.any { l -> right.any { r -> !hasConflict(l, r) } }
     }
 
-    private fun hasConflict(left: RuntimePath, right: RuntimePath): Boolean {
-        return left.assignments.any { (path, type) ->
+    private fun hasConflict(left: RuntimePath, right: RuntimePath): Boolean =
+        left.assignments.any { (path, type) ->
             val rightType = right.assignments[path]
             rightType != null && rightType != type
         }
-    }
 
     private fun mergeVariants(
         left: ResponseFieldVariant,
@@ -456,9 +419,7 @@ class ResponseSelectionParser(
                 ResponseSelectionSet(
                     parentType = left.selectionSet.parentType,
                     responsePath = left.selectionSet.responsePath,
-                    fields = normalizeFields(
-                        left.selectionSet.fields + right.selectionSet.fields,
-                    ),
+                    fields = normalizeFields(left.selectionSet.fields + right.selectionSet.fields),
                 )
             } else {
                 left.selectionSet ?: right.selectionSet
@@ -468,9 +429,7 @@ class ResponseSelectionParser(
 
     private fun resolveFragmentType(typeName: TypeName?): SchemaType {
         val name = requireNotNull(typeName?.name) { "Type condition must have a name." }
-        val def = requireNotNull(schemaIndex.definition(name)) {
-            "Type '$name' not found in schema."
-        }
+        val def = requireNotNull(schemaIndex.definition(name)) { "Type '$name' not found in schema." }
         return when (def) {
             is SchemaType.ObjectType -> def
             is SchemaType.InterfaceType -> def
@@ -492,9 +451,7 @@ class ResponseSelectionParser(
         is GraphQLType.List -> resolveNamedType(type.of)
     }
 
-    private fun normalizeArguments(
-        arguments: List<graphql.language.Argument>,
-    ): String {
+    private fun normalizeArguments(arguments: List<graphql.language.Argument>): String {
         if (arguments.isEmpty()) return ""
         return arguments.sortedBy { it.name }
             .joinToString("&") { "${it.name}=${renderValue(it.value)}" }
@@ -508,19 +465,12 @@ class ResponseSelectionParser(
         is graphql.language.EnumValue -> value.name
         is graphql.language.VariableReference -> "\$${value.name}"
         is graphql.language.NullValue -> "null"
-        is graphql.language.ArrayValue ->
-            value.values.joinToString(",") { renderValue(it) }
+        is graphql.language.ArrayValue -> value.values.joinToString(",") { renderValue(it) }
         is graphql.language.ObjectValue ->
-            value.objectFields.joinToString(",") {
-                "${it.name}:${renderValue(it.value)}"
-            }
+            value.objectFields.joinToString(",") { "${it.name}:${renderValue(it.value)}" }
         else -> value.toString()
     }
 
-    /**
-     * Converts directives to a [SelectionCondition].
-     * Iterates ALL directives. Returns null if any excludes statically.
-     */
     private fun directivesToCondition(
         directives: List<graphql.language.Directive>,
     ): SelectionCondition? {
@@ -547,10 +497,6 @@ class ResponseSelectionParser(
         return SelectionCondition(mayBeAbsent = mayBeAbsent)
     }
 
-    private fun mergeConditions(
-        base: SelectionCondition,
-        override: SelectionCondition,
-    ): SelectionCondition {
-        return SelectionCondition(mayBeAbsent = base.mayBeAbsent || override.mayBeAbsent)
-    }
+    private fun mergeConditions(base: SelectionCondition, override: SelectionCondition): SelectionCondition =
+        SelectionCondition(mayBeAbsent = base.mayBeAbsent || override.mayBeAbsent)
 }

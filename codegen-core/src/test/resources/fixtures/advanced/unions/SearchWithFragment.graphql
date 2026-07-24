@@ -1,0 +1,11 @@
+fragment UserFields on User {
+  displayName
+}
+query Search {
+  search {
+    ...UserFields
+    ... on Repository {
+      repositoryName
+    }
+  }
+}

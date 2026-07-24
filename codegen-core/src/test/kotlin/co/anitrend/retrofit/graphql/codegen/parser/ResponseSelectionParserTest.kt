@@ -1325,6 +1325,59 @@ class ResponseSelectionParserTest {
         assertEquals(0, result.size)
     }
 
+    // --- P0-3: Named fragment spread scope ---
+
+    @Test
+    fun `named fragment spread fields have correct runtimePaths`() {
+        val schemaFile = fixtureFile(
+            "fixtures/advanced/unions/SearchWithFragment.graphqls",
+        )
+        val schemaResult = SchemaParser().parseWithRootTypes(schemaFile)
+        val schemaIndex = SchemaIndex.from(
+            types = schemaResult.types,
+            queryTypeName = schemaResult.queryTypeName,
+            mutationTypeName = schemaResult.mutationTypeName,
+            subscriptionTypeName = schemaResult.subscriptionTypeName,
+        )
+
+        val parser = ResponseSelectionParser(schemaIndex)
+        val operation = buildOperation(
+            name = "Search",
+            type = OperationType.QUERY,
+            document = operationText(
+                "fixtures/advanced/unions/SearchWithFragment.graphql",
+            ),
+        )
+
+        val result = parser.parse(operation)
+        val search = result.fields.first { it.responseName == "search" }
+        val searchFields = search.selectionSet!!
+
+        // displayName from named fragment should have runtimePaths = [{search=User}]
+        val displayNameField = searchFields.fields.find { it.responseName == "displayName" }
+        assertNotNull("Should have displayName field from named fragment", displayNameField)
+        assertTrue(
+            "displayName should have User in runtime paths",
+            displayNameField!!.runtimePaths.any { rp ->
+                rp.assignments.containsValue("User")
+            },
+        )
+        assertFalse(
+            "displayName should NOT have empty runtime paths",
+            displayNameField.runtimePaths.isEmpty(),
+        )
+
+        // repositoryName from inline fragment should have runtimePaths = [{search=Repository}]
+        val repoNameField = searchFields.fields.find { it.responseName == "repositoryName" }
+        assertNotNull("Should have repositoryName field", repoNameField)
+        assertTrue(
+            "repositoryName should have Repository in runtime paths",
+            repoNameField!!.runtimePaths.any { rp ->
+                rp.assignments.containsValue("Repository")
+            },
+        )
+    }
+
     private fun fixtureFile(path: String): File {
         val url =
             checkNotNull(

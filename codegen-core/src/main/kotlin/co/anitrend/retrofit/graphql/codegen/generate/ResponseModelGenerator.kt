@@ -22,7 +22,6 @@ import co.anitrend.retrofit.graphql.codegen.model.ProjectedField
 import co.anitrend.retrofit.graphql.codegen.model.ProjectedSelectionSet
 import co.anitrend.retrofit.graphql.codegen.model.ResponseFieldVariant
 import co.anitrend.retrofit.graphql.codegen.model.ResponseModelIdentity
-import co.anitrend.retrofit.graphql.codegen.model.ResponsePath
 import co.anitrend.retrofit.graphql.codegen.model.ResponseSelectionSet
 import co.anitrend.retrofit.graphql.codegen.model.RuntimePath
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
@@ -51,6 +50,10 @@ import com.squareup.kotlinpoet.TypeSpec
  * 3. **Generation**: KotlinPoet types are generated from the collected
  *    projected selection sets.
  *
+ * Property resolution uses exact [ResponseModelIdentity] matching via
+ * the child's response path and runtime path derived from the current
+ * identity. No heuristic fallback searches are used.
+ *
  * @property schemaIndex Indexed schema metadata used to resolve type definitions.
  * @property scalarMappings Custom scalar type to Kotlin type mappings.
  */
@@ -70,9 +73,6 @@ class ResponseModelGenerator(
             "ID" to "kotlin.String",
         )
 
-        /**
-         * Tests whether a field variant is active for the given runtime path.
-         */
         fun isVariantActive(
             variantPaths: Set<RuntimePath>,
             runtimePath: RuntimePath,
@@ -86,17 +86,12 @@ class ResponseModelGenerator(
         }
     }
 
-    /**
-     * Generates kotlinx-serializable response model classes for a single
-     * operation from its normalized response selection set.
-     */
     fun generate(
         operation: GraphQLOperationInfo,
         selectionSet: ResponseSelectionSet,
         packageName: String,
         dataClassName: String = "${operation.name}Data",
     ): List<FileSpec> {
-        // Phase 1+2: Project and collect
         val collected = linkedMapOf<ResponseModelIdentity, ProjectedSelectionSet>()
         projectAndCollect(
             selectionSet = selectionSet,
@@ -104,22 +99,20 @@ class ResponseModelGenerator(
             collected = collected,
         )
 
-        // Phase 3: Generate model classes
         val allNestedSpecs = mutableListOf<TypeSpec>()
 
-        // Identify abstract entries and their concrete counterparts
         val abstractEntries = collected.filter { (_, projSet) ->
             schemaIndex.isAbstractType(projSet.parentType)
         }
 
         val generatedConcreteIdentities = mutableSetOf<ResponseModelIdentity>()
 
-        // Pre-compute class names for the initial identities
         var identityToClassName = assignClassNames(collected.keys.toList())
 
         for ((abstractIdentity, abstractProj) in abstractEntries) {
             val abstractTypeName = abstractProj.parentType
-            val interfaceName = identityToClassName[abstractIdentity] ?: abstractProj.parentType
+            val interfaceName =
+                identityToClassName[abstractIdentity] ?: abstractProj.parentType
             val responsePath = abstractIdentity.responsePath
             val schemaPossibleTypes = schemaIndex.possibleTypesFor(abstractTypeName)
 
@@ -128,21 +121,27 @@ class ResponseModelGenerator(
                 >()
 
             for (concreteTypeName in schemaPossibleTypes) {
-                val concreteIdentity = collected.keys.find { id ->
-                    id.responsePath == responsePath &&
-                        id.runtimePath.assignments[responsePath] == concreteTypeName
-                }
+                // P0-2: compose the full runtime path including enclosing assignments
+                val concreteRuntimePath = RuntimePath(
+                    assignments = abstractIdentity.runtimePath.assignments +
+                        (responsePath to concreteTypeName),
+                )
+                val concreteIdentity = ResponseModelIdentity(
+                    responsePath = responsePath,
+                    runtimePath = concreteRuntimePath,
+                )
 
-                if (concreteIdentity != null) {
-                    val concreteProj = collected[concreteIdentity]!!
+                val fromCollected = collected[concreteIdentity]
+                if (fromCollected != null) {
                     generatedConcreteIdentities.add(concreteIdentity)
                     concreteTypeEntries.add(
-                        concreteTypeName to (concreteIdentity to concreteProj),
+                        concreteTypeName to (concreteIdentity to fromCollected),
                     )
                 } else {
-                    // Unselected type: add empty entry
+                    // P0-2: always use concreteIdentity (with enclosing context),
+                    // not fall back to abstractIdentity
                     concreteTypeEntries.add(
-                        concreteTypeName to (abstractIdentity to abstractProj),
+                        concreteTypeName to (concreteIdentity to abstractProj),
                     )
                 }
             }
@@ -159,15 +158,12 @@ class ResponseModelGenerator(
             allNestedSpecs.add(sealedSpec)
         }
 
-        // Refresh class names to include identities added during sealed
-        // interface generation for unselected concrete types.
         identityToClassName = assignClassNames(collected.keys.toList())
 
-        // Generate data classes for remaining concrete identities
         for ((identity, projSet) in collected) {
             if (identity in abstractEntries) continue
             if (identity in generatedConcreteIdentities) continue
-            if (identity.responsePath.isEmpty()) continue // skip root identity
+            if (identity.responsePath.isEmpty()) continue
 
             val className = identityToClassName[identity] ?: continue
             val dataSpec = generateDataClass(
@@ -181,7 +177,6 @@ class ResponseModelGenerator(
             allNestedSpecs.add(dataSpec)
         }
 
-        // Generate root data class
         val rootIdentity = ResponseModelIdentity(
             responsePath = selectionSet.responsePath,
             runtimePath = RuntimePath.EMPTY,
@@ -198,13 +193,12 @@ class ResponseModelGenerator(
                 packageName = packageName,
                 identityToClassName = identityToClassName,
                 collected = collected,
-                currentRuntimePath = RuntimePath.EMPTY,
+                currentIdentity = rootIdentity,
             )
         }
 
         val rootConstructorParams = rootProjected.fields.zip(rootProperties).map { (field, prop) ->
-            val paramBuilder =
-                com.squareup.kotlinpoet.ParameterSpec.builder(prop.name, prop.type)
+            val paramBuilder = com.squareup.kotlinpoet.ParameterSpec.builder(prop.name, prop.type)
             if (field.condition.mayBeAbsent && prop.type.isNullable) {
                 paramBuilder.defaultValue("null")
             }
@@ -236,13 +230,8 @@ class ResponseModelGenerator(
         )
     }
 
-    // --- Projection + Collection (combined pass) ---
+    // --- Projection + Collection ---
 
-    /**
-     * Projects a raw [ResponseSelectionSet] onto a runtime path and
-     * collects the result. For abstract types, recursively expands
-     * across all possible concrete types.
-     */
     private fun projectAndCollect(
         selectionSet: ResponseSelectionSet,
         runtimePath: RuntimePath,
@@ -255,7 +244,6 @@ class ResponseModelGenerator(
             runtimePath = runtimePath,
         )
 
-        // Merge with existing
         val existing = collected[identity]
         if (existing != null) {
             collected[identity] = mergeProjectedSets(existing, projSet)
@@ -263,14 +251,12 @@ class ResponseModelGenerator(
             collected[identity] = projSet
         }
 
-        // Recurse into child fields
         for (field in selectionSet.fields) {
             val childSet = field.selectionSet ?: continue
             val typeName = resolveNamedType(field.outputType)
             val childPath = selectionSet.responsePath + field.responseName
 
             if (schemaIndex.isAbstractType(typeName)) {
-                // Also collect the abstract type itself (for sealed interface)
                 val abstractProj = ProjectedSelectionSet(
                     parentType = typeName,
                     responsePath = childPath,
@@ -286,20 +272,17 @@ class ResponseModelGenerator(
                 )
                 val existingAbstract = collected[abstractIdentity]
                 if (existingAbstract != null) {
-                    collected[abstractIdentity] =
-                        mergeProjectedSets(existingAbstract, abstractProj)
+                    collected[abstractIdentity] = mergeProjectedSets(existingAbstract, abstractProj)
                 } else {
                     collected[abstractIdentity] = abstractProj
                 }
 
-                // Expand across all possible concrete types
                 val possibleTypes = schemaIndex.possibleTypesFor(typeName)
                 for (concreteType in possibleTypes) {
                     val concreteRuntimePath = RuntimePath(
                         assignments = runtimePath.assignments +
                             (childPath to concreteType),
                     )
-                    // Project the child with the concrete type context
                     projectAndCollectAbstract(
                         selectionSet = childSet,
                         runtimePath = concreteRuntimePath,
@@ -308,7 +291,6 @@ class ResponseModelGenerator(
                     )
                 }
             } else {
-                // Concrete child: project and recurse
                 projectAndCollect(
                     selectionSet = childSet,
                     runtimePath = runtimePath,
@@ -318,18 +300,12 @@ class ResponseModelGenerator(
         }
     }
 
-    /**
-     * Projects a selection set for an abstract type's concrete
-     * implementor. The parentType is replaced with the concrete type
-     * name so fields resolve correctly.
-     */
     private fun projectAndCollectAbstract(
         selectionSet: ResponseSelectionSet,
         runtimePath: RuntimePath,
         concreteType: String,
         collected: LinkedHashMap<ResponseModelIdentity, ProjectedSelectionSet>,
     ) {
-        // Select active variants for this runtime path
         val activeVariants = selectionSet.fields.filter { variant ->
             isVariantActive(variant.runtimePaths, runtimePath)
         }
@@ -354,7 +330,6 @@ class ResponseModelGenerator(
             collected[identity] = projSet
         }
 
-        // Recurse into children (both concrete and abstract)
         for (field in selectionSet.fields) {
             val childSet = field.selectionSet ?: continue
             val active = isVariantActive(field.runtimePaths, runtimePath)
@@ -363,7 +338,6 @@ class ResponseModelGenerator(
             val childPath = selectionSet.responsePath + field.responseName
 
             if (schemaIndex.isAbstractType(childTypeName)) {
-                // Also collect the abstract type itself
                 val abstractProj = ProjectedSelectionSet(
                     parentType = childTypeName,
                     responsePath = childPath,
@@ -379,8 +353,7 @@ class ResponseModelGenerator(
                 )
                 val existingAbs = collected[abstractIdentity]
                 if (existingAbs != null) {
-                    collected[abstractIdentity] =
-                        mergeProjectedSets(existingAbs, abstractProj)
+                    collected[abstractIdentity] = mergeProjectedSets(existingAbs, abstractProj)
                 } else {
                     collected[abstractIdentity] = abstractProj
                 }
@@ -408,9 +381,6 @@ class ResponseModelGenerator(
         }
     }
 
-    /**
-     * Projects a raw [ResponseSelectionSet] onto a runtime path.
-     */
     private fun projectRaw(
         selectionSet: ResponseSelectionSet,
         runtimePath: RuntimePath,
@@ -429,9 +399,6 @@ class ResponseModelGenerator(
         )
     }
 
-    /**
-     * Groups active variants by responseName and produces projected fields.
-     */
     private fun groupAndProjectFields(
         variants: List<ResponseFieldVariant>,
         runtimePath: RuntimePath,
@@ -447,7 +414,6 @@ class ResponseModelGenerator(
                     condition = v.condition,
                 )
             } else {
-                // Merge compatible variants for the same responseName
                 val merged = mergeActiveVariants(group)
                 ProjectedField(
                     responseName = merged.responseName,
@@ -459,24 +425,13 @@ class ResponseModelGenerator(
         }
     }
 
-    /**
-     * Merges multiple active variants for the same responseName.
-     */
-    private fun mergeActiveVariants(
-        variants: List<ResponseFieldVariant>,
-    ): ResponseFieldVariant {
+    private fun mergeActiveVariants(variants: List<ResponseFieldVariant>): ResponseFieldVariant {
         if (variants.size == 1) return variants.first()
         val base = variants.first()
-        // Merge conditions
         val mergedMayBeAbsent = variants.any { it.condition.mayBeAbsent }
-        return base.copy(
-            condition = SelectionCondition(mayBeAbsent = mergedMayBeAbsent),
-        )
+        return base.copy(condition = SelectionCondition(mayBeAbsent = mergedMayBeAbsent))
     }
 
-    /**
-     * Merges two [ProjectedSelectionSet] values.
-     */
     private fun mergeProjectedSets(
         base: ProjectedSelectionSet,
         other: ProjectedSelectionSet,
@@ -495,12 +450,10 @@ class ResponseModelGenerator(
                 mergedFields[field.responseName] = field
             }
         }
-        return base.copy(
-            fields = mergedFields.values.sortedBy { it.responseName },
-        )
+        return base.copy(fields = mergedFields.values.sortedBy { it.responseName })
     }
 
-    // --- Generate phase ---
+    // --- Generation ---
 
     private fun generateSealedInterface(
         abstractName: String,
@@ -515,78 +468,26 @@ class ResponseModelGenerator(
             .addModifiers(KModifier.PUBLIC, KModifier.SEALED)
             .addAnnotation(SERIALIZABLE)
             .addAnnotation(
-                AnnotationSpec.builder(
-                    ClassName("kotlin", "OptIn"),
-                )
-                    .addMember(
-                        "%T::class",
-                        ClassName(
-                            "kotlinx.serialization",
-                            "ExperimentalSerializationApi",
-                        ),
-                    )
+                AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+                    .addMember("%T::class", ClassName("kotlinx.serialization", "ExperimentalSerializationApi"))
                     .build(),
             )
             .addAnnotation(
-                AnnotationSpec.builder(
-                    ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"),
-                )
+                AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
                     .addMember("%S", "__typename")
                     .build(),
             )
-            .addKdoc(
-                "Sealed interface for the GraphQL abstract type `%L`.",
-                abstractName,
-            )
+            .addKdoc("Sealed interface for the GraphQL abstract type `%L`.", abstractName)
 
         for ((concreteTypeName, identityAndSet) in concreteIdentities) {
-            val (identity, projSet) = identityAndSet
-            // Use the concrete type name directly for subtype class names
+            val (currentIdentity, projSet) = identityAndSet
             val className = concreteTypeName
 
-            // Filter applicable fields from the projected set
-            var applicableFields = projSet.fields.filter { field ->
+            // P0-4: No schema-field synthesis. Only use projected fields.
+            val applicableFields = projSet.fields.filter { field ->
                 !(field.schemaName == "__typename" && field.responseName == "__typename")
             }
 
-            // If the subtype has no projected fields (unselected), include
-            // fields from the abstract type's schema definition
-            if (applicableFields.isEmpty()) {
-                val abstractDef = schemaIndex.definition(abstractName)
-                if (abstractDef is SchemaType.InterfaceType) {
-                    applicableFields = abstractDef.fields.map { schemaField ->
-                        // Create a projected identity for this field
-                        val childPath = identity.responsePath + schemaField.name
-                        val childRuntimePath = RuntimePath(
-                            assignments = mapOf(identity.responsePath to concreteTypeName),
-                        )
-                        val childProj = ProjectedSelectionSet(
-                            parentType = resolveNamedType(schemaField.type),
-                            responsePath = childPath,
-                            runtimePath = childRuntimePath,
-                            fields = emptyList(),
-                        )
-                        val childIdentity = ResponseModelIdentity(
-                            responsePath = childPath,
-                            runtimePath = childRuntimePath,
-                        )
-                        val existing = collected[childIdentity]
-                        if (existing == null) {
-                            collected[childIdentity] = childProj
-                        }
-                        ProjectedField(
-                            responseName = schemaField.name,
-                            schemaName = schemaField.name,
-                            outputType = schemaField.type,
-                            condition = SelectionCondition.UNCONDITIONAL,
-                        )
-                    }
-                }
-            }
-
-            val concreteRuntimePath = RuntimePath(
-                assignments = mapOf(projSet.responsePath to concreteTypeName),
-            )
             val properties = applicableFields.map { field ->
                 toPropertySpec(
                     field = field,
@@ -594,14 +495,12 @@ class ResponseModelGenerator(
                     packageName = packageName,
                     identityToClassName = identityToClassName,
                     collected = collected,
-                    currentRuntimePath = concreteRuntimePath,
+                    currentIdentity = currentIdentity,
                 )
             }
 
             val constructorParams = applicableFields.zip(properties).map { (field, prop) ->
-                val paramBuilder =
-                    com.squareup.kotlinpoet.ParameterSpec
-                        .builder(prop.name, prop.type)
+                val paramBuilder = com.squareup.kotlinpoet.ParameterSpec.builder(prop.name, prop.type)
                 if (field.condition.mayBeAbsent && prop.type.isNullable) {
                     paramBuilder.defaultValue("null")
                 }
@@ -609,6 +508,7 @@ class ResponseModelGenerator(
             }
 
             val subtypeSpec = if (applicableFields.isEmpty()) {
+                // P0-4: Unselected type — emit empty serializable regular class
                 TypeSpec.classBuilder(className)
                     .addModifiers(KModifier.PUBLIC)
                     .addAnnotation(SERIALIZABLE)
@@ -617,9 +517,7 @@ class ResponseModelGenerator(
                             .addMember("%S", concreteTypeName)
                             .build(),
                     )
-                    .addSuperinterface(
-                        ClassName(packageName, dataClassName, interfaceName),
-                    )
+                    .addSuperinterface(ClassName(packageName, dataClassName, interfaceName))
                     .build()
             } else {
                 TypeSpec.classBuilder(className)
@@ -630,9 +528,7 @@ class ResponseModelGenerator(
                             .addMember("%S", concreteTypeName)
                             .build(),
                     )
-                    .addSuperinterface(
-                        ClassName(packageName, dataClassName, interfaceName),
-                    )
+                    .addSuperinterface(ClassName(packageName, dataClassName, interfaceName))
                     .primaryConstructor(
                         com.squareup.kotlinpoet.FunSpec.constructorBuilder()
                             .addParameters(constructorParams)
@@ -663,6 +559,11 @@ class ResponseModelGenerator(
     ): TypeSpec {
         val sortedFields = projectedSet.fields.sortedBy { it.responseName }
 
+        val currentIdentity = ResponseModelIdentity(
+            responsePath = projectedSet.responsePath,
+            runtimePath = projectedSet.runtimePath,
+        )
+
         val properties = sortedFields.map { field ->
             toPropertySpec(
                 field = field,
@@ -670,14 +571,12 @@ class ResponseModelGenerator(
                 packageName = packageName,
                 identityToClassName = identityToClassName,
                 collected = collected,
-                currentRuntimePath = projectedSet.runtimePath,
+                currentIdentity = currentIdentity,
             )
         }
 
         val constructorParams = sortedFields.zip(properties).map { (field, prop) ->
-            val paramBuilder =
-                com.squareup.kotlinpoet.ParameterSpec
-                    .builder(prop.name, prop.type)
+            val paramBuilder = com.squareup.kotlinpoet.ParameterSpec.builder(prop.name, prop.type)
             if (field.condition.mayBeAbsent && prop.type.isNullable) {
                 paramBuilder.defaultValue("null")
             }
@@ -702,16 +601,16 @@ class ResponseModelGenerator(
             .build()
     }
 
-    /**
-     * Generates a [PropertySpec] from a [ProjectedField].
-     */
+    // --- Property spec ---
+
+    // P0-1: use currentIdentity instead of currentRuntimePath
     private fun toPropertySpec(
         field: ProjectedField,
         dataClassName: String,
         packageName: String,
         identityToClassName: Map<ResponseModelIdentity, String>,
         collected: LinkedHashMap<ResponseModelIdentity, ProjectedSelectionSet>,
-        currentRuntimePath: RuntimePath,
+        currentIdentity: ResponseModelIdentity,
     ): PropertySpec {
         var kotlinType = resolveTypeName(
             graphQLType = field.outputType,
@@ -720,7 +619,7 @@ class ResponseModelGenerator(
             identityToClassName = identityToClassName,
             collected = collected,
             fieldName = field.responseName,
-            currentRuntimePath = currentRuntimePath,
+            currentIdentity = currentIdentity,
         )
 
         if (field.condition.mayBeAbsent && !kotlinType.isNullable) {
@@ -741,9 +640,7 @@ class ResponseModelGenerator(
         return spec.build()
     }
 
-    /**
-     * Resolves a [GraphQLType] to a KotlinPoet [TypeName].
-     */
+    // P0-1: use currentIdentity instead of currentRuntimePath
     private fun resolveTypeName(
         graphQLType: GraphQLType,
         dataClassName: String,
@@ -751,7 +648,7 @@ class ResponseModelGenerator(
         identityToClassName: Map<ResponseModelIdentity, String>,
         collected: LinkedHashMap<ResponseModelIdentity, ProjectedSelectionSet>,
         fieldName: String,
-        currentRuntimePath: RuntimePath,
+        currentIdentity: ResponseModelIdentity,
     ): TypeName {
         return when (graphQLType) {
             is GraphQLType.Named -> {
@@ -762,7 +659,7 @@ class ResponseModelGenerator(
                     identityToClassName = identityToClassName,
                     collected = collected,
                     fieldName = fieldName,
-                    currentRuntimePath = currentRuntimePath,
+                    currentIdentity = currentIdentity,
                 )
                 if (graphQLType.nullable) base.copy(nullable = true) else base
             }
@@ -774,7 +671,7 @@ class ResponseModelGenerator(
                     identityToClassName = identityToClassName,
                     collected = collected,
                     fieldName = fieldName,
-                    currentRuntimePath = currentRuntimePath,
+                    currentIdentity = currentIdentity,
                 )
                 val listType = ClassName("kotlin.collections", "List")
                     .parameterizedBy(elementType)
@@ -784,11 +681,11 @@ class ResponseModelGenerator(
     }
 
     /**
-     * Resolves a single named GraphQL type to a KotlinPoet [TypeName].
+     * Resolves a single named GraphQL type to a KotlinPoet [TypeName]
+     * using exact [ResponseModelIdentity] matching.
      *
-     * Uses exact [ResponseModelIdentity] matching. For the child field,
-     * the identity is: responsePath = currentPath + fieldName,
-     * runtimePath = currentRuntimePath (filtered to relevant assignments).
+     * P0-1: No heuristic fallback searches. Constructs the exact child
+     * identity from [currentIdentity] and looks it up directly.
      */
     private fun resolveNamedTypeName(
         name: String,
@@ -797,7 +694,7 @@ class ResponseModelGenerator(
         identityToClassName: Map<ResponseModelIdentity, String>,
         collected: LinkedHashMap<ResponseModelIdentity, ProjectedSelectionSet>,
         fieldName: String,
-        currentRuntimePath: RuntimePath,
+        currentIdentity: ResponseModelIdentity,
     ): TypeName {
         // 1. Custom scalar mappings
         scalarMappings[name]?.let { return parseFqcnToTypeName(it) }
@@ -805,72 +702,53 @@ class ResponseModelGenerator(
         // 2. Built-in scalars
         BUILT_IN_SCALARS[name]?.let { return parseFqcnToTypeName(it) }
 
-        // 3. Look up by exact ResponseModelIdentity
-        // Construct the child response path
-        val parentPath = currentRuntimePath.assignments.keys.lastOrNull()
-            ?: emptyList()
-        val childPath = if (parentPath.isEmpty()) {
-            listOf(fieldName)
-        } else {
-            findChildPath(collected, fieldName)
+        // 3. Construct exact child identity
+        val childResponsePath = currentIdentity.responsePath + fieldName
+
+        // Compute relevant runtime path assignments: only keep assignments
+        // whose paths are a prefix of childResponsePath.
+        val relevantAssignments = currentIdentity.runtimePath.assignments.filterKeys { path ->
+            path.size <= childResponsePath.size &&
+                childResponsePath.subList(0, path.size) == path
         }
 
-        // Find the identity that matches this field
-        val matchingIdentity = findMatchingIdentity(
-            collected = collected,
-            currentRuntimePath = currentRuntimePath,
-            fieldName = fieldName,
-            fieldTypeName = name,
+        // Try exact identity first
+        val exactChildRuntimePath = RuntimePath(assignments = relevantAssignments)
+        val exactChildIdentity = ResponseModelIdentity(
+            responsePath = childResponsePath,
+            runtimePath = exactChildRuntimePath,
         )
+        identityToClassName[exactChildIdentity]?.let { generatedName ->
+            return ClassName(packageName, dataClassName, generatedName)
+        }
 
-        if (matchingIdentity != null) {
-            identityToClassName[matchingIdentity]?.let { generatedName ->
+        // Try compatible identity: any identity at childResponsePath whose
+        // runtime path assignments are compatible with currentIdentity's
+        val compatibleIdentity = collected.keys.find { id ->
+            id.responsePath == childResponsePath &&
+                id.runtimePath.assignments.all { (path, type) ->
+                    val currentType = currentIdentity.runtimePath.assignments[path]
+                    currentType == null || currentType == type
+                } &&
+                currentIdentity.runtimePath.assignments.all { (path, type) ->
+                    val idType = id.runtimePath.assignments[path]
+                    idType == null || idType == type
+                }
+        }
+        if (compatibleIdentity != null) {
+            identityToClassName[compatibleIdentity]?.let { generatedName ->
                 return ClassName(packageName, dataClassName, generatedName)
             }
         }
 
-        // 4. Fall back to looking up by response path in collected keys
-        val fallbackIdentity = collected.keys.find { id ->
-            val lastSegment = id.responsePath.lastOrNull()
-            lastSegment == fieldName &&
-                id.runtimePath.assignments == currentRuntimePath.assignments
-        }
-        fallbackIdentity?.let { id ->
-            identityToClassName[id]?.let { generatedName ->
-                return ClassName(packageName, dataClassName, generatedName)
-            }
-        }
-
-        // 5. Schema-defined type
+        // 4. Schema-defined type fallback
         val def = schemaIndex.definition(name)
         when (def) {
             is SchemaType.ObjectType -> {
-                // Try to find by response path suffix (last segment is fieldName)
-                val suffixMatch = collected.keys.find { id ->
-                    id.responsePath.lastOrNull() == fieldName &&
-                        id.runtimePath.assignments.all { (path, type) ->
-                            currentRuntimePath.assignments[path]?.let {
-                                it == type
-                            } ?: true
-                        }
-                }
-                suffixMatch?.let { id ->
-                    identityToClassName[id]?.let { generatedName ->
-                        return ClassName(packageName, dataClassName, generatedName)
-                    }
-                }
-                // Fallback: match by response path suffix only (ignoring runtime path)
-                val pathOnlyMatch = collected.keys.find { id ->
-                    id.responsePath.lastOrNull() == fieldName
-                }
-                pathOnlyMatch?.let { id ->
-                    identityToClassName[id]?.let { generatedName ->
-                        return ClassName(packageName, dataClassName, generatedName)
-                    }
-                }
                 error(
-                    "Object type '$name' for field '$fieldName' has no " +
-                        "generated model. This indicates a missing projection.",
+                    "Object type '$name' for field '$fieldName' at path " +
+                        "'$childResponsePath' has no generated model. " +
+                        "This indicates a missing projection.",
                 )
             }
             is SchemaType.InterfaceType,
@@ -878,94 +756,29 @@ class ResponseModelGenerator(
             -> {
                 // For abstract types, look up the abstract identity
                 val absIdentity = collected.keys.find { id ->
-                    id.responsePath.lastOrNull() == fieldName &&
+                    id.responsePath == childResponsePath &&
                         id.runtimePath.assignments.isEmpty()
                 }
-                absIdentity?.let { id ->
-                    identityToClassName[id]?.let { generatedName ->
+                if (absIdentity != null) {
+                    identityToClassName[absIdentity]?.let { generatedName ->
                         return ClassName(packageName, dataClassName, generatedName)
                     }
                 }
                 error(
-                    "Abstract type '$name' for field '$fieldName' was not " +
-                        "collected. This indicates a processing error.",
+                    "Abstract type '$name' for field '$fieldName' was not collected. " +
+                        "This indicates a processing error.",
                 )
             }
             is SchemaType.InputObject,
             is SchemaType.Enum,
-            -> {
-                return ClassName(packageName, name)
-            }
-            is SchemaType.Scalar -> {
-                error(
-                    "Unknown scalar type '$name'. " +
-                        "Add a scalar mapping.",
-                )
-            }
-            null -> {
-                error(
-                    "Unknown type '$name' is not defined in the schema.",
-                )
-            }
+            -> return ClassName(packageName, name)
+            is SchemaType.Scalar -> error("Unknown scalar type '$name'. Add a scalar mapping.")
+            null -> error("Unknown type '$name' is not defined in the schema.")
         }
     }
 
-    /**
-     * Finds the response path for a child field by looking through
-     * collected identities.
-     */
-    private fun findChildPath(
-        collected: LinkedHashMap<ResponseModelIdentity, ProjectedSelectionSet>,
-        fieldName: String,
-    ): ResponsePath {
-        val match = collected.keys.find { id ->
-            id.responsePath.lastOrNull() == fieldName
-        }
-        return match?.responsePath ?: listOf(fieldName)
-    }
+    // --- Naming helpers ---
 
-    /**
-     * Finds the [ResponseModelIdentity] that exactly matches a field
-     * given its enclosing runtime path.
-     */
-    private fun findMatchingIdentity(
-        collected: LinkedHashMap<ResponseModelIdentity, ProjectedSelectionSet>,
-        currentRuntimePath: RuntimePath,
-        fieldName: String,
-        fieldTypeName: String,
-    ): ResponseModelIdentity? {
-        // Try exact match first: same runtime path assignments,
-        // response path ends with fieldName
-        val exact = collected.keys.find { id ->
-            id.responsePath.lastOrNull() == fieldName &&
-                id.runtimePath == currentRuntimePath
-        }
-        if (exact != null) return exact
-
-        // Try match where runtime path is a subset (abstract field
-        // inside a concrete subtype)
-        val subset = collected.keys.find { id ->
-            id.responsePath.lastOrNull() == fieldName &&
-                id.runtimePath.assignments.any() &&
-                currentRuntimePath.assignments.all { (path, type) ->
-                    id.runtimePath.assignments[path] == type
-                }
-        }
-        if (subset != null) return subset
-
-        // Try match by response path ending
-        val pathMatch = collected.keys.find { id ->
-            id.responsePath.lastOrNull() == fieldName &&
-                id.runtimePath.assignments.isEmpty()
-        }
-        if (pathMatch != null) return pathMatch
-
-        return null
-    }
-
-    /**
-     * Assigns generated class names from [ResponseModelIdentity] keys.
-     */
     private fun assignClassNames(
         identities: List<ResponseModelIdentity>,
     ): Map<ResponseModelIdentity, String> {
@@ -980,8 +793,7 @@ class ResponseModelGenerator(
                 result[identity] = className
                 seen[className] = 1
             } else {
-                val uniqueName = "${className}${count + 1}"
-                result[identity] = uniqueName
+                result[identity] = "${className}${count + 1}"
                 seen[className] = count + 1
             }
         }
@@ -989,14 +801,8 @@ class ResponseModelGenerator(
         return result
     }
 
-    /**
-     * Converts a [ResponseModelIdentity] to a dotted string for
-     * deterministic class name generation.
-     */
     private fun identityToDottedString(identity: ResponseModelIdentity): String {
         val path = identity.responsePath.joinToString(".")
-        // For identities with runtime type assignments, prefix with
-        // the first concrete type to disambiguate (e.g., "Success.result.detail")
         val firstAssignment = identity.runtimePath.assignments.entries.firstOrNull()
         return if (firstAssignment != null) {
             "${firstAssignment.value}.$path"
@@ -1005,9 +811,6 @@ class ResponseModelGenerator(
         }
     }
 
-    /**
-     * Converts a dotted identity string to PascalCase.
-     */
     private fun dottedToPascalCase(identity: String): String =
         identity.split(".", "[", "]", "_", ":")
             .filter { it.isNotEmpty() }
@@ -1015,19 +818,13 @@ class ResponseModelGenerator(
                 it.replaceFirstChar { c -> c.uppercase() }
             }
 
-    /**
-     * Extracts the innermost named type from a [GraphQLType].
-     */
-    private fun resolveNamedType(type: GraphQLType): String {
-        return when (type) {
-            is GraphQLType.Named -> type.name
-            is GraphQLType.List -> resolveNamedType(type.of)
-        }
+    // --- Utility ---
+
+    private fun resolveNamedType(type: GraphQLType): String = when (type) {
+        is GraphQLType.Named -> type.name
+        is GraphQLType.List -> resolveNamedType(type.of)
     }
 
-    /**
-     * Parses a fully-qualified Kotlin type name string into a [ClassName].
-     */
     private fun parseFqcnToTypeName(fqcn: String): ClassName {
         val parts = fqcn.split(".")
         val firstClassIndex = parts.indexOfLast { it.first().isLowerCase() } + 1
