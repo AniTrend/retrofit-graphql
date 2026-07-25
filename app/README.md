@@ -137,22 +137,28 @@ Two keep rules in `proguard-rules.pro` for the Gson upload path. Generated types
 ./gradlew :app:testDebugUnitTest
 ```
 
-### Unit Tests (Release -- R8-optimized)
+### Release-variant JVM Unit Tests
 
 ```bash
 ./gradlew :app:testReleaseUnitTest
 ```
 
-### Instrumented Tests (Release -- R8-optimized on device)
+These tests run on the JVM against release-variant classes. They do not execute
+the minified R8 APK.
+
+### Release R8 Verification
 
 ```bash
-./gradlew :app:connectedReleaseAndroidTest
+./gradlew :app:releaseR8Verification -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 ```
+
+This is the sample app's R8 runtime gate. It runs mapping checks and the
+managed-device `pixel2api30ReleaseAndroidTest` task against the minified APK.
 
 ### All Tests
 
 ```bash
-./gradlew :app:testReleaseUnitTest :app:connectedReleaseAndroidTest
+./gradlew :app:testReleaseUnitTest :app:releaseR8Verification -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 ```
 
 ## Test Files

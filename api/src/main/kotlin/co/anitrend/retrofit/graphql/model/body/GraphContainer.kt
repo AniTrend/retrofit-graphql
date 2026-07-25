@@ -42,27 +42,31 @@ import kotlinx.serialization.Transient
  * ### Accessing [extensions] with kotlinx
  *
  * To read [extensions] while using kotlinx serialization, define your own
- * `@Serializable` response wrapper with a custom serializer:
+ * `@Serializable` response wrapper with concrete JSON element types. No custom
+ * serializer is required unless the actual wire structure needs transformation:
  * ```kotlin
- * @Serializable(with = GraphContainerExtensionsSerializer::class)
- * data class MyGraphContainer<T>(
+ * @Serializable
+ * data class JsonGraphContainer<T>(
  *     val data: T? = null,
- *     val errors: List<GraphError>? = null,
- *     val extensions: Map<String, JsonElement>? = null,
+ *     val errors: List<JsonGraphError>? = null,
+ *     val extensions: JsonObject? = null,
  * )
  *
- * object GraphContainerExtensionsSerializer :
- *     JsonTransformingSerializer<MyGraphContainer<JsonElement>>(
- *         MyGraphContainer.serializer(JsonElement.serializer()),
- *     ) {
- *     override fun transformDeserialize(element: JsonElement): JsonElement {
- *         // extensions are available in the raw JSON object
- *         return element
- *     }
- * }
+ * @Serializable
+ * data class JsonGraphError(
+ *     val message: String? = null,
+ *     val path: List<JsonElement>? = null,
+ *     val locations: List<GraphError.Location>? = null,
+ *     val extensions: JsonObject? = null,
+ * )
+ *
+ * @POST("graphql")
+ * suspend fun getCurrentUser(
+ *     @Body request: GraphQLRequest<EmptyGraphQLVariables>
+ * ): Response<JsonGraphContainer<GetCurrentUserData>>
  * ```
- * Alternatively, extract extension values from the raw [JsonObject] payload
- * before kotlinx deserialization runs.
+ * Alternatively, extract extension values from the raw JSON payload before
+ * kotlinx deserialization runs.
  *
  * ## Usage with generated response DTOs
  *

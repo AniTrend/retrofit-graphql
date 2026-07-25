@@ -28,6 +28,7 @@ class App : SampleApp() {
      */
     override fun onCreate() {
         super.onCreate()
+        ReleaseR8VerificationAnchor.touchGeneratedUnionTypes()
         if (BuildConfig.DEBUG)
             createUncaughtExceptionHandler()
     }

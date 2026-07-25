@@ -1,6 +1,6 @@
 # Generated Response DTOs
 
-When `generateResponses = true` is set in the codegen DSL, the plugin generates kotlinx-serializable response model data classes for each operation's selection set.
+When `generateResponses = true` is set in the codegen DSL, the plugin generates response model data classes for each operation's selection set. `KOTLINX` supports concrete, interface, and union response paths. `GSON` supports concrete-only response paths.
 
 ## Enabling
 
@@ -39,24 +39,26 @@ Generated output (simplified):
 
 ```kotlin
 @Serializable
-@SerialName("GetCurrentUserData")
 data class GetCurrentUserData(
     @SerialName("viewer")
     val viewer: Viewer?,
 ) {
     @Serializable
-    @SerialName("GetCurrentUserData.viewer")
     data class Viewer(
+        @SerialName("id")
         val id: String,
+        @SerialName("login")
         val login: String,
+        @SerialName("name")
         val name: String?,
+        @SerialName("bio")
         val bio: String?,
         @SerialName("status")
         val status: ViewerStatus?,
     ) {
         @Serializable
-        @SerialName("GetCurrentUserData.viewer.status")
         data class ViewerStatus(
+            @SerialName("message")
             val message: String?,
         )
     }
@@ -80,7 +82,7 @@ query GetMarketPlaceApps($first: Int, $after: String, $before: String) {
 }
 ```
 
-Generated output includes the root `GetMarketPlaceAppsData` class with nested `MarketplaceListings`, `MarketplaceListingsEdges`, `MarketplaceListingsEdgesNode`, etc. Each nested class carries a path-qualified `@SerialName` descriptor.
+Generated output includes the root `GetMarketPlaceAppsData` class with nested `MarketplaceListings`, `MarketplaceListingsEdges`, `MarketplaceListingsEdgesNode`, etc. Classes use their default fully qualified kotlinx descriptor names, while properties and enum entries carry wire-name annotations.
 
 ## Using in Retrofit
 
@@ -207,7 +209,7 @@ implementation("com.github.AniTrend.retrofit-graphql:serialization-kotlinx:{tag}
 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 ```
 
-Gson is not supported for response models because it cannot deserialize polymorphic sealed interfaces. For Gson-only consumers, use `generateResponses = false` and write your own response model classes with `@SerializedName` annotations.
+Gson is supported for response models only when the operation response selection contains concrete object types. Those DTOs use `@SerializedName` on generated properties and are covered by codegen functional tests. Operations that select GraphQL interfaces or unions generate polymorphic sealed interfaces, which Gson cannot deserialize, so the codegen task fails before writing output and reports the operation name plus the exact abstract response path. Use `KOTLINX` for interface or union response DTOs.
 
 ## See Also
 

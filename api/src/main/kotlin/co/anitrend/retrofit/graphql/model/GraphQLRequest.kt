@@ -51,26 +51,20 @@ import kotlinx.serialization.Transient
  * [withPersistedQuery()] already works through [KotlinxGraphQLJson.encode]
  * without a custom serializer. For other extension values (e.g. custom
  * protocol extensions, vendor-specific metadata), define your own
- * `@Serializable` wrapper with a custom serializer:
+ * `@Serializable` request wrapper with concrete JSON element types. No custom
+ * serializer is required unless the actual wire structure needs transformation:
  * ```kotlin
- * @Serializable(with = GraphQLRequestExtensionsSerializer::class)
- * data class MyGraphQLRequest<TVariables : GraphQLVariables>(
+ * @Serializable
+ * data class JsonGraphQLRequest<TVariables : GraphQLVariables>(
  *     val query: String,
  *     val operationName: String,
  *     val variables: TVariables? = null,
- *     val extensions: Map<String, JsonElement> = emptyMap(),
+ *     val extensions: JsonObject? = null,
  * )
- *
- * object GraphQLRequestExtensionsSerializer :
- *     JsonTransformingSerializer<MyGraphQLRequest<EmptyGraphQLVariables>>(
- *         MyGraphQLRequest.serializer(EmptyGraphQLVariables.serializer()),
- *     ) {
- *     override fun transformSerialize(element: JsonElement): JsonElement {
- *         // Merge custom extension values into the outgoing JSON
- *         return element
- *     }
- * }
  * ```
+ * Use this wrapper only as the request body type for endpoints whose extension
+ * payloads are already represented as JSON. Keep using [GraphQLRequest] when
+ * [KotlinxGraphQLJson.encode] can encode the extension values directly.
  * [withPersistedQuery()] handles APQ without any custom serializer.
  * This example covers arbitrary extension payloads beyond APQ.
  *

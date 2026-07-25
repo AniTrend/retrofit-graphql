@@ -122,7 +122,7 @@ retrofitGraphQL {
 | Value | Behavior |
 |-------|----------|
 | `NONE` | No serialization annotations emitted. Classes are generated as plain data holders. |
-| `KOTLINX` | Emits `@Serializable`, `@SerialName`, and polymorphic markers. **Required** for response model generation (`generateResponses = true`). |
+| `KOTLINX` | Emits `@Serializable`, `@SerialName`, and polymorphic markers. Required for response models that include interface or union paths. |
 | `GSON` | Emits `@SerializedName` on properties. Supports response models for concrete-only operations (no interface/union types). |
 
 **Auto-selection (convenience)**: When `serializationBackend` is `NONE` (the default) and `generateResponses` is `true`, the codegen automatically selects `KOTLINX`. This means consumers who only care about typed responses can set `generateResponses.set(true)` without explicitly configuring the backend. Consumers who want Gson annotations for variables/input objects without response models should set `serializationBackend.set(SerializationBackend.GSON)` and leave `generateResponses` at `false`.
@@ -196,7 +196,7 @@ Generated types are transport DTOs designed for the Retrofit/network boundary. M
 - **Multipart upload path**: The `UploadMutationHelper` sample uses Gson for serializing the operations payload in multipart requests. Two targeted R8 keep rules are needed for this path (see R8 section below)
 - **Legacy `QueryContainerBuilder` flow**: The `QueryContainer` class is not `@Serializable`, so the runtime keeps this builder-based flow on an internal Gson serializer even when responses use `KotlinxGraphQLJson`
 
-**Gson + generated responses**: Not supported. Gson cannot deserialize polymorphic sealed interfaces, which are needed for GraphQL union and interface response types. Use `KOTLINX` with `generateResponses = true`.
+**Gson + generated responses**: Supported for concrete-only operations and covered by codegen functional tests. Operations that include GraphQL interfaces or unions fail during codegen with a diagnostic that includes the operation name and response path. Use `KOTLINX` for those polymorphic response DTOs.
 
 See the [Serialization Backends](docs/wiki/Serialization-Backends.md) wiki page for detailed compatibility matrix.
 
@@ -249,11 +249,13 @@ These rules are narrowly scoped to the exact classes used in the Gson upload pat
 -keep class co.anitrend.retrofit.graphql.model.request.PersistedQuery { <fields>; }
 ```
 
-**Verifying R8 safety**: The sample app's test suite validates R8 correctness:
+**Verifying R8 safety**: The sample app separates release-variant JVM checks from the R8 runtime gate:
 
-- `./gradlew :app:testReleaseUnitTest` -- runs unit tests against the R8-optimized APK (11 tests: 6 serialization + 5 mapper)
-- `./gradlew :app:connectedReleaseAndroidTest` -- runs instrumented tests against the R8-optimized APK on a device/emulator
+- `./gradlew :app:testReleaseUnitTest` -- runs release-variant JVM unit tests (11 tests: 6 serialization + 5 mapper). These do not execute minified R8 bytecode.
+- `./gradlew :app:releaseR8Verification` -- runs the sample app's R8 runtime gate: mapping checks plus the managed-device `pixel2api30ReleaseAndroidTest` task against the R8-optimized APK.
 - Inspect `app/build/outputs/mapping/release/mapping.txt` to verify no serialization-critical fields are renamed
+
+The release verification covers the kotlinx generated response runtime plus the sample's Gson multipart upload path. Concrete Gson response DTO generation is covered by codegen functional tests; consumers using Gson response DTOs in release should add their own scoped keep-rule verification.
 
 ### Gradle Plugin Consumption
 

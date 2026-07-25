@@ -43,11 +43,10 @@ import java.io.File
  *
  * These tests verify that `@SerialName` and `@SerializedName` annotation
  * values in generated source code match the exact expected wire names.
- * The annotation values directly correspond to `serializer().descriptor`
- * properties at runtime:
- * - `serialName` = class-level `@SerialName` value
- * - `getElementName(index)` = property-level `@SerialName` value
- * - enum literal `getElementName(index)` = enum constant `@SerialName` value
+ * Ordinary response model classes intentionally omit class-level `@SerialName`
+ * so kotlinx.serialization uses the generated fully qualified class name as the
+ * descriptor identity. Property annotations and enum literal annotations still
+ * correspond to `serializer().descriptor.getElementName(index)` values.
  *
  * All assertions use EXACT string matching, not substring matching.
  */
@@ -72,16 +71,16 @@ class SerializationDescriptorTest {
     // -----------------------------------------------------------------------
 
     @Test
-    fun `root response data class has SerialName with operation data class name`() {
+    fun `root response data class omits class-level SerialName`() {
         val source = generateResponseSource(
             queryPath = "phase2/queries/GetCurrentUser.graphql",
             operationName = "GetCurrentUser",
             backend = SerializationBackend.KOTLINX,
         ).first().toString()
 
-        // Root data class must have class-level descriptor matching the data class name
-        assertTrue(
-            "@SerialName(\"GetCurrentUserData\") annotation must be present on root data class",
+        assertTrue(source.contains("public data class GetCurrentUserData"))
+        assertFalse(
+            "Root data class must not override its default descriptor identity",
             source.contains("@SerialName(\"GetCurrentUserData\")"),
         )
     }
@@ -91,17 +90,15 @@ class SerializationDescriptorTest {
     // -----------------------------------------------------------------------
 
     @Test
-    fun `nested response data class has path-qualified SerialName`() {
+    fun `nested response data class omits path-qualified SerialName`() {
         val source = generateResponseSource(
             queryPath = "phase2/queries/GetCurrentUser.graphql",
             operationName = "GetCurrentUser",
             backend = SerializationBackend.KOTLINX,
         ).first().toString()
 
-        // The nested Viewer type (under getCurrentUser) should have
-        // a path-qualified descriptor
-        assertTrue(
-            "Nested viewer type must have path-qualified @SerialName",
+        assertFalse(
+            "Nested viewer type must not override its default descriptor identity",
             source.contains("@SerialName(\"GetCurrentUserData.getCurrentUser\")"),
         )
     }
@@ -111,17 +108,15 @@ class SerializationDescriptorTest {
     // -----------------------------------------------------------------------
 
     @Test
-    fun `doubly nested response data class has full path descriptor`() {
+    fun `doubly nested response data class omits full path descriptor`() {
         val source = generateResponseSource(
             queryPath = "phase2/queries/GetCurrentUser.graphql",
             operationName = "GetCurrentUser",
             backend = SerializationBackend.KOTLINX,
         ).first().toString()
 
-        // Friends within GetCurrentUser -> User (under getCurrentUser) 
-        // This should be at getCurrentUser.friends path
-        assertTrue(
-            "Friends nested type must have path-qualified @SerialName",
+        assertFalse(
+            "Friends nested type must not override its default descriptor identity",
             source.contains("@SerialName(\"GetCurrentUserData.getCurrentUser.friends\")"),
         )
     }
@@ -131,20 +126,17 @@ class SerializationDescriptorTest {
     // -----------------------------------------------------------------------
 
     @Test
-    fun `distinct descriptors for repeated schema projections`() {
-        // The friends field (list of User) appears nested under getCurrentUser.
-        // It should have its own distinct descriptor path.
+    fun `repeated schema projections rely on distinct default descriptors`() {
         val source = generateResponseSource(
             queryPath = "phase2/queries/GetCurrentUser.graphql",
             operationName = "GetCurrentUser",
             backend = SerializationBackend.KOTLINX,
         ).first().toString()
 
-        // The top-level getCurrentUser has its descriptor
-        assertTrue(source.contains("@SerialName(\"GetCurrentUserData.getCurrentUser\")"))
-
-        // The friends nested list has a different descriptor
-        assertTrue(source.contains("@SerialName(\"GetCurrentUserData.getCurrentUser.friends\")"))
+        assertFalse(source.contains("@SerialName(\"GetCurrentUserData.getCurrentUser\")"))
+        assertFalse(source.contains("@SerialName(\"GetCurrentUserData.getCurrentUser.friends\")"))
+        assertTrue(source.contains("public data class GetCurrentUser"))
+        assertTrue(source.contains("public data class GetCurrentUserFriends"))
     }
 
     // -----------------------------------------------------------------------
@@ -460,17 +452,16 @@ class SerializationDescriptorTest {
     // -----------------------------------------------------------------------
 
     @Test
-    fun `sealed interface has SerialName with operation plus response path`() {
+    fun `sealed interface omits class-level SerialName descriptor`() {
         val source = generateResponseSource(
             queryPath = "phase2/queries/SearchQuery.graphql",
             operationName = "SearchQuery",
             backend = SerializationBackend.KOTLINX,
         ).first().toString()
 
-        // The sealed interface under the search field should have
-        // a descriptor that includes the operation name and path
-        assertTrue(
-            "Sealed interface must have @SerialName",
+        assertTrue(source.contains("public sealed interface Search"))
+        assertFalse(
+            "Sealed interface must not override its default descriptor identity",
             source.contains("@SerialName(\"SearchQueryData.search\")"),
         )
     }

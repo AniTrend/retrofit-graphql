@@ -336,7 +336,7 @@ class SerializationAnnotationTest {
     // ---- ResponseModelGenerator (Finding 2) ----
 
     @Test
-    fun `response model with KOTLINX backend emits Serializable and SerialName on all properties`() {
+    fun `response model with KOTLINX backend emits Serializable and property SerialName annotations`() {
         val (schemaIndex, selectionSet) = parseSelectionSet(
             "fixtures/simple/schemas/github-simple.graphqls",
             fixtureText("fixtures/simple/queries/GetUser.graphql"),
@@ -348,9 +348,9 @@ class SerializationAnnotationTest {
         val fileSpecs = generator.generate(operation, selectionSet, "com.example")
         val source = fileSpecs.first().toString()
 
-        // Class-level annotations
+        // Class-level serialization marker
         assertTrue(source.contains("@Serializable"))
-        assertTrue(source.contains("@SerialName(\"GetUserData\")"))
+        assertFalse(source.contains("@SerialName(\"GetUserData\")"))
 
         // Property annotations on root fields - always emitted when KOTLINX
         assertTrue(source.contains("@SerialName(\"viewer\")"))
@@ -401,7 +401,7 @@ class SerializationAnnotationTest {
     }
 
     @Test
-    fun `response model with KOTLINX backend has class-level SerialName descriptor on root data class`() {
+    fun `response model with KOTLINX backend omits class-level SerialName on root data class`() {
         val (schemaIndex, selectionSet) = parseSelectionSet(
             "fixtures/simple/schemas/github-simple.graphqls",
             fixtureText("fixtures/simple/queries/GetUser.graphql"),
@@ -413,11 +413,11 @@ class SerializationAnnotationTest {
         val fileSpecs = generator.generate(operation, selectionSet, "com.example")
         val source = fileSpecs.first().toString()
 
-        assertTrue(source.contains("@SerialName(\"GetUserData\")"))
+        assertFalse(source.contains("@SerialName(\"GetUserData\")"))
     }
 
     @Test
-    fun `response model nested class has path-qualified class-level SerialName descriptor`() {
+    fun `response model nested class omits path-qualified class-level SerialName descriptor`() {
         val (schemaIndex, selectionSet) = parseSelectionSet(
             "fixtures/simple/schemas/github-simple.graphqls",
             fixtureText("fixtures/simple/queries/GetUser.graphql"),
@@ -429,7 +429,7 @@ class SerializationAnnotationTest {
         val fileSpecs = generator.generate(operation, selectionSet, "com.example")
         val source = fileSpecs.first().toString()
 
-        assertTrue(source.contains("@SerialName(\"GetUserData.viewer\")"))
+        assertFalse(source.contains("@SerialName(\"GetUserData.viewer\")"))
     }
 
     @Test
@@ -464,6 +464,7 @@ class SerializationAnnotationTest {
             "Full source should contain @JsonClassDiscriminator",
             source.contains("JsonClassDiscriminator"),
         )
+        assertFalse(source.contains("@SerialName(\"ThreeImplementorsData.search\")"))
     }
 
     @Test

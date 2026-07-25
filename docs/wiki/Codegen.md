@@ -177,14 +177,13 @@ The original wire name is always preserved in `@SerialName`, so JSON field names
 
 ### Response Model Descriptor Names
 
-Nested response classes carry path-qualified `@SerialName` descriptors:
+Generated response classes use their default fully qualified kotlinx descriptor
+names. Properties keep GraphQL wire names through property-level `@SerialName`:
 
 ```kotlin
 @Serializable
-@SerialName("GetCurrentUserData")
 data class GetCurrentUserData(@SerialName("viewer") val viewer: Viewer?) {
     @Serializable
-    @SerialName("GetCurrentUserData.viewer")
     data class Viewer(@SerialName("login") val login: String)
 }
 ```

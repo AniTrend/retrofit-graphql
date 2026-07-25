@@ -223,11 +223,6 @@ class ResponseModelGenerator(
             .apply {
                 if (backend == SerializationBackend.KOTLINX) {
                     addAnnotation(SERIALIZABLE)
-                    addAnnotation(
-                        AnnotationSpec.builder(SERIAL_NAME)
-                            .addMember("%S", dataClassName)
-                            .build(),
-                    )
                 }
             }
             .primaryConstructor(
@@ -492,18 +487,8 @@ class ResponseModelGenerator(
             .addModifiers(KModifier.PUBLIC, KModifier.SEALED)
             .addKdoc("Sealed interface for the GraphQL abstract type `%L`.", abstractName)
 
-        // Class-level descriptor for sealed interface, using the explicit identity
-        val sealedDescriptor = abstractIdentity.responsePath.let {
-            buildClassDescriptor(dataClassName, it)
-        }
-
         if (backend == SerializationBackend.KOTLINX) {
             interfaceBuilder.addAnnotation(SERIALIZABLE)
-            interfaceBuilder.addAnnotation(
-                AnnotationSpec.builder(SERIAL_NAME)
-                    .addMember("%S", sealedDescriptor ?: interfaceName)
-                    .build(),
-            )
             interfaceBuilder.addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
                     .addMember("%T::class", ClassName("kotlinx.serialization", "ExperimentalSerializationApi"))
@@ -630,20 +615,11 @@ class ResponseModelGenerator(
             paramBuilder.build()
         }
 
-        val classDescriptor = buildClassDescriptor(dataClassName, projectedSet.responsePath)
-
         return TypeSpec.classBuilder(className)
             .addModifiers(KModifier.PUBLIC, KModifier.DATA)
             .apply {
                 if (backend == SerializationBackend.KOTLINX) {
                     addAnnotation(SERIALIZABLE)
-                    if (classDescriptor != null) {
-                        addAnnotation(
-                            AnnotationSpec.builder(SERIAL_NAME)
-                                .addMember("%S", classDescriptor)
-                                .build(),
-                        )
-                    }
                 }
             }
             .primaryConstructor(
@@ -834,22 +810,6 @@ class ResponseModelGenerator(
             .joinToString("") {
                 it.replaceFirstChar { c -> c.uppercase() }
             }
-
-    /**
-     * Builds a stable class-level descriptor for `@SerialName` on generated
-     * response model classes.
-     *
-     * Root response: just the data class name (e.g. `"GetCurrentUserData"`).
-     * Nested response: `"$dataClassName.$responsePath"` (e.g. `"GetCurrentUserData.viewer.repositories"`).
-     */
-    private fun buildClassDescriptor(
-        dataClassName: String,
-        responsePath: List<String>,
-    ): String? {
-        if (responsePath.isEmpty()) return null
-        if (responsePath.size == 1 && responsePath.first() == dataClassName) return dataClassName
-        return "$dataClassName.${responsePath.joinToString(".")}"
-    }
 
     // --- Utility ---
 

@@ -18,12 +18,16 @@ package co.anitrend.retrofit.graphql
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper.createOperationsJsonForReleaseVerification
 import co.anitrend.retrofit.graphql.model.body.GraphContainer
+import co.anitrend.retrofit.graphql.sample.bucket.UploadToStorageBucket
+import co.anitrend.retrofit.graphql.sample.generated.GeneralSearchData
 import co.anitrend.retrofit.graphql.sample.generated.GetCurrentUserData
 import co.anitrend.retrofit.graphql.sample.generated.GetMarketPlaceAppsData
 import co.anitrend.retrofit.graphql.serialization.kotlinx.KotlinxGraphQLJson
+import com.google.gson.Gson
+import com.google.gson.JsonParser
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -35,15 +39,15 @@ import java.nio.charset.StandardCharsets
 /**
  * Release-mode serialization tests that execute against R8-minified bytecode.
  *
- * When running via `./gradlew :app:connectedReleaseAndroidTest`, the test
- * APK exercises the R8-optimized release variant of the sample app. This
- * verifies that:
+ * When running via `./gradlew :app:releaseR8Verification`, the managed-device
+ * `pixel2api30ReleaseAndroidTest` task exercises the R8-optimized release
+ * variant of the sample app. This verifies that:
  *
  * 1. kotlinx.serialization deserializers survive R8 tree-shaking and
  *    renaming (consumer rules from the kotlinx-serialization plugin are
  *    applied automatically).
- * 2. Generated `@Serializable` data classes with `@SerialName` annotations
- *    decode correctly because the annotation values are string literals
+ * 2. Generated `@Serializable` data classes with property `@SerialName`
+ *    annotations decode correctly because the wire names are string literals
  *    that R8 cannot rename.
  * 3. Polymorphic sealed interfaces with `@JsonClassDiscriminator` select
  *    the correct subtype via `__typename` resolution.
@@ -51,7 +55,7 @@ import java.nio.charset.StandardCharsets
  *    minified classes.
  *
  * Fixture JSON files are stored in `androidTest/assets/graphql/fixtures/`.
- * To run: `./gradlew :app:connectedReleaseAndroidTest -x lint`
+ * To run: `./gradlew :app:releaseR8Verification -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect`
  */
 class ReleaseSerializationTest {
 
@@ -123,6 +127,46 @@ class ReleaseSerializationTest {
     }
 
     @Test
+    fun decodeGeneralSearchResponse_selectsRepositorySubtype_againstR8output() {
+        val fixture = readFixture("general_search_response.json")
+        val type = makeGraphContainerType(GeneralSearchData::class.java)
+
+        val container: GraphContainer<GeneralSearchData> = json.decode(fixture, type)
+
+        assertNull("errors should be null for valid data", container.errors)
+        assertNotNull("data should not be null", container.data)
+        val firstEdge = container.data!!.search.edges!![0]!!
+        val node = firstEdge.node
+
+        assertTrue(
+            "__typename=Repository should select the generated Repository subtype",
+            node is GeneralSearchData.SearchEdgesNode.Repository,
+        )
+        val repository = node as GeneralSearchData.SearchEdgesNode.Repository
+        assertEquals("MDEwOlJlcG9zaXRvcnkxMjk2MjY5", repository.id)
+        assertEquals("Hello-World", repository.name)
+        assertEquals(80, repository.watchers.totalCount)
+        assertEquals("name", firstEdge.textMatches!![0]!!.property)
+    }
+
+    @Test
+    fun encodeUploadOperationsWithGson_preservesWireKeys_againstR8output() {
+        val operationsJson = UploadToStorageBucket.request("/tmp/source.webp")
+            .createOperationsJsonForReleaseVerification(Gson())
+        val operations = JsonParser.parseString(operationsJson).asJsonObject
+
+        assertTrue("query key must survive R8 for Gson reflection", operations.has("query"))
+        assertTrue("operationName key must survive R8 for Gson reflection", operations.has("operationName"))
+        assertTrue("variables key must survive R8 for Gson reflection", operations.has("variables"))
+        assertEquals(UploadToStorageBucket.document, operations.get("query").asString)
+        assertEquals(UploadToStorageBucket.name, operations.get("operationName").asString)
+
+        val variables = operations.getAsJsonObject("variables")
+        assertTrue("upload key must survive R8 for Gson reflection", variables.has("upload"))
+        assertEquals("upload_file", variables.get("upload").asString)
+    }
+
+    @Test
     fun decodeGraphContainer_withErrors_againstR8output() {
         val errorFixture = """{"errors":[{"message":"Not found","path":["user"]}]}"""
         val type = makeGraphContainerType(GetCurrentUserData::class.java)
@@ -166,20 +210,18 @@ class ReleaseSerializationTest {
     // correct @SerialName values after R8 processing. Descriptors are part
     // of the kotlinx.serialization runtime API and must survive tree-shaking.
     //
-    // Generated classes use two levels of @SerialName:
-    //   1. Class-level: path-qualified descriptor (e.g. "GetMarketPlaceAppsData.marketplaceListings")
-    //   2. Property-level: the GraphQL response name (e.g. "edges", "totalCount")
+    // Generated response classes use default class descriptors plus
+    // property-level @SerialName values for GraphQL response names.
     //
     // Properties are generated in alphabetical order by responseName.
     // Element descriptors for non-list fields directly yield the nested
-    // type's serializer descriptor (carrying the class-level @SerialName).
+    // type's serializer descriptor.
 
     @Test
     fun descriptor_serialName_and_elementNames_surviveR8_getMarketPlaceAppsData() {
         val descriptor = GetMarketPlaceAppsData.serializer().descriptor
 
-        // Class-level @SerialName: the root data class name
-        assertEquals("GetMarketPlaceAppsData", descriptor.serialName)
+        assertDescriptorSerialNameEndsWith(descriptor.serialName, ".GetMarketPlaceAppsData")
 
         // Root has one top-level field: marketplaceListings
         assertEquals(1, descriptor.elementsCount)
@@ -191,12 +233,11 @@ class ReleaseSerializationTest {
         val rootDescriptor = GetMarketPlaceAppsData.serializer().descriptor
 
         // marketplaceListings is at index 0 (only root field, sorted alphabetically).
-        // Its type is a nested data class with a path-qualified @SerialName.
         val listingsDescriptor = rootDescriptor.getElementDescriptor(0)
 
-        assertEquals(
-            "GetMarketPlaceAppsData.marketplaceListings",
+        assertDescriptorSerialNameEndsWith(
             listingsDescriptor.serialName,
+            ".GetMarketPlaceAppsData.MarketplaceListings",
         )
 
         // marketplaceListings has 3 fields (sorted: edges, pageInfo, totalCount)
@@ -215,9 +256,9 @@ class ReleaseSerializationTest {
         // pageInfo is a non-list field, so getElementDescriptor returns the nested type directly.
         val pageInfoDescriptor = listingsDescriptor.getElementDescriptor(1)
 
-        assertEquals(
-            "GetMarketPlaceAppsData.marketplaceListings.pageInfo",
+        assertDescriptorSerialNameEndsWith(
             pageInfoDescriptor.serialName,
+            ".GetMarketPlaceAppsData.MarketplaceListingsPageInfo",
         )
 
         // pageInfo has 4 fields from PageInfo fragment (sorted):
@@ -233,8 +274,7 @@ class ReleaseSerializationTest {
     fun descriptor_serialName_and_elementNames_surviveR8_getCurrentUserData() {
         val descriptor = GetCurrentUserData.serializer().descriptor
 
-        // Class-level @SerialName: the root data class name
-        assertEquals("GetCurrentUserData", descriptor.serialName)
+        assertDescriptorSerialNameEndsWith(descriptor.serialName, ".GetCurrentUserData")
 
         // Root has one top-level field: viewer
         assertEquals(1, descriptor.elementsCount)
@@ -248,10 +288,7 @@ class ReleaseSerializationTest {
         // viewer is at index 0 (only root field)
         val viewerDescriptor = rootDescriptor.getElementDescriptor(0)
 
-        assertEquals(
-            "GetCurrentUserData.viewer",
-            viewerDescriptor.serialName,
-        )
+        assertDescriptorSerialNameEndsWith(viewerDescriptor.serialName, ".GetCurrentUserData.Viewer")
 
         // viewer has 6 fields from UserCore fragment (sorted):
         // avatarUrl, bio, company, id, login, status
@@ -272,10 +309,7 @@ class ReleaseSerializationTest {
         // status is at index 5 (sorted: avatarUrl, bio, company, id, login, status)
         val statusDescriptor = viewerDescriptor.getElementDescriptor(5)
 
-        assertEquals(
-            "GetCurrentUserData.viewer.status",
-            statusDescriptor.serialName,
-        )
+        assertDescriptorSerialNameEndsWith(statusDescriptor.serialName, ".GetCurrentUserData.ViewerStatus")
 
         // status has 3 fields from the inline status selection (sorted):
         // createdAt, emoji, message
@@ -307,5 +341,15 @@ class ReleaseSerializationTest {
             override fun getOwnerType(): java.lang.reflect.Type? = null
             override fun getActualTypeArguments(): Array<java.lang.reflect.Type> = arrayOf(dataType)
         }
+    }
+
+    private fun assertDescriptorSerialNameEndsWith(
+        actual: String,
+        expectedSuffix: String,
+    ) {
+        assertTrue(
+            "Expected descriptor serialName '$actual' to end with '$expectedSuffix'",
+            actual.endsWith(expectedSuffix),
+        )
     }
 }

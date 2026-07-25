@@ -75,19 +75,34 @@ import java.lang.reflect.Type
  *
  * ## Working Around @Transient Fields
  *
- * When you need access to `@Transient` fields with kotlinx, define your own
- * `@Serializable` wrapper classes that include those fields with concrete types
- * that kotlinx can resolve (e.g. `Map<String, JsonElement>` instead of
- * `Map<Any, Any>`), paired with a custom `JsonTransformingSerializer`:
+ * When you need access to `@Transient` fields with kotlinx, define complete
+ * transport wrapper classes that include those fields with concrete types that
+ * kotlinx can resolve (e.g. `JsonObject` instead of `Map<Any, Any>`):
  * ```kotlin
- * @Serializable(with = MyContainerSerializer::class)
- * data class MyContainer<T>(val data: T?, val extensions: Map<String, JsonElement>?)
+ * @Serializable
+ * data class JsonGraphContainer<T>(
+ *     val data: T? = null,
+ *     val errors: List<JsonGraphError>? = null,
+ *     val extensions: JsonObject? = null,
+ * )
  *
- * object MyContainerSerializer :
- *     JsonTransformingSerializer<MyContainer<JsonElement>>(
- *         MyContainer.serializer(JsonElement.serializer()),
- *     )
+ * @Serializable
+ * data class JsonGraphError(
+ *     val message: String? = null,
+ *     val path: List<JsonElement>? = null,
+ *     val locations: List<GraphError.Location>? = null,
+ *     val extensions: JsonObject? = null,
+ * )
  * ```
+ * Then use the wrapper as the Retrofit response type:
+ * ```kotlin
+ * @POST("graphql")
+ * suspend fun getCurrentUser(
+ *     @Body request: GraphQLRequest<EmptyGraphQLVariables>,
+ * ): Response<JsonGraphContainer<GetCurrentUserData>>
+ * ```
+ * Use a custom serializer only when the wire JSON shape itself needs to be
+ * transformed before or after normal serialization.
  * For detailed per-type examples, see the KDoc on [GraphContainer.extensions],
  * [GraphError.path], [GraphError.extensions], and [GraphQLRequest.extensions].
  *
@@ -199,10 +214,26 @@ class KotlinxGraphQLJson(
                 }
             is Iterable<*> -> JsonArray(value.map(::encodeDynamicValue))
             is Array<*> -> JsonArray(value.map(::encodeDynamicValue))
-            is Enum<*> -> JsonPrimitive(value.name)
+            is Enum<*> -> encodeDynamicEnum(value)
             else -> {
                 val serializer = resolveSerializer<Any>(value::class.java)
                 json.encodeToJsonElement(serializer, value)
             }
+        }
+
+    /**
+     * Encodes extension enum values with their generated kotlinx serializer when
+     * one is available so enum-entry `@SerialName` values remain the wire name.
+     * Non-serializable enum values fall back to [Enum.name] for backward
+     * compatibility with ad-hoc extension maps.
+     */
+    private fun encodeDynamicEnum(value: Enum<*>): JsonElement =
+        try {
+            val serializer = resolveSerializer<Any>(value::class.java)
+            json.encodeToJsonElement(serializer, value)
+        } catch (_: SerializationException) {
+            JsonPrimitive(value.name)
+        } catch (_: IllegalArgumentException) {
+            JsonPrimitive(value.name)
         }
 }

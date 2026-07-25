@@ -15,6 +15,11 @@ include(":serialization-gson")
 include(":serialization-kotlinx")
 include(":library")
 
-if (!System.getenv().containsKey("CI")) {
+val includeSampleApp = providers.gradleProperty("includeSampleApp")
+    .map(String::toBoolean)
+    .orElse(false)
+    .get()
+
+if (!System.getenv().containsKey("CI") || includeSampleApp) {
     include(":app")
 }

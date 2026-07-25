@@ -1,16 +1,15 @@
 # Naming Contract
 
-retrofit-graphql's codegen plugin follows a strict naming contract with three distinct names per generated identifier. This page documents the contract.
+retrofit-graphql's codegen plugin follows a strict naming contract with distinct Kotlin identifiers and GraphQL wire names. This page documents the contract.
 
-## The Three Names
+## The Names
 
-Each generated identifier carries three representations stored in `GeneratedName`:
+Each generated identifier carries these representations stored in `GeneratedName`:
 
 | Name | Purpose | Example |
 |------|---------|---------|
 | `kotlinName` | Identifier used in generated Kotlin source code | `privateValue` |
 | `wireName` | Original GraphQL name for serialization annotations | `"private"` |
-| `descriptorName` | Stable class-level path descriptor for `@SerialName` | `"GetCurrentUserData.viewer.status"` |
 
 ### Invariant
 
@@ -131,27 +130,28 @@ Each `GraphNameAllocator` instance is scoped (e.g., per class or per operation),
 
 ## Response Model Descriptor Names
 
-Nested response classes carry path-qualified `@SerialName` descriptors. The descriptor encodes the full selection path from the root data class:
+Generated response classes intentionally do not override their class-level
+kotlinx descriptor names. kotlinx.serialization therefore uses each generated
+class's default fully qualified name, while property annotations preserve the
+GraphQL wire names:
 
 ```kotlin
 @Serializable
-@SerialName("GetCurrentUserData")                          // root
 data class GetCurrentUserData(
     @SerialName("viewer") val viewer: Viewer?,
 ) {
     @Serializable
-    @SerialName("GetCurrentUserData.viewer")               // path-qualified
     data class Viewer(
         @SerialName("status") val status: Status?,
     ) {
         @Serializable
-        @SerialName("GetCurrentUserData.viewer.status")    // path-qualified
-        data class Status(val message: String?)
+        data class Status(@SerialName("message") val message: String?)
     }
 }
 ```
 
-The descriptor name ensures unique class-level identifiers, which is important when the same GraphQL nested type appears at different positions in different selections.
+Concrete polymorphic subtypes still use class-level `@SerialName` values that
+match their GraphQL `__typename` discriminator.
 
 ## See Also
 

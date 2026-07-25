@@ -1,14 +1,18 @@
 package co.anitrend.retrofit.graphql.serialization.kotlinx
 
+import co.anitrend.retrofit.graphql.model.EmptyGraphQLVariables
 import co.anitrend.retrofit.graphql.model.GraphQLJson
 import co.anitrend.retrofit.graphql.model.GraphQLRequest
-import co.anitrend.retrofit.graphql.model.EmptyGraphQLVariables
 import co.anitrend.retrofit.graphql.model.GraphQLVariables
-import co.anitrend.retrofit.graphql.model.body.GraphContainer
 import co.anitrend.retrofit.graphql.model.attribute.GraphError
+import co.anitrend.retrofit.graphql.model.body.GraphContainer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -35,6 +39,18 @@ class KotlinxGraphQLJsonTest {
         val first: Int? = null,
         val after: String? = null,
     ) : GraphQLVariables
+
+    @Serializable
+    enum class Visibility {
+        @SerialName("private")
+        PRIVATE,
+
+        PUBLIC,
+    }
+
+    enum class NonSerializableVisibility {
+        PRIVATE,
+    }
 
     // ---- Parameterized type helpers ---------------------------------------
 
@@ -207,6 +223,74 @@ class KotlinxGraphQLJsonTest {
         assertTrue(encoded.contains("\"persistedQuery\""))
         assertTrue(encoded.contains("\"sha256Hash\":\"abc123\""))
         assertTrue(encoded.contains("\"version\":1"))
+    }
+
+    @Test
+    fun `encode preserves SerialName for enum values in recursively nested extensions`() {
+        val type = graphQLRequestType(EmptyGraphQLVariables::class.java)
+        val request = GraphQLRequest(
+            query = "query GetCurrentUser { viewer { login } }",
+            operationName = "GetCurrentUser",
+            variables = EmptyGraphQLVariables,
+            extensions = mapOf(
+                "metadata" to mapOf(
+                    "audit" to listOf(
+                        mapOf(
+                            "visibility" to Visibility.PRIVATE,
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+        val encoded = json.encode(request, type)
+        val visibility = Json.parseToJsonElement(encoded)
+            .jsonObject
+            .getValue("extensions")
+            .jsonObject
+            .getValue("metadata")
+            .jsonObject
+            .getValue("audit")
+            .jsonArray
+            .first()
+            .jsonObject
+            .getValue("visibility")
+            .jsonPrimitive
+            .content
+
+        assertEquals("private", visibility)
+        assertTrue(
+            "Serializable enum extension value must not fall back to Enum.name",
+            !encoded.contains("PRIVATE"),
+        )
+    }
+
+    @Test
+    fun `encode falls back to Enum name for non serializable enum extension values`() {
+        val type = graphQLRequestType(EmptyGraphQLVariables::class.java)
+        val request = GraphQLRequest(
+            query = "query GetCurrentUser { viewer { login } }",
+            operationName = "GetCurrentUser",
+            variables = EmptyGraphQLVariables,
+            extensions = mapOf(
+                "metadata" to mapOf(
+                    "visibility" to NonSerializableVisibility.PRIVATE,
+                ),
+            ),
+        )
+
+        val encoded = json.encode(request, type)
+        val visibility = Json.parseToJsonElement(encoded)
+            .jsonObject
+            .getValue("extensions")
+            .jsonObject
+            .getValue("metadata")
+            .jsonObject
+            .getValue("visibility")
+            .jsonPrimitive
+            .content
+
+        assertEquals("PRIVATE", visibility)
     }
 
     @Test

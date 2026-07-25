@@ -29,6 +29,7 @@ import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.exists
+import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readText
 
 /**
@@ -148,6 +149,168 @@ class GenerateGraphQLSourcesTaskFunctionalTest {
         assertFalse(generatedDir.resolve("GetViewer.kt").exists())
         // Remaining operation should still be regenerated
         assertTrue(generatedDir.resolve("SearchRepos.kt").exists())
+    }
+
+    @Test
+    fun `task removes stale output when only operation file is removed`() {
+        val projectDir = createProject("removed-only-op")
+        val generatedDir = projectDir.resolve("build/generated/source/graphql/sample/generated")
+
+        writeSingleTargetProject(
+            projectDir = projectDir,
+            generateVariables = true,
+        )
+        val file = writeGraphQLFile(projectDir, "GetViewer.graphql", "query GetViewer { viewer { login } }")
+
+        val first = gradleRunner(projectDir, "generateGraphQLSources").build()
+        assertEquals(TaskOutcome.SUCCESS, first.task(":generateGraphQLSources")?.outcome)
+        assertTrue(generatedDir.resolve("GetViewer.kt").exists())
+
+        Files.delete(file)
+
+        val second = gradleRunner(projectDir, "generateGraphQLSources").build()
+        assertEquals(TaskOutcome.SUCCESS, second.task(":generateGraphQLSources")?.outcome)
+        assertTrue(
+            "Generated package directory should be removed or empty",
+            !generatedDir.exists() || generatedDir.listDirectoryEntries().isEmpty(),
+        )
+    }
+
+    @Test
+    fun `GSON generateResponses succeeds for concrete operation and emits SerializedName DTOs`() {
+        val projectDir = createProject("gson-responses-concrete")
+        val generatedData = projectDir.resolve("build/generated/source/graphql/sample/generated/GetViewerData.kt")
+
+        writeSingleTargetProject(
+            projectDir = projectDir,
+            schemaContent = responseSchema(),
+            serializationBackend = SerializationBackend.GSON,
+            generateResponses = true,
+        )
+        writeGraphQLFile(projectDir, "GetViewer.graphql", "query GetViewer { viewer { id login } }")
+
+        val result = gradleRunner(projectDir, "generateGraphQLSources").build()
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateGraphQLSources")?.outcome)
+        assertTrue(generatedData.exists())
+        val source = generatedData.readText()
+        assertTrue(source.contains("import com.google.gson.annotations.SerializedName"))
+        assertTrue(source.contains("@SerializedName(\"viewer\")"))
+        assertTrue(source.contains("@SerializedName(\"id\")"))
+        assertTrue(source.contains("@SerializedName(\"login\")"))
+    }
+
+    @Test
+    fun `GSON generateResponses fails for interface operation with operation name and path`() {
+        val projectDir = createProject("gson-responses-interface")
+
+        writeSingleTargetProject(
+            projectDir = projectDir,
+            schemaContent = responseSchema(),
+            serializationBackend = SerializationBackend.GSON,
+            generateResponses = true,
+        )
+        writeGraphQLFile(projectDir, "GetNode.graphql", "query GetNode { node { id ... on User { login } } }")
+
+        val result = gradleRunner(projectDir, "generateGraphQLSources").buildAndFail()
+
+        assertTrue(result.output.contains("Operation 'GetNode'"))
+        assertTrue(result.output.contains("node (Node)"))
+    }
+
+    @Test
+    fun `GSON generateResponses fails for union operation with operation name and path`() {
+        val projectDir = createProject("gson-responses-union")
+
+        writeSingleTargetProject(
+            projectDir = projectDir,
+            schemaContent = responseSchema(),
+            serializationBackend = SerializationBackend.GSON,
+            generateResponses = true,
+        )
+        writeGraphQLFile(
+            projectDir,
+            "Search.graphql",
+            "query Search { search { ... on User { login } ... on Repository { name } } }",
+        )
+
+        val result = gradleRunner(projectDir, "generateGraphQLSources").buildAndFail()
+
+        assertTrue(result.output.contains("Operation 'Search'"))
+        assertTrue(result.output.contains("search (SearchResult)"))
+    }
+
+    @Test
+    fun `GSON generateResponses mixed target fails deterministically for abstract operation`() {
+        val projectDir = createProject("gson-responses-mixed")
+
+        writeSingleTargetProject(
+            projectDir = projectDir,
+            schemaContent = responseSchema(),
+            serializationBackend = SerializationBackend.GSON,
+            generateResponses = true,
+        )
+        writeGraphQLFile(projectDir, "Concrete.graphql", "query GetViewer { viewer { id login } }")
+        writeGraphQLFile(projectDir, "Abstract.graphql", "query GetNode { node { id ... on User { login } } }")
+
+        val result = gradleRunner(projectDir, "generateGraphQLSources").buildAndFail()
+
+        assertTrue(result.output.contains("GSON response generation is not supported"))
+        assertTrue(result.output.contains("Operation 'GetNode'"))
+        assertTrue(result.output.contains("node (Node)"))
+        assertFalse(result.output.contains("Operation 'GetViewer' has abstract type"))
+    }
+
+    @Test
+    fun `GSON generateResponses failure leaves no partial generated output`() {
+        val projectDir = createProject("gson-responses-no-partial")
+        val generatedDir = projectDir.resolve("build/generated/source/graphql/sample/generated")
+
+        writeSingleTargetProject(
+            projectDir = projectDir,
+            schemaContent = responseSchema(),
+            serializationBackend = SerializationBackend.GSON,
+            generateResponses = true,
+        )
+        writeGraphQLFile(
+            projectDir,
+            "Search.graphql",
+            "query Search { search { ... on User { login } ... on Repository { name } } }",
+        )
+
+        val result = gradleRunner(projectDir, "generateGraphQLSources").buildAndFail()
+
+        assertTrue(result.output.contains("Operation 'Search'"))
+        assertFalse(
+            "Failed validation must not leave generated package files behind",
+            generatedDir.exists() && generatedDir.listDirectoryEntries().isNotEmpty(),
+        )
+        assertFalse(
+            "Response enum file must not be written before Gson validation succeeds",
+            generatedDir.resolve("Status.kt").exists(),
+        )
+    }
+
+    @Test
+    fun `GSON generateResponses reports nested abstract response path`() {
+        val projectDir = createProject("gson-responses-nested-interface")
+
+        writeSingleTargetProject(
+            projectDir = projectDir,
+            schemaContent = responseSchema(),
+            serializationBackend = SerializationBackend.GSON,
+            generateResponses = true,
+        )
+        writeGraphQLFile(
+            projectDir,
+            "GetViewerBestFriend.graphql",
+            "query GetViewerBestFriend { viewer { id bestFriend { id ... on Repository { name } } } }",
+        )
+
+        val result = gradleRunner(projectDir, "generateGraphQLSources").buildAndFail()
+
+        assertTrue(result.output.contains("Operation 'GetViewerBestFriend'"))
+        assertTrue(result.output.contains("viewer.bestFriend (Node)"))
     }
 
     @Test
@@ -307,6 +470,7 @@ class GenerateGraphQLSourcesTaskFunctionalTest {
         schema: Boolean = false,
         schemaContent: String = "",
         generateVariables: Boolean = false,
+        generateResponses: Boolean = false,
     ) {
         writeFile(projectDir.resolve("settings.gradle.kts"), settingsFile())
         val schemaBlock = if (schema || schemaContent.isNotEmpty()) {
@@ -323,7 +487,10 @@ class GenerateGraphQLSourcesTaskFunctionalTest {
             ""
         }
 
-        val extraSettings = if (generateVariables) "generateVariables.set(true)" else ""
+        val extraSettings = listOfNotNull(
+            "generateVariables.set(true)".takeIf { generateVariables },
+            "generateResponses.set(true)".takeIf { generateResponses },
+        ).joinToString("\n")
 
         writeFile(
             projectDir.resolve("build.gradle.kts"),
@@ -405,6 +572,29 @@ class GenerateGraphQLSourcesTaskFunctionalTest {
 
     private fun createProject(name: String): Path =
         createTempDirectory("retrofit-graphql-$name-")
+
+    private fun responseSchema(): String =
+        """
+        schema { query: Query }
+        type Query {
+            viewer: User!
+            node: Node!
+            search: SearchResult!
+        }
+        interface Node { id: ID! }
+        type User implements Node {
+            id: ID!
+            login: String!
+            status: Status!
+            bestFriend: Node!
+        }
+        type Repository implements Node {
+            id: ID!
+            name: String!
+        }
+        union SearchResult = User | Repository
+        enum Status { ACTIVE INACTIVE }
+        """.trimIndent()
 
     private fun writeGraphQLSupportSources(projectDir: Path) {
         writeFile(

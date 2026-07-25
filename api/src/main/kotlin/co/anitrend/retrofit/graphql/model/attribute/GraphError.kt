@@ -41,23 +41,17 @@ import kotlinx.serialization.Transient
  * ### Accessing [path] and [extensions] with kotlinx
  *
  * To read [path] or [extensions] while using kotlinx serialization, define
- * your own `@Serializable` error class with a custom serializer:
+ * your own `@Serializable` transport error class with concrete JSON element
+ * types. No custom serializer is required unless the actual wire structure
+ * needs transformation:
  * ```kotlin
- * @Serializable(with = GraphErrorPathExtensionsSerializer::class)
- * data class MyGraphError(
+ * @Serializable
+ * data class JsonGraphError(
  *     val message: String? = null,
  *     val path: List<JsonElement>? = null,
- *     val locations: List<Location>? = null,
- *     val extensions: Map<String, JsonElement>? = null,
+ *     val locations: List<GraphError.Location>? = null,
+ *     val extensions: JsonObject? = null,
  * )
- *
- * object GraphErrorPathExtensionsSerializer :
- *     JsonTransformingSerializer<MyGraphError>(MyGraphError.serializer()) {
- *     override fun transformDeserialize(element: JsonElement): JsonElement {
- *         // path and extensions are available in the raw JSON object
- *         return element
- *     }
- * }
  * ```
  * Alternatively, extract [path] and [extensions] from the raw [JsonObject]
  * payload before kotlinx deserialization runs.

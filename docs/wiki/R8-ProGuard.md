@@ -15,7 +15,7 @@ android {
             isShrinkResources = true
         }
     }
-    testBuildType = "release"  // test against R8-optimized APK
+    testBuildType = "release"  // compile unit tests against the release variant
 }
 ```
 
@@ -67,27 +67,27 @@ This is only needed if your Gson path involves APQ. The typed kotlinx request pa
 
 ## Verification
 
-### Unit Tests (R8)
+### Release-variant JVM Unit Tests
 
 ```bash
 ./gradlew :app:testReleaseUnitTest
 ```
 
-This runs unit tests against the R8-optimized APK. The sample app has 11 unit tests (6 serialization + 5 mapper) that validate:
+This runs JVM unit tests against release-variant classes. These tests do not execute minified R8 bytecode. The sample app has 11 unit tests (6 serialization + 5 mapper) that validate:
 
 - `GetCurrentUserData` can be deserialized from JSON
 - `GetMarketPlaceAppsData` can be deserialized from JSON
-- `@SerialName` annotations survive R8
-- Error responses deserialize with R8-optimized classes
-- Empty data responses deserialize with R8-optimized classes
+- `@SerialName` annotations are present on release-variant generated classes
+- Error responses deserialize on the release JVM classpath
+- Empty data responses deserialize on the release JVM classpath
 
 ### Instrumented Tests (R8 on Device)
 
 ```bash
-./gradlew :app:connectedReleaseAndroidTest
+./gradlew :app:releaseR8Verification -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 ```
 
-The `ReleaseSerializationTest` instrumented test validates serialization behavior on an actual device/emulator running the R8-optimized APK.
+This is the sample app's R8 runtime gate. It runs `verifyReleaseMapping` plus the managed-device `pixel2api30ReleaseAndroidTest` task. `ReleaseSerializationTest` validates serialization behavior on an actual emulator running the R8-optimized APK.
 
 ### Mapping Inspection
 
@@ -98,9 +98,11 @@ cat app/build/outputs/mapping/release/mapping.txt
 
 Verify that no serialization-critical classes or fields are renamed:
 
-- Generated response DTO classes should be present (not renamed) if kotlinx consumer rules are working
+- Generated response DTO classes may be renamed, but their kotlinx serializers and wire-name literals must remain usable
 - `GraphQLRequest` fields (`query`, `operationName`, `variables`) should not be renamed
 - `UploadToStorageBucketVariables` field (`upload`) should not be renamed
+
+The sample release verification covers the kotlinx generated response runtime and the Gson multipart upload path. Concrete Gson response DTO support is covered by codegen functional tests; applications that deserialize generated response DTOs through Gson in release should add scoped keep rules and their own mapping or device verification.
 
 ## What NOT to Keep
 

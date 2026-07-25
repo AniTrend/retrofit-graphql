@@ -7,7 +7,7 @@ retrofit-graphql uses a pluggable `GraphQLJson` abstraction for request and resp
 | Backend | Module | Annotation on Generated Types | Response Models | R8 Safety |
 |---------|--------|------------------------------|----------------|-----------|
 | kotlinx.serialization | `:serialization-kotlinx` | `@Serializable`, `@SerialName` | Supported | Automatic |
-| Gson | `:serialization-gson` | `@SerializedName` | Not supported | Keep rules needed |
+| Gson | `:serialization-gson` | `@SerializedName` | Concrete operations only | Keep rules may be needed |
 
 ## kotlinx.serialization (Recommended)
 
@@ -51,7 +51,6 @@ When `serializationBackend` is `KOTLINX` (or auto-selected), generated types car
 
 ```kotlin
 @Serializable
-@SerialName("GetCurrentUserData")
 data class GetCurrentUserData(
     @SerialName("viewer")
     val viewer: Viewer?,
@@ -128,6 +127,7 @@ data class GetCurrentUserData(
 ### What Works
 
 - All fields on all API types, including `extensions`, `path`
+- Generated response DTOs for operations whose response selection contains only concrete object types
 - `QueryContainerBuilder` (legacy builder flow stays on Gson internally)
 - Multipart upload payloads
 
@@ -135,8 +135,12 @@ data class GetCurrentUserData(
 
 | Limitation | Detail |
 |-----------|--------|
-| `generateResponses = true` | Not supported. Gson cannot deserialize polymorphic sealed interfaces. |
+| Interface or union response paths | Not supported. Gson cannot deserialize the generated polymorphic sealed interfaces used for GraphQL interfaces and unions. |
 | R8 | Reflection-based; may need keep rules for serialized classes. |
+
+When `serializationBackend = GSON` and `generateResponses = true`, the codegen task validates each operation before writing output. Concrete-only operations succeed and emit `@SerializedName` response DTOs. Operations with interface or union response paths fail at build time with a diagnostic that includes the operation name and exact response path, for example `Operation 'Search' has abstract type(s) at response path(s): search (SearchResult)`.
+
+Concrete Gson response DTO generation is covered by codegen functional tests. The sample release verification focuses on the kotlinx generated response runtime and the Gson multipart upload path because the sample app does not deserialize generated response DTOs through Gson.
 
 ### R8
 
@@ -153,7 +157,7 @@ The sample app requires 2 targeted keep rules for the Gson upload path:
 }
 ```
 
-If your project uses Gson for the entire path (no kotlinx), you may need broader rules.
+The sample release verification covers kotlinx generated response DTOs and the Gson multipart upload path. Concrete Gson response DTO support is covered by codegen functional tests, not by the sample release gate. If your project uses Gson generated response DTOs in release, keep rules should be scoped to the generated DTOs you deserialize reflectively and verified by your own release test or mapping check.
 
 ## Custom Backends
 

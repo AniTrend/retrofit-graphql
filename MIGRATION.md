@@ -459,6 +459,32 @@ Several fields are marked `@Transient` because their types cannot be resolved by
 
 These fields remain excluded from kotlinx deserialization. If your application depends on them being serialized or read back exactly, use the Gson-backed `GsonGraphQLJson` or the preserved Gson factory overloads.
 
+If you only need JSON-tree access to the transient fields, define an alternative transport wrapper with concrete kotlinx-compatible types instead of adding a generic custom serializer to `GraphContainer<T>` or `GraphQLRequest<TVariables>`:
+
+```kotlin
+@Serializable
+data class JsonGraphContainer<T>(
+    val data: T? = null,
+    val errors: List<JsonGraphError>? = null,
+    val extensions: JsonObject? = null,
+)
+
+@Serializable
+data class JsonGraphError(
+    val message: String? = null,
+    val path: List<JsonElement>? = null,
+    val locations: List<GraphError.Location>? = null,
+    val extensions: JsonObject? = null,
+)
+
+@POST("graphql")
+suspend fun getCurrentUser(
+    @Body request: GraphQLRequest<EmptyGraphQLVariables>,
+): Response<JsonGraphContainer<GetCurrentUserData>>
+```
+
+No custom serializer is required unless the actual wire structure needs transformation before or after normal serialization.
+
 ### APQ behavior (kotlinx)
 
 `GraphQLRequest.withPersistedQuery()` still works on the typed kotlinx request path. `GraphQLRequest.extensions` remains `@Transient` on the data class, but `KotlinxGraphQLJson.encode()` merges supported extension values, including `PersistedQuery`, into the outgoing JSON.

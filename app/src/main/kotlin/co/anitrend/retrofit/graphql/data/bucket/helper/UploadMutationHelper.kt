@@ -54,15 +54,25 @@ internal object UploadMutationHelper {
         gson: Gson,
         graphQueryMediaType: MediaType?
     ): MultipartBody.Part {
-        val variables = requireNotNull(variables) {
-            "Upload mutation variables are required for multipart GraphQL uploads"
-        }
-        val operations = copy(variables = variables.copy(upload = PART_FILE_NAME))
-        val queryJson = gson.toJson(operations)
+        val queryJson = createOperationsJson(gson)
         val requestBody = queryJson.toRequestBody(graphQueryMediaType)
         return MultipartBody.Part.createFormData(
             PART_BODY_OPERATIONS, null, requestBody
         )
+    }
+
+    internal fun GraphQLRequest<UploadToStorageBucketVariables>.createOperationsJsonForReleaseVerification(
+        gson: Gson,
+    ): String = createOperationsJson(gson)
+
+    private fun GraphQLRequest<UploadToStorageBucketVariables>.createOperationsJson(
+        gson: Gson,
+    ): String {
+        val variables = requireNotNull(variables) {
+            "Upload mutation variables are required for multipart GraphQL uploads"
+        }
+        val operations = copy(variables = variables.copy(upload = PART_FILE_NAME))
+        return gson.toJson(operations)
     }
 
     private fun MediaType?.createMapPart(gson: Gson, key: String): MultipartBody.Part {

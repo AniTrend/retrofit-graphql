@@ -40,6 +40,7 @@ import co.anitrend.retrofit.graphql.codegen.resolve.FragmentVariablePropagator
 import co.anitrend.retrofit.graphql.codegen.schema.SchemaCompiler
 import co.anitrend.retrofit.graphql.codegen.schema.TypenameInjector
 import co.anitrend.retrofit.graphql.codegen.validate.GraphQLTypeUsageValidator
+import com.squareup.kotlinpoet.FileSpec
 import graphql.language.OperationDefinition
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -126,7 +127,11 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
             .filter { it.extension == "graphql" }
             .sortedBy { it.canonicalPath }
 
+        val outputDirectory = outputDir.get().asFile
+
         if (graphqlFiles.isEmpty()) {
+            outputDirectory.deleteRecursively()
+            outputDirectory.mkdirs()
             logger.info("No .graphql files found in ${operationsDir.asPath}")
             return
         }
@@ -228,51 +233,45 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
 
         // Generate source files
         val pkg = packageName.get()
-        val outputDirectory = outputDir.get().asFile
 
         // Resolve and validate serialization backend
         val backend = resolveBackend()
 
-        // Clean stale output before generation
-        outputDirectory.deleteRecursively()
-        outputDirectory.mkdirs()
+        val generatedFiles = mutableListOf<FileSpec>()
 
         if (generateOperationConstants.get()) {
-            writeFile(
+            generatedFiles.add(
                 OperationConstantsGenerator.generate(typedOps, pkg),
-                outputDirectory,
             )
         }
 
         if (generateDocuments.get()) {
-            writeFile(
+            generatedFiles.add(
                 DocumentGenerator.generate(typedOps, pkg),
-                outputDirectory,
             )
         }
 
         if (generateHashes.get()) {
-            writeFile(
+            generatedFiles.add(
                 HashConstantsGenerator.generate(typedOps, pkg),
-                outputDirectory,
             )
         }
 
         // Registry is always generated (needed by the runtime)
-        writeFile(
+        generatedFiles.add(
             RegistryGenerator.generate(typedOps, pkg),
-            outputDirectory,
         )
 
         // Variable / input / enum / request helper generation
         if (generateVariables.get()) {
-            generateVariableArtifacts(
-                typedOps,
-                schemaIndex,
-                scalarMap,
-                pkg,
-                outputDirectory,
-                backend,
+            generatedFiles.addAll(
+                generateVariableArtifacts(
+                    typedOps,
+                    schemaIndex,
+                    scalarMap,
+                    pkg,
+                    backend,
+                ),
             )
         }
 
@@ -282,18 +281,28 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                 throw GradleException(
                     "generateResponses is enabled but no valid schema file is set. " +
                         "Provide a schema file to generate response models, " +
-                        "or set generateResponses = false.",
+                            "or set generateResponses = false.",
                 )
             } else {
-                generateResponseArtifacts(
-                    typedOps,
-                    schemaIndex,
-                    scalarMap,
-                    pkg,
-                    outputDirectory,
-                    backend,
+                generatedFiles.addAll(
+                    generateResponseArtifacts(
+                        typedOps,
+                        schemaIndex,
+                        scalarMap,
+                        pkg,
+                        backend,
+                    ),
                 )
             }
+        }
+
+        // Clean stale output only after parsing, schema validation, backend
+        // resolution, type usage validation, and response validation succeed.
+        outputDirectory.deleteRecursively()
+        outputDirectory.mkdirs()
+
+        generatedFiles.forEach { fileSpec ->
+            writeFile(fileSpec, outputDirectory)
         }
 
         logger.lifecycle(
@@ -328,9 +337,10 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         schemaIndex: SchemaIndex,
         scalarMap: Map<String, String>,
         pkg: String,
-        outputDirectory: File,
         backend: SerializationBackend,
-    ) {
+    ): List<FileSpec> {
+        val fileSpecs = mutableListOf<FileSpec>()
+
         // Validate unknown scalars in variables
         GraphQLTypeUsageValidator.validate(operations, schemaIndex, scalarMap)
 
@@ -345,7 +355,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                     backend,
                 )
             if (varFile != null) {
-                writeFile(varFile, outputDirectory)
+                fileSpecs.add(varFile)
                 logger.info("Generated ${operation.name}Variables")
             }
         }
@@ -353,13 +363,12 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         // Generate input object classes from schema
         val inputObjects = schemaIndex.inputObjects
         if (inputObjects.isNotEmpty()) {
-            InputObjectGenerator.generate(inputObjects, pkg, scalarMap, schemaIndex, backend)
-                .forEach { writeFile(it, outputDirectory) }
+            fileSpecs.addAll(InputObjectGenerator.generate(inputObjects, pkg, scalarMap, schemaIndex, backend))
             logger.info("Generated ${inputObjects.size} input object class(es)")
         }
 
         // Generate enum classes from schema
-        generateEnumArtifacts(schemaIndex, pkg, outputDirectory, "variables", backend)
+        fileSpecs.addAll(generateEnumArtifacts(schemaIndex, pkg, "variables", backend))
 
         // Generate per-operation request helpers
         operations.forEach { operation ->
@@ -370,9 +379,11 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                     scalarMap,
                     schemaIndex,
                 )
-            writeFile(reqFile, outputDirectory)
+            fileSpecs.add(reqFile)
             logger.info("Generated ${operation.name} request helper")
         }
+
+        return fileSpecs
     }
 
     private fun generateResponseArtifacts(
@@ -380,21 +391,19 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         schemaIndex: SchemaIndex,
         scalarMap: Map<String, String>,
         pkg: String,
-        outputDirectory: File,
         backend: SerializationBackend,
-    ) {
+    ): List<FileSpec> {
         val selectionParser = ResponseSelectionParser(schemaIndex)
         val modelGenerator = ResponseModelGenerator(schemaIndex, scalarMap, backend)
-
-        // Generate enum classes needed by response types (even if generateVariables is off)
-        generateEnumArtifacts(schemaIndex, pkg, outputDirectory, "responses", backend)
+        val parsedOperations = operations.map { operation ->
+            operation to selectionParser.parse(operation)
+        }
 
         // Per-operation GSON validation: allow concrete-only operations,
         // fail for operations with interface/union response paths
         if (backend == SerializationBackend.GSON) {
             val allViolations = mutableListOf<String>()
-            for (operation in operations) {
-                val selectionSet = selectionParser.parse(operation)
+            for ((operation, selectionSet) in parsedOperations) {
                 val abstractPaths = findAbstractTypePaths(selectionSet, schemaIndex)
                 if (abstractPaths.isNotEmpty()) {
                     allViolations.add(
@@ -415,16 +424,21 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
             }
         }
 
-        operations.forEach { operation ->
-            val selectionSet = selectionParser.parse(operation)
-            val fileSpecs = modelGenerator.generate(operation, selectionSet, pkg)
-            fileSpecs.forEach { writeFile(it, outputDirectory) }
+        val fileSpecs = mutableListOf<FileSpec>()
+
+        // Generate enum classes needed by response types (even if generateVariables is off)
+        fileSpecs.addAll(generateEnumArtifacts(schemaIndex, pkg, "responses", backend))
+
+        parsedOperations.forEach { (operation, selectionSet) ->
+            fileSpecs.addAll(modelGenerator.generate(operation, selectionSet, pkg))
             logger.info("Generated ${operation.name}Data response model")
         }
+
+        return fileSpecs
     }
 
     private fun writeFile(
-        fileSpec: com.squareup.kotlinpoet.FileSpec,
+        fileSpec: FileSpec,
         outputDirectory: File,
     ) {
         fileSpec.writeTo(outputDirectory)
@@ -436,14 +450,16 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
     private fun generateEnumArtifacts(
         schemaIndex: SchemaIndex,
         pkg: String,
-        outputDirectory: File,
         logPrefix: String,
         backend: SerializationBackend,
-    ) {
+    ): List<FileSpec> {
         val enums = schemaIndex.enums
-        if (enums.isNotEmpty()) {
-            EnumGenerator.generate(enums, pkg, backend).forEach { writeFile(it, outputDirectory) }
+        return if (enums.isNotEmpty()) {
+            val fileSpecs = EnumGenerator.generate(enums, pkg, backend)
             logger.info("[$logPrefix] Generated ${enums.size} enum class(es)")
+            fileSpecs
+        } else {
+            emptyList()
         }
     }
 

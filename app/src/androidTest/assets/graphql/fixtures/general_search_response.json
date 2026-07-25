@@ -1,0 +1,49 @@
+{
+  "data": {
+    "search": {
+      "edges": [
+        {
+          "cursor": "Y3Vyc29yOnJlcG8=",
+          "node": {
+            "__typename": "Repository",
+            "id": "MDEwOlJlcG9zaXRvcnkxMjk2MjY5",
+            "createdAt": "2008-01-14T04:33:35Z",
+            "description": "Test repository fixture",
+            "forkCount": 9,
+            "homepageUrl": null,
+            "isFork": false,
+            "isLocked": false,
+            "isPrivate": false,
+            "isTemplate": false,
+            "name": "Hello-World",
+            "projectsUrl": "https://github.com/octocat/Hello-World/projects",
+            "url": "https://github.com/octocat/Hello-World",
+            "viewerHasStarred": true,
+            "watchers": {
+              "totalCount": 80
+            }
+          },
+          "textMatches": [
+            {
+              "fragment": "Hello-World repository",
+              "highlights": [
+                {
+                  "beginIndice": 0,
+                  "endIndice": 5,
+                  "text": "Hello"
+                }
+              ],
+              "property": "name"
+            }
+          ]
+        }
+      ],
+      "pageInfo": {
+        "endCursor": "Y3Vyc29yOnJlcG8=",
+        "hasNextPage": false,
+        "hasPreviousPage": false,
+        "startCursor": "Y3Vyc29yOnJlcG8="
+      }
+    }
+  }
+}

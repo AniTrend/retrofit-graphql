@@ -1,4 +1,5 @@
 import co.anitrend.retrofit.graphql.codegen.config.SerializationBackend
+import org.gradle.api.GradleException
 import java.net.URI
 
 plugins {
@@ -25,9 +26,21 @@ android {
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     testBuildType = "release"
+    testOptions {
+        managedDevices {
+            localDevices {
+                create("pixel2api30") {
+                    device = "Pixel 2"
+                    apiLevel = 30
+                    systemImageSource = "aosp-atd"
+                }
+            }
+        }
+    }
     lint {
         abortOnError = false
         baseline = file("lint-baseline.xml")
@@ -130,4 +143,97 @@ retrofitGraphQL {
         map("URI", "kotlin.String")
         map("Upload", "kotlin.String")
     }
+}
+
+tasks.register("verifyReleaseMapping") {
+    group = "verification"
+    description = "Verifies release R8 mapping for generated DTOs and Gson upload keep rules."
+    dependsOn("assembleRelease")
+
+    val mappingFile = layout.buildDirectory.file("outputs/mapping/release/mapping.txt")
+    inputs.file(mappingFile)
+
+    doLast {
+        val file = mappingFile.get().asFile
+        if (!file.isFile) {
+            throw GradleException("Release mapping file not found: ${file.absolutePath}")
+        }
+
+        val lines = file.readLines()
+        val classMappings = lines
+            .filter { it.isNotBlank() && !it.startsWith(" ") && !it.startsWith("#") }
+            .associate { line ->
+                val originalName = line.substringBefore(" -> ")
+                val mappedName = line.substringAfter(" -> ").removeSuffix(":")
+                originalName to mappedName
+            }
+
+        fun mappedNameFor(className: String): String = classMappings[className]
+            ?: throw GradleException("Missing release mapping entry for $className")
+
+        fun assertRenamed(className: String) {
+            val mappedName = mappedNameFor(className)
+            if (mappedName == className || mappedName.substringAfterLast('.') == className.substringAfterLast('.')) {
+                throw GradleException("Expected $className to be renamed in release mapping, but found $mappedName")
+            }
+        }
+
+        fun assertNotRenamed(className: String) {
+            val mappedName = mappedNameFor(className)
+            if (mappedName != className) {
+                throw GradleException("Expected $className to be kept for Gson reflection, but found $mappedName")
+            }
+        }
+
+        fun classBlock(className: String): List<String> {
+            val start = lines.indexOfFirst { it == "$className -> ${mappedNameFor(className)}:" }
+            if (start == -1) {
+                throw GradleException("Missing release mapping block for $className")
+            }
+            val end = (start + 1 until lines.size)
+                .firstOrNull { index ->
+                    lines[index].isNotBlank() && !lines[index].startsWith(" ") && !lines[index].startsWith("#")
+                }
+                ?: lines.size
+            return lines.subList(start + 1, end).map { it.trim() }
+        }
+
+        fun assertFieldNotRenamedIfPresent(className: String, fieldName: String) {
+            val memberLine = classBlock(className).firstOrNull { member ->
+                member.substringBefore(" -> ").substringAfterLast(' ') == fieldName
+            }
+            if (memberLine == null) {
+                logger.lifecycle("No member mapping entry for $className.$fieldName; treating field as not renamed by mapping.")
+                return
+            }
+            val mappedName = memberLine.substringAfter(" -> ")
+            if (mappedName != fieldName) {
+                throw GradleException("Expected $className.$fieldName to be kept for Gson reflection, but found $mappedName")
+            }
+        }
+
+        val generatedPackage = "co.anitrend.retrofit.graphql.sample.generated"
+        assertRenamed("$generatedPackage.GetCurrentUserData")
+        assertRenamed("$generatedPackage.GetMarketPlaceAppsData")
+        val unionResponseClass = "$generatedPackage.GeneralSearchData"
+        assertRenamed(unionResponseClass)
+        assertRenamed("$unionResponseClass\$SearchEdgesNode")
+        assertRenamed("$unionResponseClass\$SearchEdgesNode\$Repository")
+
+        val graphQLRequest = "co.anitrend.retrofit.graphql.model.GraphQLRequest"
+        assertNotRenamed(graphQLRequest)
+        assertFieldNotRenamedIfPresent(graphQLRequest, "query")
+        assertFieldNotRenamedIfPresent(graphQLRequest, "operationName")
+        assertFieldNotRenamedIfPresent(graphQLRequest, "variables")
+
+        val uploadVariables = "co.anitrend.retrofit.graphql.sample.bucket.UploadToStorageBucketVariables"
+        assertNotRenamed(uploadVariables)
+        assertFieldNotRenamedIfPresent(uploadVariables, "upload")
+    }
+}
+
+tasks.register("releaseR8Verification") {
+    group = "verification"
+    description = "Runs release R8 mapping checks and managed-device release instrumentation tests."
+    dependsOn("verifyReleaseMapping", "pixel2api30ReleaseAndroidTest")
 }
