@@ -46,6 +46,34 @@ import kotlinx.serialization.Transient
  * ### Gson (via GsonGraphQLJson)
  * - All fields are serialized normally, including [extensions]
  *
+ * ### Accessing [extensions] with kotlinx
+ *
+ * [withPersistedQuery()] already works through [KotlinxGraphQLJson.encode]
+ * without a custom serializer. For other extension values (e.g. custom
+ * protocol extensions, vendor-specific metadata), define your own
+ * `@Serializable` wrapper with a custom serializer:
+ * ```kotlin
+ * @Serializable(with = GraphQLRequestExtensionsSerializer::class)
+ * data class MyGraphQLRequest<TVariables : GraphQLVariables>(
+ *     val query: String,
+ *     val operationName: String,
+ *     val variables: TVariables? = null,
+ *     val extensions: Map<String, JsonElement> = emptyMap(),
+ * )
+ *
+ * object GraphQLRequestExtensionsSerializer :
+ *     JsonTransformingSerializer<MyGraphQLRequest<EmptyGraphQLVariables>>(
+ *         MyGraphQLRequest.serializer(EmptyGraphQLVariables.serializer()),
+ *     ) {
+ *     override fun transformSerialize(element: JsonElement): JsonElement {
+ *         // Merge custom extension values into the outgoing JSON
+ *         return element
+ *     }
+ * }
+ * ```
+ * [withPersistedQuery()] handles APQ without any custom serializer.
+ * This example covers arbitrary extension payloads beyond APQ.
+ *
  * ### APQ behavior
  * [withPersistedQuery()] still works with [KotlinxGraphQLJson] for the typed
  * [GraphQLRequest] flow. The runtime encoder merges `extensions.persistedQuery`

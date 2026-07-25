@@ -38,6 +38,30 @@ import kotlinx.serialization.Transient
  * - All fields are serialized/deserialized normally, including [path]
  *   and [extensions]
  *
+ * ### Accessing [path] and [extensions] with kotlinx
+ *
+ * To read [path] or [extensions] while using kotlinx serialization, define
+ * your own `@Serializable` error class with a custom serializer:
+ * ```kotlin
+ * @Serializable(with = GraphErrorPathExtensionsSerializer::class)
+ * data class MyGraphError(
+ *     val message: String? = null,
+ *     val path: List<JsonElement>? = null,
+ *     val locations: List<Location>? = null,
+ *     val extensions: Map<String, JsonElement>? = null,
+ * )
+ *
+ * object GraphErrorPathExtensionsSerializer :
+ *     JsonTransformingSerializer<MyGraphError>(MyGraphError.serializer()) {
+ *     override fun transformDeserialize(element: JsonElement): JsonElement {
+ *         // path and extensions are available in the raw JSON object
+ *         return element
+ *     }
+ * }
+ * ```
+ * Alternatively, extract [path] and [extensions] from the raw [JsonObject]
+ * payload before kotlinx deserialization runs.
+ *
  * @param message Description of the error.
  * @param path Path of the response field that encountered the error.
  *   Gson-only; `@Transient` for kotlinx.

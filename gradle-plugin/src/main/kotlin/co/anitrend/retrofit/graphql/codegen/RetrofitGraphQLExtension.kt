@@ -16,6 +16,7 @@
 
 package co.anitrend.retrofit.graphql.codegen
 
+import co.anitrend.retrofit.graphql.codegen.config.SerializationBackend
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.ConfigurableFileCollection
@@ -94,23 +95,26 @@ abstract class GraphQLTargetExtension @Inject constructor(val name: String) {
     /**
      * Which serialization backend to use for generated annotations.
      *
-     * Accepted values (case-sensitive):
-     * - `"NONE"` — No serialization annotations emitted. Classes are generated
-     *   as plain data holders. This is the default.
-     * - `"KOTLINX"` — Emits `@Serializable`, `@SerialName`, and polymorphic
-     *   markers. Required when [generateResponses] is true.
-     * - `"GSON"` — Emits `@SerializedName` on properties. Not compatible
-     *   with [generateResponses] (Gson cannot deserialize polymorphic sealed
-     *   interfaces needed for GraphQL unions/interfaces).
+     * Accepted values:
+     * - [SerializationBackend.NONE] — No serialization annotations emitted.
+     *   Classes are generated as plain data holders. This is the default.
+     * - [SerializationBackend.KOTLINX] — Emits `@Serializable`, `@SerialName`,
+     *   and polymorphic markers. Required when [generateResponses] is true.
+     * - [SerializationBackend.GSON] — Emits `@SerializedName` on properties.
+     *   Not compatible with [generateResponses] for operations with
+     *   interface/union response types (Gson cannot deserialize polymorphic
+     *   sealed interfaces needed for GraphQL unions/interfaces).
+     *   Concrete-only operations are supported.
      *
-     * Auto-selection: When set to `"NONE"` (default) and [generateResponses]
-     * is `true`, the codegen automatically selects `"KOTLINX"`. This is a
-     * convenience for consumers who only want typed responses.
+     * Auto-selection: When set to [SerializationBackend.NONE] (default) and
+     * [generateResponses] is `true`, the codegen automatically selects
+     * [SerializationBackend.KOTLINX]. This is a convenience for consumers
+     * who only want typed responses.
      *
      * Falls back to the common {} block if not set on this target.
-     * Default: "NONE"
+     * Default: [SerializationBackend.NONE]
      */
-    abstract val serializationBackend: Property<String>
+    abstract val serializationBackend: Property<SerializationBackend>
 
     /**
      * The output directory for generated sources.
@@ -178,13 +182,15 @@ abstract class CommonExtension {
      * all targets. Each target can override this individually via its own
      * [GraphQLTargetExtension.serializationBackend].
      *
-     * Accepted values: `"NONE"`, `"KOTLINX"`, `"GSON"` (case-sensitive).
-     * Default: `"NONE"`. When `"NONE"` and [generateResponses] is `true`,
-     * the codegen auto-selects `"KOTLINX"`.
+     * Accepted values: [SerializationBackend.NONE],
+     * [SerializationBackend.KOTLINX], [SerializationBackend.GSON].
+     * Default: [SerializationBackend.NONE]. When [SerializationBackend.NONE]
+     * and [generateResponses] is `true`, the codegen auto-selects
+     * [SerializationBackend.KOTLINX].
      *
      * @see GraphQLTargetExtension.serializationBackend
      */
-    abstract val serializationBackend: Property<String>
+    abstract val serializationBackend: Property<SerializationBackend>
 
     init {
         generateOperationConstants.convention(true)
@@ -192,7 +198,7 @@ abstract class CommonExtension {
         generateHashes.convention(true)
         generateVariables.convention(false)
         generateResponses.convention(false)
-        serializationBackend.convention("NONE")
+        serializationBackend.convention(SerializationBackend.NONE)
     }
 }
 
@@ -281,7 +287,7 @@ open class RetrofitGraphQLExtension @Inject constructor(objects: ObjectFactory) 
     val generateResponses: Property<Boolean> = objects.property(Boolean::class.java)
 
     @get:org.gradle.api.tasks.Input
-    val serializationBackend: Property<String> = objects.property(String::class.java)
+    val serializationBackend: Property<SerializationBackend> = objects.property(SerializationBackend::class.java)
 
     @get:org.gradle.api.tasks.OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty()

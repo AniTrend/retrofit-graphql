@@ -28,7 +28,9 @@ import co.anitrend.retrofit.graphql.codegen.generate.ResponseModelGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.VariableClassGenerator
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLFragmentInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
+import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
 import co.anitrend.retrofit.graphql.codegen.model.OperationType
+import co.anitrend.retrofit.graphql.codegen.model.ResponseSelectionSet
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import co.anitrend.retrofit.graphql.codegen.parser.GraphQLDocumentParser
 import co.anitrend.retrofit.graphql.codegen.parser.ResponseSelectionParser
@@ -105,7 +107,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
     abstract val generateResponses: Property<Boolean>
 
     @get:Input
-    abstract val serializationBackend: Property<String>
+    abstract val serializationBackend: Property<SerializationBackend>
 
     @get:Input
     abstract val scalarMappings: MapProperty<String, String>
@@ -302,24 +304,14 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
 
     /**
      * Resolves the effective [SerializationBackend] from the Gradle property,
-     * applying compatibility validation and backward-compatible auto-selection.
+     * applying backward-compatible auto-selection.
      *
      * - If [generateResponses] is `true` and the configured backend is [SerializationBackend.NONE],
      *   auto-selects [SerializationBackend.KOTLINX] with a warning (backward compatibility).
-     * - If [generateResponses] is `true` and the configured backend is [SerializationBackend.GSON],
-     *   throws a [GradleException] because Gson does not support polymorphic response models.
      * - Otherwise returns the configured backend.
      */
     private fun resolveBackend(): SerializationBackend {
-        val configured = serializationBackend.get()
-        val backend = try {
-            SerializationBackend.valueOf(configured)
-        } catch (_: IllegalArgumentException) {
-            throw GradleException(
-                "Invalid serialization backend '$configured'. " +
-                    "Valid values: ${SerializationBackend.entries.joinToString(", ") { it.name }}",
-            )
-        }
+        val backend = serializationBackend.get()
         if (generateResponses.get() && backend == SerializationBackend.NONE) {
             logger.warn(
                 "generateResponses is enabled but serializationBackend is NONE. " +
@@ -327,14 +319,6 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                     "Explicitly set serializationBackend = KOTLINX to silence this warning.",
             )
             return SerializationBackend.KOTLINX
-        }
-        if (generateResponses.get() && backend == SerializationBackend.GSON) {
-            throw GradleException(
-                "generateResponses requires KOTLINX serialization backend. " +
-                    "GSON does not support polymorphic deserialization of response models. " +
-                    "Set serializationBackend = KOTLINX or use GSON only for variables/inputs/enums " +
-                    "by setting generateResponses = false.",
-            )
         }
         return backend
     }
@@ -405,6 +389,32 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         // Generate enum classes needed by response types (even if generateVariables is off)
         generateEnumArtifacts(schemaIndex, pkg, outputDirectory, "responses", backend)
 
+        // Per-operation GSON validation: allow concrete-only operations,
+        // fail for operations with interface/union response paths
+        if (backend == SerializationBackend.GSON) {
+            val allViolations = mutableListOf<String>()
+            for (operation in operations) {
+                val selectionSet = selectionParser.parse(operation)
+                val abstractPaths = findAbstractTypePaths(selectionSet, schemaIndex)
+                if (abstractPaths.isNotEmpty()) {
+                    allViolations.add(
+                        "Operation '${operation.name}' has abstract type(s) at response path(s): " +
+                            abstractPaths.joinToString(", ") { (type, path) ->
+                                "$path ($type)"
+                            } +
+                            ". Gson cannot deserialize polymorphic sealed interfaces. " +
+                            "Use SerializationBackend.KOTLINX for this operation.",
+                    )
+                }
+            }
+            if (allViolations.isNotEmpty()) {
+                throw GradleException(
+                    "GSON response generation is not supported for operations with interface/union types:\n" +
+                        allViolations.joinToString("\n"),
+                )
+            }
+        }
+
         operations.forEach { operation ->
             val selectionSet = selectionParser.parse(operation)
             val fileSpecs = modelGenerator.generate(operation, selectionSet, pkg)
@@ -444,5 +454,42 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         OperationType.QUERY -> OperationDefinition.Operation.QUERY
         OperationType.MUTATION -> OperationDefinition.Operation.MUTATION
         OperationType.SUBSCRIPTION -> OperationDefinition.Operation.SUBSCRIPTION
+    }
+
+    /**
+     * Recursively finds abstract type (interface/union) references within a
+     * [ResponseSelectionSet] and returns the type name and response path for
+     * each violation.
+     *
+     * @param selectionSet The response selection set to inspect.
+     * @param schemaIndex The schema index for type lookup.
+     * @param currentPath The current response path being traversed.
+     * @return A list of pairs where each pair is (typeName, path).
+     */
+    private fun findAbstractTypePaths(
+        selectionSet: ResponseSelectionSet,
+        schemaIndex: SchemaIndex,
+        currentPath: List<String> = emptyList(),
+    ): List<Pair<String, String>> {
+        val violations = mutableListOf<Pair<String, String>>()
+        for (field in selectionSet.fields) {
+            val childSet = field.selectionSet ?: continue
+            val typeName = resolveNamedType(field.outputType)
+            val fieldPath = currentPath + field.responseName
+            if (schemaIndex.isAbstractType(typeName)) {
+                violations.add(typeName to fieldPath.joinToString("."))
+            } else {
+                violations.addAll(findAbstractTypePaths(childSet, schemaIndex, fieldPath))
+            }
+        }
+        return violations
+    }
+
+    /**
+     * Extracts the named type from a [GraphQLType], unwrapping list wrappers.
+     */
+    private fun resolveNamedType(type: GraphQLType): String = when (type) {
+        is GraphQLType.Named -> type.name
+        is GraphQLType.List -> resolveNamedType(type.of)
     }
 }

@@ -16,6 +16,7 @@
 
 package co.anitrend.retrofit.graphql.codegen
 
+import co.anitrend.retrofit.graphql.codegen.config.SerializationBackend
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert.assertEquals
@@ -155,7 +156,7 @@ class GenerateGraphQLSourcesTaskFunctionalTest {
 
         writeSingleTargetProject(
             projectDir = projectDir,
-            serializationBackend = "NONE",
+            serializationBackend = SerializationBackend.NONE,
         )
         writeGraphQLFile(projectDir, "GetViewer.graphql", "query GetViewer { viewer { login } }")
 
@@ -165,7 +166,7 @@ class GenerateGraphQLSourcesTaskFunctionalTest {
         // Change serializationBackend
         val buildFile = projectDir.resolve("build.gradle.kts")
         val updatedContent = buildFile.readText()
-            .replace("\"NONE\"", "\"KOTLINX\"")
+            .replace("SerializationBackend.NONE", "SerializationBackend.KOTLINX")
         Files.writeString(buildFile, updatedContent)
 
         val second = gradleRunner(projectDir, "generateGraphQLSources").build()
@@ -302,7 +303,7 @@ class GenerateGraphQLSourcesTaskFunctionalTest {
     private fun writeSingleTargetProject(
         projectDir: Path,
         packageName: String = "sample.generated",
-        serializationBackend: String = "NONE",
+        serializationBackend: SerializationBackend = SerializationBackend.NONE,
         schema: Boolean = false,
         schemaContent: String = "",
         generateVariables: Boolean = false,
@@ -327,6 +328,8 @@ class GenerateGraphQLSourcesTaskFunctionalTest {
         writeFile(
             projectDir.resolve("build.gradle.kts"),
             """
+            import co.anitrend.retrofit.graphql.codegen.config.SerializationBackend
+
             plugins {
                 kotlin("jvm") version "$KOTLIN_VERSION"
                 id("co.anitrend.retrofit.graphql.codegen")
@@ -341,7 +344,7 @@ class GenerateGraphQLSourcesTaskFunctionalTest {
                 })
                 $schemaBlock
                 $extraSettings
-                serializationBackend.set("$serializationBackend")
+                serializationBackend.set(SerializationBackend.$serializationBackend)
             }
             """.trimIndent(),
         )

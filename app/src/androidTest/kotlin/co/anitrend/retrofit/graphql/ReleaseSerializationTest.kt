@@ -23,6 +23,7 @@ import co.anitrend.retrofit.graphql.sample.generated.GetCurrentUserData
 import co.anitrend.retrofit.graphql.sample.generated.GetMarketPlaceAppsData
 import co.anitrend.retrofit.graphql.serialization.kotlinx.KotlinxGraphQLJson
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -157,6 +158,131 @@ class ReleaseSerializationTest {
 
         assertNull("errors should be null", container.errors)
         assertNull("data should be null", container.data)
+    }
+
+    // --- Runtime kotlinx descriptor assertions ---
+    //
+    // These tests verify that kotlinx.serialization descriptors reflect the
+    // correct @SerialName values after R8 processing. Descriptors are part
+    // of the kotlinx.serialization runtime API and must survive tree-shaking.
+    //
+    // Generated classes use two levels of @SerialName:
+    //   1. Class-level: path-qualified descriptor (e.g. "GetMarketPlaceAppsData.marketplaceListings")
+    //   2. Property-level: the GraphQL response name (e.g. "edges", "totalCount")
+    //
+    // Properties are generated in alphabetical order by responseName.
+    // Element descriptors for non-list fields directly yield the nested
+    // type's serializer descriptor (carrying the class-level @SerialName).
+
+    @Test
+    fun descriptor_serialName_and_elementNames_surviveR8_getMarketPlaceAppsData() {
+        val descriptor = GetMarketPlaceAppsData.serializer().descriptor
+
+        // Class-level @SerialName: the root data class name
+        assertEquals("GetMarketPlaceAppsData", descriptor.serialName)
+
+        // Root has one top-level field: marketplaceListings
+        assertEquals(1, descriptor.elementsCount)
+        assertEquals("marketplaceListings", descriptor.getElementName(0))
+    }
+
+    @Test
+    fun descriptor_nestedType_serialName_survivesR8_marketplaceListings() {
+        val rootDescriptor = GetMarketPlaceAppsData.serializer().descriptor
+
+        // marketplaceListings is at index 0 (only root field, sorted alphabetically).
+        // Its type is a nested data class with a path-qualified @SerialName.
+        val listingsDescriptor = rootDescriptor.getElementDescriptor(0)
+
+        assertEquals(
+            "GetMarketPlaceAppsData.marketplaceListings",
+            listingsDescriptor.serialName,
+        )
+
+        // marketplaceListings has 3 fields (sorted: edges, pageInfo, totalCount)
+        assertEquals(3, listingsDescriptor.elementsCount)
+        assertEquals("edges", listingsDescriptor.getElementName(0))
+        assertEquals("pageInfo", listingsDescriptor.getElementName(1))
+        assertEquals("totalCount", listingsDescriptor.getElementName(2))
+    }
+
+    @Test
+    fun descriptor_nestedType_serialName_survivesR8_marketplaceListingsPageInfo() {
+        val rootDescriptor = GetMarketPlaceAppsData.serializer().descriptor
+        val listingsDescriptor = rootDescriptor.getElementDescriptor(0)
+
+        // pageInfo is at index 1 within marketplaceListings (sorted: edges, pageInfo, totalCount).
+        // pageInfo is a non-list field, so getElementDescriptor returns the nested type directly.
+        val pageInfoDescriptor = listingsDescriptor.getElementDescriptor(1)
+
+        assertEquals(
+            "GetMarketPlaceAppsData.marketplaceListings.pageInfo",
+            pageInfoDescriptor.serialName,
+        )
+
+        // pageInfo has 4 fields from PageInfo fragment (sorted):
+        // endCursor, hasNextPage, hasPreviousPage, startCursor
+        assertEquals(4, pageInfoDescriptor.elementsCount)
+        assertEquals("endCursor", pageInfoDescriptor.getElementName(0))
+        assertEquals("hasNextPage", pageInfoDescriptor.getElementName(1))
+        assertEquals("hasPreviousPage", pageInfoDescriptor.getElementName(2))
+        assertEquals("startCursor", pageInfoDescriptor.getElementName(3))
+    }
+
+    @Test
+    fun descriptor_serialName_and_elementNames_surviveR8_getCurrentUserData() {
+        val descriptor = GetCurrentUserData.serializer().descriptor
+
+        // Class-level @SerialName: the root data class name
+        assertEquals("GetCurrentUserData", descriptor.serialName)
+
+        // Root has one top-level field: viewer
+        assertEquals(1, descriptor.elementsCount)
+        assertEquals("viewer", descriptor.getElementName(0))
+    }
+
+    @Test
+    fun descriptor_nestedType_serialName_survivesR8_viewer() {
+        val rootDescriptor = GetCurrentUserData.serializer().descriptor
+
+        // viewer is at index 0 (only root field)
+        val viewerDescriptor = rootDescriptor.getElementDescriptor(0)
+
+        assertEquals(
+            "GetCurrentUserData.viewer",
+            viewerDescriptor.serialName,
+        )
+
+        // viewer has 6 fields from UserCore fragment (sorted):
+        // avatarUrl, bio, company, id, login, status
+        assertEquals(6, viewerDescriptor.elementsCount)
+        assertEquals("avatarUrl", viewerDescriptor.getElementName(0))
+        assertEquals("bio", viewerDescriptor.getElementName(1))
+        assertEquals("company", viewerDescriptor.getElementName(2))
+        assertEquals("id", viewerDescriptor.getElementName(3))
+        assertEquals("login", viewerDescriptor.getElementName(4))
+        assertEquals("status", viewerDescriptor.getElementName(5))
+    }
+
+    @Test
+    fun descriptor_nestedType_serialName_survivesR8_viewerStatus() {
+        val rootDescriptor = GetCurrentUserData.serializer().descriptor
+        val viewerDescriptor = rootDescriptor.getElementDescriptor(0)
+
+        // status is at index 5 (sorted: avatarUrl, bio, company, id, login, status)
+        val statusDescriptor = viewerDescriptor.getElementDescriptor(5)
+
+        assertEquals(
+            "GetCurrentUserData.viewer.status",
+            statusDescriptor.serialName,
+        )
+
+        // status has 3 fields from the inline status selection (sorted):
+        // createdAt, emoji, message
+        assertEquals(3, statusDescriptor.elementsCount)
+        assertEquals("createdAt", statusDescriptor.getElementName(0))
+        assertEquals("emoji", statusDescriptor.getElementName(1))
+        assertEquals("message", statusDescriptor.getElementName(2))
     }
 
     /**

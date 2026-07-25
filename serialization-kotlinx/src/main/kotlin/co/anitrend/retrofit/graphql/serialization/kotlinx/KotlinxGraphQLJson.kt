@@ -73,6 +73,24 @@ import java.lang.reflect.Type
  * - [QueryContainer] is not `@Serializable`; the runtime keeps the legacy
  *   [QueryContainerBuilder] request flow on a Gson-backed serializer.
  *
+ * ## Working Around @Transient Fields
+ *
+ * When you need access to `@Transient` fields with kotlinx, define your own
+ * `@Serializable` wrapper classes that include those fields with concrete types
+ * that kotlinx can resolve (e.g. `Map<String, JsonElement>` instead of
+ * `Map<Any, Any>`), paired with a custom `JsonTransformingSerializer`:
+ * ```kotlin
+ * @Serializable(with = MyContainerSerializer::class)
+ * data class MyContainer<T>(val data: T?, val extensions: Map<String, JsonElement>?)
+ *
+ * object MyContainerSerializer :
+ *     JsonTransformingSerializer<MyContainer<JsonElement>>(
+ *         MyContainer.serializer(JsonElement.serializer()),
+ *     )
+ * ```
+ * For detailed per-type examples, see the KDoc on [GraphContainer.extensions],
+ * [GraphError.path], [GraphError.extensions], and [GraphQLRequest.extensions].
+ *
  * @param json A configured [Json] instance. Defaults to [Json] with
  *   [Json.ignoreUnknownKeys] enabled so that fields not present in the
  *   generated data class are silently skipped.

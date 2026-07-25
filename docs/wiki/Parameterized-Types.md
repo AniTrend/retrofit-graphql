@@ -58,7 +58,7 @@ override fun <T : Any> decode(json: String, type: Type): T {
 
 ### Before (Broken)
 
-Prior to v3.x, `KotlinxGraphQLJson` attempted to resolve the serializer using only the raw class (losing type arguments):
+Prior to v0.13.x, `KotlinxGraphQLJson` attempted to resolve the serializer using only the raw class (losing type arguments):
 
 ```kotlin
 // Broken: loses GetCurrentUserData type argument

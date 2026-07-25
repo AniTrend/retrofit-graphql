@@ -45,7 +45,7 @@ import java.lang.reflect.Type
  *
  * ## Serialization Backend
  *
- * As of v3.x, [GraphConverter] uses a pluggable [GraphQLJson] instance
+ * As of v0.13.x, [GraphConverter] uses a pluggable [GraphQLJson] instance
  * instead of a hard dependency on Gson. The [json] property provides
  * the serialization backend for both request and response conversion.
  * Factory methods accept either a [GraphQLJson] instance directly or

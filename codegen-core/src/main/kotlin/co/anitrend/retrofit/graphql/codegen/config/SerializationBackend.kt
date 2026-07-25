@@ -45,7 +45,8 @@ package co.anitrend.retrofit.graphql.codegen.config
  *
  * **Limitation**: Gson cannot deserialize polymorphic sealed interfaces,
  * which are needed for GraphQL union and interface response types.
- * Using `GSON` with `generateResponses = true` is **not supported**.
+ * Using `GSON` with `generateResponses = true` is only supported for
+ * operations whose response types are concrete (no interfaces or unions).
  *
  * ## DSL Integration
  *
@@ -53,7 +54,7 @@ package co.anitrend.retrofit.graphql.codegen.config
  * ```kotlin
  * retrofitGraphQL {
  *     common {
- *         serializationBackend.set("KOTLINX")
+ *         serializationBackend.set(SerializationBackend.KOTLINX)
  *     }
  * }
  * ```

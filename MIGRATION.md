@@ -1,11 +1,11 @@
 # Migration Guide
 
-This guide covers migrating consumer projects from the deprecated `:library` aggregator to the new modular architecture, and from v2.x Gson-based workflows to v3.x GraphQLJson abstraction with kotlinx.serialization support.
+This guide covers migrating consumer projects from the deprecated `:library` aggregator to the new modular architecture, and from v2.x Gson-based workflows to v0.13.x GraphQLJson abstraction with kotlinx.serialization support.
 
 ## Table of Contents
 
 - [Migration to Modular Dependencies](#migration-to-modular-dependencies) (v2.x)
-- [v3.x Serialization Contract Migration](#v3x-serialization-contract-migration)
+- [v0.13.x Serialization Contract Migration](#v013x-serialization-contract-migration)
   - [Gson-to-GraphQLJson](#gson-to-graphqljson)
   - [Constructor rename (binary breaking)](#constructor-rename-binary-breaking)
   - [kotlinx parameterized type handling](#kotlinx-parameterized-type-handling)
@@ -358,9 +358,9 @@ If you subclass `GraphRequestConverter`, the `resolveQuery()` method is now `pro
 
 ---
 
-# v3.x Serialization Contract Migration
+# v0.13.x Serialization Contract Migration
 
-This section covers migrating from v2.x Gson-based `GraphConverter` construction to the v3.x `GraphQLJson` abstraction, and related serialization contract changes.
+This section covers migrating from v2.x Gson-based `GraphConverter` construction to the v0.13.x `GraphQLJson` abstraction, and related serialization contract changes.
 
 ### Gson-to-GraphQLJson
 
@@ -381,7 +381,7 @@ val converter = GraphConverter.create(
 )
 ```
 
-**After (v3.x -- new GraphQLJson overload):**
+**After (v0.13.x -- new GraphQLJson overload):**
 
 ```kotlin
 // kotlinx.serialization path (recommended for response DTOs)
@@ -410,16 +410,16 @@ val converter = GraphConverter.create(
 **For subclassers only**: The `GraphConverter` primary constructor parameter was renamed:
 
 - v2.x: `protected val gson: Gson`
-- v3.x: `protected val json: GraphQLJson`
+- v0.13.x: `protected val json: GraphQLJson`
 
 This is a **binary-compatibility** breaking change. Source-compatible code that uses `GraphConverter` factory methods (`create(...)`) is unaffected. Only direct constructor calls or subclasses that reference the `gson` parameter need updating:
 
 ```kotlin
-// v2.x (broken in v3.x)
+// v2.x (broken in v0.13.x)
 class CustomConverter(processor: AbstractGraphProcessor, gson: Gson) :
     GraphConverter(processor, gson)  // error: cannot find 'gson'
 
-// v3.x (fix)
+// v0.13.x (fix)
 class CustomConverter(processor: AbstractGraphProcessor, json: GraphQLJson) :
     GraphConverter(processor, json)
 ```

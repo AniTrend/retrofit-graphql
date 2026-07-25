@@ -39,6 +39,31 @@ import kotlinx.serialization.Transient
  * ### Gson (via GsonGraphQLJson)
  * - All fields are serialized/deserialized normally, including [extensions]
  *
+ * ### Accessing [extensions] with kotlinx
+ *
+ * To read [extensions] while using kotlinx serialization, define your own
+ * `@Serializable` response wrapper with a custom serializer:
+ * ```kotlin
+ * @Serializable(with = GraphContainerExtensionsSerializer::class)
+ * data class MyGraphContainer<T>(
+ *     val data: T? = null,
+ *     val errors: List<GraphError>? = null,
+ *     val extensions: Map<String, JsonElement>? = null,
+ * )
+ *
+ * object GraphContainerExtensionsSerializer :
+ *     JsonTransformingSerializer<MyGraphContainer<JsonElement>>(
+ *         MyGraphContainer.serializer(JsonElement.serializer()),
+ *     ) {
+ *     override fun transformDeserialize(element: JsonElement): JsonElement {
+ *         // extensions are available in the raw JSON object
+ *         return element
+ *     }
+ * }
+ * ```
+ * Alternatively, extract extension values from the raw [JsonObject] payload
+ * before kotlinx deserialization runs.
+ *
  * ## Usage with generated response DTOs
  *
  * ```kotlin

@@ -36,7 +36,7 @@ retrofitGraphQL {
         generateHashes.set(true)
         generateVariables.set(true)
         generateResponses.set(true)
-        serializationBackend.set("KOTLINX")
+        serializationBackend.set(SerializationBackend.KOTLINX)
     }
     target("github") {
         packageName.set("co.anitrend.retrofit.graphql.sample.generated")
@@ -114,7 +114,7 @@ The `serializationBackend` property controls which annotations are emitted on ge
 ```kotlin
 retrofitGraphQL {
     common {
-        serializationBackend.set("KOTLINX")  // "NONE", "KOTLINX", or "GSON"
+        serializationBackend.set(SerializationBackend.KOTLINX)  // SerializationBackend.NONE, .KOTLINX, or .GSON
     }
 }
 ```
@@ -125,7 +125,7 @@ retrofitGraphQL {
 |---------|------------|----------------|-----------|
 | `NONE` | None | Plain data holders | N/A |
 | `KOTLINX` | `@Serializable`, `@SerialName`, `@JsonClassDiscriminator` | Supported (required) | Automatic (consumer rules) |
-| `GSON` | `@SerializedName` | Not supported | May need keep rules |
+| `GSON` | `@SerializedName` | Supported (concrete types only) | May need keep rules |
 
 ### Auto-Selection
 
@@ -145,14 +145,14 @@ Is equivalent to:
 retrofitGraphQL {
     common {
         generateResponses.set(true)
-        serializationBackend.set("KOTLINX")
+        serializationBackend.set(SerializationBackend.KOTLINX)
     }
 }
 ```
 
-### GSON Incompatibility
+### GSON Limitations
 
-`GSON` + `generateResponses = true` is **not supported**. Gson cannot deserialize polymorphic sealed interfaces needed for GraphQL union and interface response types. Use `KOTLINX` for response models.
+`GSON` + `generateResponses = true` is only supported for operations whose response types are fully concrete (no interfaces or unions). Gson cannot deserialize polymorphic sealed interfaces needed for GraphQL union and interface response types. Operations with abstract response types will fail at build time with a clear error message. Use `KOTLINX` for those operations, or use `GSON` only with `generateResponses = false`.
 
 ## Naming Convention
 

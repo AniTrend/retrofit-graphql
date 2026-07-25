@@ -25,7 +25,7 @@ retrofitGraphQL {
     common {
         generateVariables.set(true)
         generateResponses.set(true)
-        serializationBackend.set("KOTLINX")
+        serializationBackend.set(SerializationBackend.KOTLINX)
         // serializationBackend auto-selects KOTLINX when generateResponses=true
     }
     packageName.set("co.anitrend.retrofit.graphql.sample.generated")

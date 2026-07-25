@@ -6,7 +6,7 @@ this project is a retrofit converter which injects `.graphql` query or mutation 
 into a request body along with any GraphQL variables. Supports both runtime asset-based
 discovery and optional build-time code generation for type-safe request helpers.
 
-> **Note:** As of v3.x, retrofit-graphql offers first-class support for kotlinx.serialization with generated `@Serializable` response models, Gson-for-upload paths, and R8-safe serialization. See [MIGRATION.md](MIGRATION.md) for migration guidance from v2.x GraphQLJson + Gson workflows.
+> **Note:** As of v0.13.x, retrofit-graphql offers first-class support for kotlinx.serialization with generated `@Serializable` response models, Gson-for-upload paths, and R8-safe serialization. See [MIGRATION.md](MIGRATION.md) for migration guidance from v2.x GraphQLJson + Gson workflows.
 
 ## Why This Project Exists?
 
@@ -23,7 +23,7 @@ especially when using R8.
 
 > **Note:** As of v2.x, retrofit-graphql also offers optional build-time code generation via a Gradle plugin. This combines the flexibility of file-based queries with type-safe request helpers when desired.
 >
-> As of v3.x, retrofit-graphql adds first-class kotlinx.serialization support with `@Serializable` generated response DTOs, a serialization-backend-agnostic `GraphQLJson` abstraction, and R8-safe serialization. Gson remains supported for request-only consumers and the multipart upload path. See [MIGRATION.md](MIGRATION.md) for migration guidance.
+> As of v0.13.x, retrofit-graphql adds first-class kotlinx.serialization support with `@Serializable` generated response DTOs, a serialization-backend-agnostic `GraphQLJson` abstraction, and R8-safe serialization. Gson remains supported for request-only consumers and the multipart upload path. See [MIGRATION.md](MIGRATION.md) for migration guidance.
 
 Strangely there are tons of simple examples all over Medium using apollo graphql for Android,
 but none of them address these issues because most of them just construct a simple single resource
@@ -114,7 +114,7 @@ The codegen plugin emits serialization annotations (`@Serializable`/`@SerialName
 ```kotlin
 retrofitGraphQL {
     common {
-        serializationBackend.set("KOTLINX")  // or "GSON" or "NONE"
+        serializationBackend.set(SerializationBackend.KOTLINX)  // or .GSON or .NONE
     }
 }
 ```
@@ -123,9 +123,9 @@ retrofitGraphQL {
 |-------|----------|
 | `NONE` | No serialization annotations emitted. Classes are generated as plain data holders. |
 | `KOTLINX` | Emits `@Serializable`, `@SerialName`, and polymorphic markers. **Required** for response model generation (`generateResponses = true`). |
-| `GSON` | Emits `@SerializedName` on properties. Does **not** support polymorphic response models (union/interface deserialization). GSON + `generateResponses = true` is not yet supported. |
+| `GSON` | Emits `@SerializedName` on properties. Supports response models for concrete-only operations (no interface/union types). |
 
-**Auto-selection (convenience)**: When `serializationBackend` is `NONE` (the default) and `generateResponses` is `true`, the codegen automatically selects `KOTLINX`. This means consumers who only care about typed responses can set `generateResponses.set(true)` without explicitly configuring the backend. Consumers who want Gson annotations for variables/input objects without response models should set `serializationBackend.set("GSON")` and leave `generateResponses` at `false`.
+**Auto-selection (convenience)**: When `serializationBackend` is `NONE` (the default) and `generateResponses` is `true`, the codegen automatically selects `KOTLINX`. This means consumers who only care about typed responses can set `generateResponses.set(true)` without explicitly configuring the backend. Consumers who want Gson annotations for variables/input objects without response models should set `serializationBackend.set(SerializationBackend.GSON)` and leave `generateResponses` at `false`.
 
 The `serializationBackend` property can be set in `common {}` (applies to all targets) and overridden per-target in `target("name") { }` blocks.
 

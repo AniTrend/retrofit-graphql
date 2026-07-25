@@ -1,3 +1,4 @@
+import co.anitrend.retrofit.graphql.codegen.config.SerializationBackend
 import java.net.URI
 
 plugins {
@@ -115,7 +116,7 @@ retrofitGraphQL {
     common {
         generateVariables.set(true)
         generateResponses.set(true)
-        serializationBackend.set("KOTLINX")
+        serializationBackend.set(SerializationBackend.KOTLINX)
     }
     packageName.set("co.anitrend.retrofit.graphql.sample.generated")
     schema.set(file("src/main/graphql/schema.graphql"))
