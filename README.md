@@ -6,7 +6,7 @@ this project is a retrofit converter which injects `.graphql` query or mutation 
 into a request body along with any GraphQL variables. Supports both runtime asset-based
 discovery and optional build-time code generation for type-safe request helpers.
 
-> **Note:** As of v0.13.x, retrofit-graphql offers first-class support for kotlinx.serialization with generated `@Serializable` response models, Gson-for-upload paths, and R8-safe serialization. See [MIGRATION.md](MIGRATION.md) for migration guidance from v2.x GraphQLJson + Gson workflows.
+> **Note:** As of v0.13.x, retrofit-graphql offers first-class support for kotlinx.serialization with generated `@Serializable` response models, Gson-for-upload paths, and R8-safe serialization. The public `:api` models are kotlinx-enabled, so consumers must keep `org.jetbrains.kotlinx:kotlinx-serialization-core` on the runtime classpath. See [MIGRATION.md](MIGRATION.md) for migration guidance from v2.x GraphQLJson + Gson workflows.
 
 ## Why This Project Exists?
 
@@ -23,7 +23,7 @@ especially when using R8.
 
 > **Note:** As of v2.x, retrofit-graphql also offers optional build-time code generation via a Gradle plugin. This combines the flexibility of file-based queries with type-safe request helpers when desired.
 >
-> As of v0.13.x, retrofit-graphql adds first-class kotlinx.serialization support with `@Serializable` generated response DTOs, a serialization-backend-agnostic `GraphQLJson` abstraction, and R8-safe serialization. Gson remains supported for request-only consumers and the multipart upload path. See [MIGRATION.md](MIGRATION.md) for migration guidance.
+> As of v0.13.x, retrofit-graphql adds first-class kotlinx.serialization support with `@Serializable` generated response DTOs, a serialization-backend-agnostic `GraphQLJson` abstraction, and R8-safe serialization. Gson remains supported for request-only consumers and the multipart upload path. Because `:api` models are annotated with kotlinx serialization types, `org.jetbrains.kotlinx:kotlinx-serialization-core` is a mandatory runtime dependency for modular consumers. See [MIGRATION.md](MIGRATION.md) for migration guidance.
 
 Strangely there are tons of simple examples all over Medium using apollo graphql for Android,
 but none of them address these issues because most of them just construct a simple single resource
@@ -70,6 +70,7 @@ dependencies {
 
     // Public API interfaces and models
     implementation("com.github.AniTrend.retrofit-graphql:api:{latest_version}")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
 
     // Asset-based query discovery
     implementation("com.github.AniTrend.retrofit-graphql:android-assets:{latest_version}")
@@ -203,7 +204,7 @@ See the [Serialization Backends](docs/wiki/Serialization-Backends.md) wiki page 
 More wiki documentation:
 - [Code Generation](docs/wiki/Codegen.md) -- plugin setup, DSL, and generated output
 - [Generated Response DTOs](docs/wiki/Generated-Response-DTOs.md) -- using generated response models with Retrofit
-- [Naming Contract](docs/wiki/Naming-Contract.md) -- Kotlin name, wire name, and descriptor name rules
+- [Naming Contract](docs/wiki/Naming-Contract.md) -- Kotlin name, wire name, and descriptor behavior rules
 - [R8 / ProGuard](docs/wiki/R8-ProGuard.md) -- R8 configuration and keep rules
 - [Parameterized Types](docs/wiki/Parameterized-Types.md) -- how parameterized types flow through serialization
 

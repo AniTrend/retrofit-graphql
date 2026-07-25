@@ -17,9 +17,12 @@ retrofit-graphql uses a pluggable `GraphQLJson` abstraction for request and resp
 dependencies {
     implementation("com.github.AniTrend.retrofit-graphql:runtime:{tag}")
     implementation("com.github.AniTrend.retrofit-graphql:serialization-kotlinx:{tag}")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 }
 ```
+
+The `:api` module's public models are kotlinx-enabled in v0.13.x. Keep `kotlinx-serialization-core` on the runtime classpath even when you depend on `:api` directly or use the Gson backend, because those public model classes reference kotlinx serialization annotations and runtime types.
 
 In your Gradle module, apply the kotlinx.serialization plugin:
 
@@ -94,6 +97,7 @@ No custom keep rules are needed. The kotlinx.serialization compiler plugin gener
 dependencies {
     implementation("com.github.AniTrend.retrofit-graphql:runtime:{tag}")
     implementation("com.github.AniTrend.retrofit-graphql:serialization-gson:{tag}")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
 }
 ```
 

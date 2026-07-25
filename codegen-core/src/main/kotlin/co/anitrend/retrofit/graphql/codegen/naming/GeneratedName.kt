@@ -20,9 +20,9 @@ package co.anitrend.retrofit.graphql.codegen.naming
  * Holds both the Kotlin identifier and its corresponding wire-format name
  * after allocation through [GraphNameAllocator].
  *
- * ## Three-Name Model
+ * ## Two-Name Model
  *
- * Each generated name carries three representations:
+ * Each generated name carries two representations:
  *
  * 1. **[kotlinName]** — The collision-safe, keyword-escaped Kotlin
  *    identifier used in generated source code (e.g. `privateValue`,
@@ -34,13 +34,6 @@ package co.anitrend.retrofit.graphql.codegen.naming
  *    derived from [kotlinName]. This is what gets written to
  *    `@SerialName("wireName")` or `@SerializedName("wireName")`, ensuring
  *    correct JSON field mapping regardless of Kotlin renaming.
- *
- * 3. **[descriptorName]** — An optional stable path descriptor for
- *    class-level `@SerialName` on nested response model classes. For
- *    example, `"GetCurrentUserData.viewer.repositories"` encodes the
- *    full selection path from the root data class through nested types.
- *    `null` when no class-level descriptor is needed (root data classes,
- *    top-level enum/input types).
  *
  * ## Invariant
  *
@@ -55,10 +48,6 @@ package co.anitrend.retrofit.graphql.codegen.naming
  *   in generated code (e.g. `privateValue`, `isActive`, `OPEN`).
  * @property wireName The original GraphQL name preserved for use in
  *   serialization annotations (`@SerialName`, `@SerializedName`).
- * @property descriptorName An optional stable descriptor string for
- *   class-level `@SerialName` annotations on generated response model
- *   classes. For example, `"GetCurrentUserData.viewer.repositories"` for a
- *   nested response class. `null` when no class-level descriptor is needed.
  * @see GraphNameAllocator
  * @see NamePolicy
  * @since 1.0
@@ -66,5 +55,4 @@ package co.anitrend.retrofit.graphql.codegen.naming
 data class GeneratedName(
     val kotlinName: String,
     val wireName: String,
-    val descriptorName: String? = null,
 )

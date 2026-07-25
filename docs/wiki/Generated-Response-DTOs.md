@@ -206,8 +206,11 @@ Generated response DTOs use kotlinx.serialization annotations (`@Serializable`, 
 
 ```kotlin
 implementation("com.github.AniTrend.retrofit-graphql:serialization-kotlinx:{tag}")
-implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 ```
+
+`kotlinx-serialization-core` is mandatory for v0.13.x modular consumers because the public `:api` transport models are annotated for kotlinx serialization.
 
 Gson is supported for response models only when the operation response selection contains concrete object types. Those DTOs use `@SerializedName` on generated properties and are covered by codegen functional tests. Operations that select GraphQL interfaces or unions generate polymorphic sealed interfaces, which Gson cannot deserialize, so the codegen task fails before writing output and reports the operation name plus the exact abstract response path. Use `KOTLINX` for interface or union response DTOs.
 

@@ -3,9 +3,7 @@ name: release-r8-verification
 on:
   push:
     branches: [ develop ]
-  pull_request:
-    branches:
-      - develop
+  workflow_dispatch:
 
 env:
   CI: "true"

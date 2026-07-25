@@ -434,6 +434,15 @@ class CustomConverter(processor: AbstractGraphProcessor, json: GraphQLJson) :
 
 ### @Serializable on API types
 
+For v0.13.x, the public `:api` models are intentionally kotlinx-enabled. Modular consumers must keep `org.jetbrains.kotlinx:kotlinx-serialization-core` on the runtime classpath, even when they choose the Gson backend. The `:api` module declares that dependency internally with `implementation`, so declare it in applications that depend on `:api` directly rather than relying on it as a transitive API dependency.
+
+```kotlin
+dependencies {
+    implementation("com.github.AniTrend.retrofit-graphql:api:{tag}")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+}
+```
+
 The following API types are now annotated with `@Serializable` for kotlinx.serialization compatibility:
 
 | Type | Annotations | Notes |

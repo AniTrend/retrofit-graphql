@@ -72,9 +72,12 @@ For kotlinx.serialization support:
 dependencies {
     implementation("com.github.AniTrend.retrofit-graphql:runtime:{tag}")
     implementation("com.github.AniTrend.retrofit-graphql:serialization-kotlinx:{tag}")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 }
 ```
+
+`kotlinx-serialization-core` is also required by the public `:api` models in v0.13.x. Keep it on the runtime classpath for modular consumers, including apps that depend on `:api` directly.
 
 ## Generated Output
 
@@ -233,5 +236,5 @@ single<GraphQLDocumentRegistry> {
 ## See Also
 
 - [Serialization Backends](Serialization-Backends.md) -- kotlinx and Gson annotation policies
-- [Naming Contract](Naming-Contract.md) -- keyword escaping and descriptor name rules
+- [Naming Contract](Naming-Contract.md) -- keyword escaping and descriptor behavior rules
 - [Generated Response DTOs](Generated-Response-DTOs.md) -- using generated response models
