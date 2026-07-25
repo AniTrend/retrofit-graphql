@@ -16,7 +16,7 @@
 
 package co.anitrend.retrofit.graphql.converter.response
 
-import com.google.gson.Gson
+import co.anitrend.retrofit.graphql.model.GraphQLJson
 import okhttp3.ResponseBody
 import retrofit2.Converter
 import java.io.IOException
@@ -24,11 +24,27 @@ import java.lang.reflect.Type
 
 /**
  * GraphQL response body converter to unwrap nested object results,
- * resulting in a smaller generic tree for requests
+ * resulting in a smaller generic tree for requests.
+ *
+ * ## Serialization
+ *
+ * Response deserialization is delegated to [GraphQLJson.decode]. The full
+ * parameterized [type] (e.g. `GraphContainer<GetCurrentUserData>`) is
+ * forwarded so that serializers with parameterized type awareness (e.g.
+ * [KotlinxGraphQLJson] via `kotlinx.serialization.serializer(type)`) can
+ * resolve the correct `KSerializer`.
+ *
+ * [GraphQLJson.decode] may throw if the response JSON is invalid or if no
+ * serializer can be resolved for the target type. These errors propagate
+ * to Retrofit's caller.
+ *
+ * @param type The target deserialization type including parameterized type info
+ *   (e.g. `GraphContainer<Foo>`). Must not be null when called from Retrofit.
+ * @param json Pluggable [GraphQLJson] instance for deserialization.
  */
 open class GraphResponseConverter<T>(
     protected val type: Type?,
-    protected val gson: Gson,
+    protected val json: GraphQLJson,
 ) : Converter<ResponseBody, T> {
     /**
      * Converter contains logic on how to handle responses, since GraphQL responses follow
@@ -43,7 +59,12 @@ open class GraphResponseConverter<T>(
         var response: T? = null
         try {
             val responseString = responseBody.string()
-            response = gson.fromJson<T>(responseString, type)
+            val resolvedType =
+                type ?: throw IllegalStateException(
+                    "Response type cannot be null when converting response body. " +
+                        "This indicates a Retrofit configuration issue.",
+                )
+            response = json.decode(responseString, resolvedType)
         } catch (e: IOException) {
             e.printStackTrace()
         }

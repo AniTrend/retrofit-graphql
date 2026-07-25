@@ -123,6 +123,7 @@ jetbrains-kotlin-metadata-jvm = { module = "org.jetbrains.kotlin:kotlin-metadata
 jetbrains-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "jetbrains-kotlinx-coroutines" }
 jetbrains-kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "jetbrains-kotlinx-coroutines" }
 jetbrains-kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "jetbrains-kotlinx-coroutines" }
+jetbrains-kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "jetbrains-kotlinx-serialization" }
 jetbrains-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "jetbrains-kotlinx-serialization" }
 
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin-core" }
@@ -142,6 +143,8 @@ mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
 spotless-gradle = { module = "com.diffplug.spotless:spotless-plugin-gradle", version = "8.8.0" }
 
 pintrest-ktlint = { module = "com.pinterest:ktlint", version.ref = "ktlint" }
+
+jetbrains-kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "jetbrains-kotlin" }
 
 graphql-java = { module = "com.graphql-java:graphql-java", version.ref = "graphql-java" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }

@@ -52,6 +52,8 @@ captures/
 .idea/modules.xml
 # Comment next line if keeping position of elements in Navigation Editor is relevant for you
 .idea/navEditor.xml
+.idea/deviceManager.xml
+.idea/planningMode.xml
 
 # Keystore files
 # Uncomment the following lines if you do not want to check your keystore files in.
@@ -250,8 +252,4 @@ app/lint-baseline.xml
 # Added by code-review-graph
 .code-review-graph/
 .claude/
-
-
-# OpenCode deepwork session files
-.slim/deepwork/
 dokka-docs/

@@ -5422,6 +5422,8 @@ type Mutation {
     updateTeamDiscussionComment(input: UpdateTeamDiscussionCommentInput!): UpdateTeamDiscussionCommentPayload
     "Replaces the repository's topics with the given topics."
     updateTopics(input: UpdateTopicsInput!): UpdateTopicsPayload
+    "Upload a file to the storage bucket."
+    uploadFile(fileData: Upload!): StorageBucketFile!
 }
 
 "Audit log entry for a oauth_application.create event."
@@ -8371,6 +8373,21 @@ type PushAllowanceEdge {
     cursor: String!
     "The item at the end of the edge."
     node: PushAllowance
+}
+
+"A file upload."
+scalar Upload
+
+"Represents a file in a storage bucket."
+type StorageBucketFile {
+    "The content type of the file."
+    contentType: String!
+    "The filename of the file."
+    filename: String!
+    "The file ID."
+    id: ID!
+    "The URL of the file."
+    url: String!
 }
 
 "The query root of GitHub's GraphQL interface."
@@ -13584,6 +13601,8 @@ type User implements Actor & Node & ProfileOwner & ProjectOwner & RegistryPackag
     ): RepositoryConnection!
     "A URL pointing to the user's public website/blog."
     websiteUrl: URI
+    "List files in the storage bucket."
+    files: [StorageBucketFile!]!
 }
 
 "Represents a 'user_blocked' event on a given user."

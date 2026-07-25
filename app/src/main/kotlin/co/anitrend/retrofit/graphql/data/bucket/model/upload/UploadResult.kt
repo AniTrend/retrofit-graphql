@@ -1,8 +1,10 @@
 package co.anitrend.retrofit.graphql.data.bucket.model.upload
 
 import co.anitrend.retrofit.graphql.data.bucket.model.node.BucketFileNode
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 internal data class UploadResult(
-    @SerializedName("uploadFile") val uploaded: BucketFileNode
+    @SerialName("uploadFile") val uploaded: BucketFileNode
 )

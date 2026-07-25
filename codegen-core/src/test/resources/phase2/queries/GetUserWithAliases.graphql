@@ -1,0 +1,8 @@
+query GetUserWithAliases {
+  getCurrentUser {
+    id
+    userId: id
+    userName: login
+    userBio: bio
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "data": {
+    "getCurrentUser": {
+      "id": "1",
+      "login": "partial"
+    }
+  }
+}

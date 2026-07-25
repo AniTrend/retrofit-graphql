@@ -1,0 +1,22 @@
+{
+  "data": {
+    "getCurrentUser": {
+      "id": "MDQ6VXNlcjE=",
+      "login": "octocat",
+      "name": "The Octocat",
+      "bio": "GitHub mascot",
+      "private": true,
+      "object": "some-value",
+      "when": 42,
+      "isActive": true,
+      "email": "octocat@github.com",
+      "friends": [
+        { "id": "1", "login": "friend1" },
+        { "id": "2", "login": "friend2" }
+      ],
+      "items": ["a", "b"],
+      "roles": ["admin", "user"],
+      "createdAt": "2024-01-15T10:30:00Z"
+    }
+  }
+}

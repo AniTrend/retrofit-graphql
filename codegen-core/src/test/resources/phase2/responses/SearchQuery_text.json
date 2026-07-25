@@ -1,0 +1,10 @@
+{
+  "data": {
+    "search": {
+      "__typename": "TextMessage",
+      "id": "4",
+      "body": "Hello world",
+      "sender": "user1"
+    }
+  }
+}

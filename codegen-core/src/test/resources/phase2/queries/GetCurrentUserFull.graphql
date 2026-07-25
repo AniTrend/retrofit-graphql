@@ -1,0 +1,10 @@
+query GetCurrentUserFull {
+  getCurrentUser {
+    id
+    login
+    Name
+    status
+    myField
+    my_field
+  }
+}

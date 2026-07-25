@@ -585,11 +585,11 @@ class RetrofitGraphQLPluginFunctionalTest {
     ): String =
         settingsFile(
             extraPluginManagement =
-                """
+            """
                 id("com.android.application") version "$AGP_VERSION"
                 id("com.android.library") version "$AGP_VERSION"
                 $extraPluginManagement
-                """.trimIndent(),
+            """.trimIndent(),
             includes = includes,
             includeGoogleRepositories = true,
         )

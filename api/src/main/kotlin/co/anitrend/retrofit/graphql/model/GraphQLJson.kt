@@ -22,7 +22,30 @@ import java.lang.reflect.Type
  * Pluggable serialization abstraction for GraphQL request and response bodies.
  *
  * Implementations exist for Gson, kotlinx.serialization, and any other JSON
- * serialization framework that consumers prefer.
+ * serialization framework that consumers prefer. The [GraphConverter] uses
+ * this interface for all request serialization and response deserialization,
+ * replacing the previous hard dependency on Gson.
+ *
+ * ## Implementations
+ *
+ * | Implementation | Module | Notes |
+ * |---------------|--------|-------|
+ * | [GsonGraphQLJson] | `:serialization-gson` | Gson-backed. Handles all types including [GraphContainer.extensions] and [GraphQLRequest.extensions]. |
+ * | [KotlinxGraphQLJson] | `:serialization-kotlinx` | kotlinx.serialization-backed. Handles parameterized types via JVM reflection extension. [GraphContainer.extensions] and [GraphQLRequest.extensions] are `@Transient`. Recommended for response DTOs. |
+ *
+ * ## Implementing a custom backend
+ *
+ * ```kotlin
+ * class MoshiGraphQLJson(private val moshi: Moshi) : GraphQLJson {
+ *     override fun <T : Any> encode(value: T, type: Type?): String = ...
+ *     override fun <T : Any> decode(json: String, type: Type): T = ...
+ * }
+ * ```
+ *
+ * Register with `GraphConverter.create(context, json = MoshiGraphQLJson(...))`.
+ *
+ * @see GsonGraphQLJson
+ * @see KotlinxGraphQLJson
  */
 interface GraphQLJson {
     /**

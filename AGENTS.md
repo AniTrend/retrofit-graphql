@@ -57,9 +57,9 @@ The project is organized into composable modules under the `co.anitrend.retrofit
 | Module | Type | Purpose |
 |--------|------|---------|
 | `:annotations` | Kotlin JVM | `@GraphQuery` annotation (runtime retention) |
-| `:api` | Android | Public API interfaces: `GraphQLOperation`, `GraphQLDocumentRegistry`, `QueryContainerBuilder`, `GraphQLRequest`, `GraphQLVariables`, `GraphContainer` |
+| `:api` | Android | Public API interfaces: `GraphQLOperation`, `GraphQLDocumentRegistry`, `QueryContainerBuilder`, `GraphQLRequest`, `GraphQLVariables`, `GraphContainer`, `GraphQLJson`, `GraphError`, `EmptyGraphQLVariables` |
 | `:android-assets` | Android | Runtime asset-based query discovery: `GraphProcessor`, `AssetManagerDiscoveryPlugin`, APQ, logging |
-| `:runtime` | Android | Retrofit `Converter.Factory`: `GraphConverter`, `GraphRequestConverter`, `GraphResponseConverter`. Depends on `:api`, `:android-assets`, `:annotations` |
+| `:runtime` | Android | Retrofit `Converter.Factory`: `GraphConverter`, `GraphRequestConverter`, `GraphResponseConverter`. Depends on `:api`, `:android-assets`, `:annotations`. Uses pluggable `GraphQLJson` for serialization. |
 | `:codegen-core` | Kotlin JVM | Code generation engine: parses `.graphql` files with graphql-java, generates Kotlin with KotlinPoet. Uses `SchemaIndex` for typed schema metadata, `GraphQLTypeMapper` for kind-aware mapping, `GraphQLDefaultValueRenderer` for default literals, and `GraphQLTypeUsageValidator` for recursive scalar validation. |
 | `:gradle-plugin` | Gradle Plugin | Plugin `id("co.anitrend.retrofit.graphql.codegen")`. Registers `GenerateGraphQLSourcesTask`, wires output into source sets, owns standalone functional tests, and publishes its own marker/implementation artifacts from the composite build. |
 | `:serialization-gson` | Android | Gson-backed `GraphQLJson` serialization |
@@ -86,6 +86,9 @@ The project is organized into composable modules under the `co.anitrend.retrofit
 - **Publishing**: JitPack. Root modules publish from the main build; the standalone `:gradle-plugin` composite build must also publish separately. `.jitpack.yml` runs both `CI=true ./gradlew build publishToMavenLocal` and `CI=true ./gradlew -p gradle-plugin publishToMavenLocal` so JitPack reliably excludes `:app` via `settings.gradle.kts`, while still materializing the plugin marker + implementation artifacts and the included `:codegen-core` dependency.
 - **CI**: Only `:library` is built/tested in CI environments. It serves as the aggregate facade and transitively builds all sub-modules via `api()` deps. `:app` is excluded in CI (see `settings.gradle.kts`).
 - **Dokka**: Generated via `buildSrc` `AndroidOptions.kt`. Published at `https://anitrend.github.io/retrofit-graphql/`. Currently generates from `:library` only; multi-module Dokka is a planned follow-up.
+- **Codegen DSL**: `serializationBackend` property (`NONE`/`KOTLINX`/`GSON`) on `common {}` and `target {}` blocks controls annotation emission. Auto-selects `KOTLINX` when `generateResponses=true` and `serializationBackend` is `NONE`.
+- **Codegen task**: `GenerateGraphQLSourcesTask` uses `@CacheableTask` + `@PathSensitive(RELATIVE)` + sorted inputs for deterministic build cache behavior.
+- **R8**: Sample app enables R8 in release builds (`isMinifyEnabled = true`, `isShrinkResources = true`) with 2 targeted keep rules for Gson upload path. kotlinx.serialization consumer rules are sufficient for generated types.
 
 ## Code Style & Documentation
 
@@ -124,7 +127,7 @@ The project is organized into composable modules under the `co.anitrend.retrofit
 
 - **Discovery plugins**: Implement the plugin interface for custom file sources (assets, external storage, network).
 - **Logger**: Implement logger contracts for custom logging frameworks.
-- **Serialization**: Implement `GraphQLJson` for alternative JSON backends (see `:serialization-gson`, `:serialization-kotlinx`).
+- **Serialization**: Implement `GraphQLJson` for alternative JSON backends (see `:serialization-gson`, `:serialization-kotlinx`). Built-in implementations: `GsonGraphQLJson` (Gson), `KotlinxGraphQLJson` (kotlinx.serialization).
 
 ## Scope & Limitations
 

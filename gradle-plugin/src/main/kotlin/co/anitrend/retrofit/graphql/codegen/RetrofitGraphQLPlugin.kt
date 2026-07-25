@@ -141,6 +141,9 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
         if (extension.generateResponses.isPresent) {
             target.generateResponses.set(extension.generateResponses)
         }
+        if (extension.serializationBackend.isPresent) {
+            target.serializationBackend.set(extension.serializationBackend)
+        }
         if (extension.outputDir.isPresent) {
             target.outputDir.set(extension.outputDir)
         }
@@ -198,6 +201,9 @@ class RetrofitGraphQLPlugin : Plugin<Project> {
             )
             task.generateResponses.set(
                 target.generateResponses.orElse(common.generateResponses),
+            )
+            task.serializationBackend.set(
+                target.serializationBackend.orElse(common.serializationBackend),
             )
 
             task.scalarMappings.set(

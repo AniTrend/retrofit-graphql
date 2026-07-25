@@ -5,7 +5,6 @@ import co.anitrend.retrofit.graphql.data.api.provider.extensions.api
 import co.anitrend.retrofit.graphql.data.arch.database.extensions.db
 import co.anitrend.retrofit.graphql.data.arch.extensions.onlineController
 import co.anitrend.retrofit.graphql.data.user.converters.UserEntityConverter
-import co.anitrend.retrofit.graphql.data.user.converters.UserModelConverter
 import co.anitrend.retrofit.graphql.data.user.mapper.UserResponseMapper
 import co.anitrend.retrofit.graphql.data.user.repository.UserRepositoryContract
 import co.anitrend.retrofit.graphql.data.user.repository.UserRepositoryImpl
@@ -31,9 +30,6 @@ private val sourceModule = module {
 
 private val converterModule = module {
     factory {
-        UserModelConverter()
-    }
-    factory {
         UserEntityConverter()
     }
 }
@@ -41,8 +37,7 @@ private val converterModule = module {
 private val mapperModule = module {
     factory {
         UserResponseMapper(
-            localSource = db().userDao(),
-            converter = get()
+            localSource = db().userDao()
         )
     }
 }

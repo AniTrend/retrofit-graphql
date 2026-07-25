@@ -9,7 +9,10 @@ import co.anitrend.retrofit.graphql.data.user.koin.userModules
 import co.anitrend.retrofit.graphql.model.GraphQLDocumentRegistry
 import co.anitrend.retrofit.graphql.logger.contract.ILogger
 import co.anitrend.retrofit.graphql.sample.BuildConfig
+import co.anitrend.retrofit.graphql.sample.bucket.BucketGraphQLRegistry
 import co.anitrend.retrofit.graphql.sample.generated.GeneratedGraphQLRegistry
+import co.anitrend.retrofit.graphql.serialization.kotlinx.KotlinxGraphQLJson
+import kotlinx.serialization.json.Json
 import com.chuckerteam.chucker.api.ChuckerCollector
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.chuckerteam.chucker.api.RetentionManager
@@ -28,7 +31,10 @@ private val coreModule = module {
         )
     }
     single<GraphQLDocumentRegistry> {
-        GeneratedGraphQLRegistry
+        CompositeGraphQLRegistry(
+            GeneratedGraphQLRegistry,
+            BucketGraphQLRegistry,
+        )
     }
 }
 
@@ -39,6 +45,13 @@ private val networkModule = module {
         else
             ILogger.Level.ERROR
 
+        val graphQLJson = KotlinxGraphQLJson(
+            Json {
+                ignoreUnknownKeys = true
+                encodeDefaults = false
+            }
+        )
+
         Retrofit.Builder()
             .addConverterFactory(
                 RequestBodyPassThroughConverterFactory
@@ -46,6 +59,7 @@ private val networkModule = module {
             .addConverterFactory(
                 GraphConverter.create(
                     context = androidContext(),
+                    json = graphQLJson,
                     registry = get<GraphQLDocumentRegistry>(),
                     level = level,
                 )

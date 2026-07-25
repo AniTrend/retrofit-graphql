@@ -1,5 +1,6 @@
 plugins {
     id("co.anitrend.retrofit.graphql")
+    kotlin("plugin.serialization")
 }
 
 android {

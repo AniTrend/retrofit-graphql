@@ -1,0 +1,11 @@
+{
+  "data": {
+    "getCurrentUser": {
+      "id": "2",
+      "login": "alias-test",
+      "userId": "2",
+      "userName": "alias-test",
+      "userBio": "Alias bio"
+    }
+  }
+}

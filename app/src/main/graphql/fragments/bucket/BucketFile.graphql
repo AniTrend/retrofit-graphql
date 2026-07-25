@@ -1,4 +1,4 @@
-fragment BucketFile on File {
+fragment BucketFile on StorageBucketFile {
     contentType
     filename
     id

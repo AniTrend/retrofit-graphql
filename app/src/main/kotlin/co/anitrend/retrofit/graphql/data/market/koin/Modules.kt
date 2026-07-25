@@ -5,7 +5,6 @@ import co.anitrend.retrofit.graphql.data.api.provider.extensions.api
 import co.anitrend.retrofit.graphql.data.arch.database.extensions.db
 import co.anitrend.retrofit.graphql.data.arch.extensions.onlineController
 import co.anitrend.retrofit.graphql.data.market.converters.MarketPlaceEntityConverter
-import co.anitrend.retrofit.graphql.data.market.converters.MarketPlaceModelConverter
 import co.anitrend.retrofit.graphql.data.market.mapper.MarketPlaceResponseMapper
 import co.anitrend.retrofit.graphql.data.market.repository.MarketPlaceRepositoryContract
 import co.anitrend.retrofit.graphql.data.market.repository.MarketPlaceRepositoryImpl
@@ -30,9 +29,6 @@ private val sourceModule = module {
 
 private val converterModule = module {
     factory {
-        MarketPlaceModelConverter()
-    }
-    factory {
         MarketPlaceEntityConverter()
     }
 }
@@ -40,8 +36,7 @@ private val converterModule = module {
 private val mapperModule = module {
     factory {
         MarketPlaceResponseMapper(
-            localSource = db().appStoreDao(),
-            converter = get()
+            localSource = db().appStoreDao()
         )
     }
 }

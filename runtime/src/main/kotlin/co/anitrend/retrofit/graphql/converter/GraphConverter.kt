@@ -28,6 +28,8 @@ import co.anitrend.retrofit.graphql.logger.DefaultGraphLogger
 import co.anitrend.retrofit.graphql.logger.contract.ILogger
 import co.anitrend.retrofit.graphql.logger.core.AbstractLogger
 import co.anitrend.retrofit.graphql.model.GraphQLDocumentRegistry
+import co.anitrend.retrofit.graphql.model.GraphQLJson
+import co.anitrend.retrofit.graphql.serialization.gson.GsonGraphQLJson
 import co.anitrend.retrofit.graphql.util.LogLevel
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -41,14 +43,64 @@ import java.lang.reflect.Type
  * Body for GraphQL requests and responses, closed for modification
  * but open for extension.
  *
+ * ## Serialization Backend
+ *
+ * As of v0.13.x, [GraphConverter] uses a pluggable [GraphQLJson] instance
+ * instead of a hard dependency on Gson. The [json] property provides
+ * the serialization backend for both request and response conversion.
+ * Factory methods accept either a [GraphQLJson] instance directly or
+ * a [Gson] instance (preserved for backward compatibility, internally
+ * wrapped in [GsonGraphQLJson]).
+ *
+ * ## Factory Methods
+ *
+ * ### Context-backed (5 overloads: 4 Gson preserved + 1 GraphQLJson new)
+ *
+ * ```kotlin
+ * // Default Gson (backward compatible)
+ * GraphConverter.create(context)
+ * // Custom Gson (backward compatible)
+ * GraphConverter.create(context, gson)
+ * // Custom Gson + registry (backward compatible)
+ * GraphConverter.create(context, gson, registry)
+ * // Default Gson + registry (backward compatible)
+ * GraphConverter.create(context, registry)
+ * // NEW: Custom GraphQLJson + registry
+ * GraphConverter.create(context, json, registry)
+ * ```
+ *
+ * ### Registry-only, no Context (3 overloads: 2 Gson preserved + 1 GraphQLJson new)
+ *
+ * ```kotlin
+ * // Default Gson (backward compatible)
+ * GraphConverter.create(registry)
+ * // Custom Gson (backward compatible)
+ * GraphConverter.create(gson, registry)
+ * // NEW: Custom GraphQLJson
+ * GraphConverter.create(json, registry)
+ * ```
+ *
+ * ## Extending
+ *
+ * Subclass [GraphConverter] to customize request/response conversion:
+ * ```kotlin
+ * class CustomGraphConverter(
+ *     processor: AbstractGraphProcessor,
+ *     json: GraphQLJson,
+ * ) : GraphConverter(processor, json) {
+ *     override fun responseBodyConverter(...) = CustomResponseConverter(...)
+ * }
+ * ```
+ *
  * @param graphProcessor Processor used for asset-based lookup. Registry-only factory overloads
- * may provide a no-op implementation when no asset fallback is required.
- * @param gson Gson instance used for request and response serialization.
+ *   provide a no-op implementation when no asset fallback is required.
+ * @param json Pluggable [GraphQLJson] instance used for request and response serialization.
+ *   Replaces the v2.x `gson: Gson` parameter.
  * @param registry Optional [GraphQLDocumentRegistry] for build-time generated operation documents.
-*/
+ */
 open class GraphConverter(
     protected val graphProcessor: AbstractGraphProcessor,
-    protected val gson: Gson,
+    protected val json: GraphQLJson,
     protected val registry: GraphQLDocumentRegistry? = null,
 ) : Converter.Factory() {
     /**
@@ -68,7 +120,7 @@ open class GraphConverter(
     ): Converter<ResponseBody, *>? {
         return when (type) {
             is ResponseBody -> super.responseBodyConverter(type, annotations, retrofit)
-            else -> GraphResponseConverter<Any>(type, gson)
+            else -> GraphResponseConverter<Any>(type, json)
         }
     }
 
@@ -89,7 +141,7 @@ open class GraphConverter(
         methodAnnotations: Array<out Annotation>,
         retrofit: Retrofit,
     ): Converter<*, RequestBody>? {
-        return GraphRequestConverter(methodAnnotations, graphProcessor, gson, registry)
+        return GraphRequestConverter(methodAnnotations, graphProcessor, json, registry, type)
     }
 
     /**
@@ -138,6 +190,8 @@ open class GraphConverter(
                 .setLenient()
                 .create()
 
+        private fun defaultJson(): GraphQLJson = GsonGraphQLJson(defaultGson())
+
         private fun assetBackedProcessor(
             context: Context,
             level: ILogger.Level,
@@ -175,8 +229,12 @@ open class GraphConverter(
                 override fun patchQueries() = Unit
             }
 
+        // -------------------------------------------------------
+        // Factory methods with Context (asset-backed processor)
+        // -------------------------------------------------------
+
         /**
-         * Default creator that uses a predefined gson configuration
+         * Default creator that uses a predefined Gson configuration.
          *
          * @param context A valid application context
          * @param level Minimum log level
@@ -188,7 +246,7 @@ open class GraphConverter(
         ): GraphConverter =
             GraphConverter(
                 graphProcessor = assetBackedProcessor(context, level),
-                gson = defaultGson(),
+                json = defaultJson(),
             )
 
         /**
@@ -207,14 +265,12 @@ open class GraphConverter(
         ): GraphConverter =
             GraphConverter(
                 graphProcessor = assetBackedProcessor(context, level),
-                gson = gson,
+                json = GsonGraphQLJson(gson),
             )
 
         /**
-         * Creates a [GraphConverter] with a build-time generated [GraphQLDocumentRegistry].
-         *
-         * When a registry is provided, the converter will resolve operation documents
-         * from the registry before falling back to asset-based file discovery.
+         * Creates a [GraphConverter] with the default [GraphQLJson] and a build-time
+         * generated [GraphQLDocumentRegistry].
          *
          * @param context A valid application context
          * @param registry A build-time generated registry of GraphQL operations
@@ -228,7 +284,7 @@ open class GraphConverter(
         ): GraphConverter =
             GraphConverter(
                 graphProcessor = assetBackedProcessor(context, level),
-                gson = defaultGson(),
+                json = defaultJson(),
                 registry = registry,
             )
 
@@ -250,9 +306,35 @@ open class GraphConverter(
         ): GraphConverter =
             GraphConverter(
                 graphProcessor = assetBackedProcessor(context, level),
-                gson = gson,
+                json = GsonGraphQLJson(gson),
                 registry = registry,
             )
+
+        /**
+         * Creates a [GraphConverter] with a custom [GraphQLJson] instance and a build-time
+         * generated [GraphQLDocumentRegistry].
+         *
+         * @param context A valid application context
+         * @param json A [GraphQLJson] implementation for serialization
+         * @param registry A build-time generated registry of GraphQL operations
+         * @param level Minimum log level
+         */
+        @JvmOverloads
+        fun create(
+            context: Context,
+            json: GraphQLJson,
+            registry: GraphQLDocumentRegistry,
+            level: ILogger.Level = ILogger.Level.INFO,
+        ): GraphConverter =
+            GraphConverter(
+                graphProcessor = assetBackedProcessor(context, level),
+                json = json,
+                registry = registry,
+            )
+
+        // -------------------------------------------------------
+        // Factory methods without Context (registry-only processor)
+        // -------------------------------------------------------
 
         /**
          * Creates a [GraphConverter] that resolves operation documents from a
@@ -271,7 +353,7 @@ open class GraphConverter(
         ): GraphConverter =
             GraphConverter(
                 graphProcessor = registryOnlyProcessor(level),
-                gson = defaultGson(),
+                json = defaultJson(),
                 registry = registry,
             )
 
@@ -294,7 +376,30 @@ open class GraphConverter(
         ): GraphConverter =
             GraphConverter(
                 graphProcessor = registryOnlyProcessor(level),
-                gson = gson,
+                json = GsonGraphQLJson(gson),
+                registry = registry,
+            )
+
+        /**
+         * Creates a registry-first [GraphConverter] with a custom [GraphQLJson] instance
+         * and without requiring an Android [Context].
+         *
+         * If a requested [GraphQuery] operation is not registered, request conversion fails fast
+         * with [IllegalStateException] because no asset fallback is available in this mode.
+         *
+         * @param json A [GraphQLJson] implementation for serialization.
+         * @param registry A build-time generated registry of GraphQL operations.
+         * @param level Minimum log level.
+         */
+        @JvmOverloads
+        fun create(
+            json: GraphQLJson,
+            registry: GraphQLDocumentRegistry,
+            level: ILogger.Level = ILogger.Level.INFO,
+        ): GraphConverter =
+            GraphConverter(
+                graphProcessor = registryOnlyProcessor(level),
+                json = json,
                 registry = registry,
             )
     }

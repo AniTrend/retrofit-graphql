@@ -1,0 +1,52 @@
+{
+  "data": {
+    "marketplaceListings": {
+      "edges": [
+        {
+          "cursor": "Y3Vyc29yOjE=",
+          "node": {
+            "id": "MDEwOlJlcG9zaXRvcnk=",
+            "primaryCategory": {
+              "name": "Code quality"
+            },
+            "secondaryCategory": null,
+            "slug": "codeclimate",
+            "shortDescription": "Automated code review",
+            "isPaid": false,
+            "isVerified": true,
+            "logoBackgroundColor": "#1e272e",
+            "logoUrl": "https://avatars.githubusercontent.com/u/123",
+            "name": "Code Climate"
+          }
+        },
+        {
+          "cursor": "Y3Vyc29yOjI=",
+          "node": {
+            "id": "MDEwOlJlcG9zaXRvcnky",
+            "primaryCategory": {
+              "name": "Continuous integration"
+            },
+            "secondaryCategory": {
+              "name": "Utilities"
+            },
+            "slug": "travis-ci",
+            "shortDescription": "Test and deploy your code",
+            "isPaid": true,
+            "isVerified": true,
+            "logoBackgroundColor": "#000000",
+            "logoUrl": "https://avatars.githubusercontent.com/u/456",
+            "name": "Travis CI"
+          }
+        }
+      ],
+      "nodes": null,
+      "pageInfo": {
+        "endCursor": "Y3Vyc29yOjI=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "Y3Vyc29yOjE="
+      },
+      "totalCount": 42
+    }
+  }
+}

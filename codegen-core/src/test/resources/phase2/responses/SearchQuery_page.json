@@ -1,0 +1,10 @@
+{
+  "data": {
+    "search": {
+      "__typename": "Page",
+      "id": "3",
+      "title": "Test Page",
+      "url": "https://example.com"
+    }
+  }
+}

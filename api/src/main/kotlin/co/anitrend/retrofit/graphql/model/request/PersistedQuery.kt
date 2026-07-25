@@ -16,12 +16,15 @@
 
 package co.anitrend.retrofit.graphql.model.request
 
+import kotlinx.serialization.Serializable
+
 /**
  * Contents of a PersistedQuery extension inside a QueryContainer
  *
  * @see QueryContainerBuilder.putPersistedQueryHash
  * @see QueryContainerBuilder.putExtension
  */
+@Serializable
 data class PersistedQuery(
     val sha256Hash: String,
     val version: Int,

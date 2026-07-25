@@ -1,0 +1,16 @@
+{
+  "data": {
+    "viewer": {
+      "id": "MDQ6VXNlcjE=",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/1?v=4",
+      "bio": "Sample bio text",
+      "company": null,
+      "status": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "emoji": ":rocket:",
+        "message": "Building something awesome"
+      },
+      "login": "octocat"
+    }
+  }
+}

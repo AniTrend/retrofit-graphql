@@ -1,4 +1,22 @@
-# Migration Guide: From `:library` to Modular Dependencies
+# Migration Guide
+
+This guide covers migrating consumer projects from the deprecated `:library` aggregator to the new modular architecture, and from v2.x Gson-based workflows to v0.13.x GraphQLJson abstraction with kotlinx.serialization support.
+
+## Table of Contents
+
+- [Migration to Modular Dependencies](#migration-to-modular-dependencies) (v2.x)
+- [v0.13.x Serialization Contract Migration](#v013x-serialization-contract-migration)
+  - [Gson-to-GraphQLJson](#gson-to-graphqljson)
+  - [Constructor rename (binary breaking)](#constructor-rename-binary-breaking)
+  - [kotlinx parameterized type handling](#kotlinx-parameterized-type-handling)
+  - [@Serializable on API types](#serializable-on-api-types)
+  - [@Transient fields](#transient-fields)
+  - [APQ behavior (kotlinx)](#apq-behavior-kotlinx)
+  - [QueryContainerBuilder limitation (kotlinx)](#querycontainerbuilder-limitation-kotlinx)
+
+---
+
+# Migration to Modular Dependencies
 
 retrofit-graphql has been restructured from a monolithic `:library` module into a set of focused, composable modules. This guide covers migrating consumer projects from the deprecated `:library` aggregator to the new modular architecture.
 
@@ -156,7 +174,7 @@ val mixedFactory = GraphConverter.create(
 ```
 
 > **Note:** `GraphConverter.create(registry)` and `GraphConverter.create(gson, registry)` are the new codegen-first factories. Use `GraphConverter.create(context, registry)` when you still want asset-based fallback during a mixed migration.
-> **Note:** In registry-only mode, unresolved operations do not throw during conversion. The request is still built and the serialized GraphQL `query` remains `null`.
+> **Note:** In registry-only mode, if a `@GraphQuery`-annotated operation is missing from the registry, the converter throws `IllegalStateException`. Non-annotated operations (codegen-only consumers using `GraphQLRequest<T>`) proceed without a query lookup because the request already contains the document string.
 
 ### Multipart Uploads
 
@@ -338,8 +356,165 @@ GraphConverter.create(gson, registry = GeneratedGraphQLRegistry)
 
 If you subclass `GraphRequestConverter`, the `resolveQuery()` method is now `protected open` and checks the registry first before falling back to asset-based discovery. Override it to customize resolution.
 
+---
+
+# v0.13.x Serialization Contract Migration
+
+This section covers migrating from v2.x Gson-based `GraphConverter` construction to the v0.13.x `GraphQLJson` abstraction, and related serialization contract changes.
+
+### Gson-to-GraphQLJson
+
+The `GraphConverter` factory methods now accept a `GraphQLJson` instance instead of a `Gson` instance. The library ships two implementations:
+
+| Backend | Module | Class |
+|---------|--------|-------|
+| kotlinx.serialization | `:serialization-kotlinx` | `KotlinxGraphQLJson(Json)` |
+| Gson | `:serialization-gson` | `GsonGraphQLJson(Gson)` |
+
+**Before (v2.x -- deprecated Gson overloads):**
+
+```kotlin
+val converter = GraphConverter.create(
+    context = context,
+    gson = GsonBuilder().serializeNulls().create(),
+    registry = GeneratedGraphQLRegistry,
+)
+```
+
+**After (v0.13.x -- new GraphQLJson overload):**
+
+```kotlin
+// kotlinx.serialization path (recommended for response DTOs)
+val json = KotlinxGraphQLJson(
+    Json { ignoreUnknownKeys = true; encodeDefaults = false }
+)
+val converter = GraphConverter.create(
+    context = context,
+    json = json,
+    registry = GeneratedGraphQLRegistry,
+)
+
+// Gson path (for request-only or upload consumers)
+val json = GsonGraphQLJson(GsonBuilder().serializeNulls().create())
+val converter = GraphConverter.create(
+    context = context,
+    json = json,
+    registry = GeneratedGraphQLRegistry,
+)
+```
+
+**Gson overloads preserved**: The 6 existing `GraphConverter.create(context, gson, ...)` and `GraphConverter.create(gson, registry, ...)` overloads are **preserved** for backward compatibility. They internally wrap the `Gson` instance in `GsonGraphQLJson`. No migration is required if you continue using the Gson-backed overloads.
+
+### Constructor rename (binary breaking)
+
+**For subclassers only**: The `GraphConverter` primary constructor parameter was renamed:
+
+- v2.x: `protected val gson: Gson`
+- v0.13.x: `protected val json: GraphQLJson`
+
+This is a **binary-compatibility** breaking change. Source-compatible code that uses `GraphConverter` factory methods (`create(...)`) is unaffected. Only direct constructor calls or subclasses that reference the `gson` parameter need updating:
+
+```kotlin
+// v2.x (broken in v0.13.x)
+class CustomConverter(processor: AbstractGraphProcessor, gson: Gson) :
+    GraphConverter(processor, gson)  // error: cannot find 'gson'
+
+// v0.13.x (fix)
+class CustomConverter(processor: AbstractGraphProcessor, json: GraphQLJson) :
+    GraphConverter(processor, json)
+```
+
+### kotlinx parameterized type handling
+
+`KotlinxGraphQLJson.decode()` now handles `java.lang.reflect.ParameterizedType` (e.g., `GraphContainer<GetCurrentUserData>`). Previously, kotlinx could not resolve serializers for parameterized types handed to it by Retrofit's converter infrastructure.
+
+**How it works**: Retrofit passes the full parameterized `Type` to `GraphResponseConverter`, which forwards it to `GraphQLJson.decode(json, type)`. `KotlinxGraphQLJson` uses `kotlinx.serialization.serializer(type)` (the JVM reflection extension) to resolve the correct `KSerializer<GraphContainer<GetCurrentUserData>>`.
+
+**Consumer impact**: None for consumers using generated response DTOs. The fix is internal. If you implemented a custom `GraphQLJson` backend, ensure your `decode(json, type)` implementation handles parameterized types.
+
+### @Serializable on API types
+
+For v0.13.x, the public `:api` models are intentionally kotlinx-enabled. Modular consumers must keep `org.jetbrains.kotlinx:kotlinx-serialization-core` on the runtime classpath, even when they choose the Gson backend. The `:api` module declares that dependency internally with `implementation`, so declare it in applications that depend on `:api` directly rather than relying on it as a transitive API dependency.
+
+```kotlin
+dependencies {
+    implementation("com.github.AniTrend.retrofit-graphql:api:{tag}")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+}
+```
+
+The following API types are now annotated with `@Serializable` for kotlinx.serialization compatibility:
+
+| Type | Annotations | Notes |
+|------|------------|-------|
+| `GraphContainer<T>` | `@Serializable` | `extensions` field is `@Transient` |
+| `GraphQLRequest<TVariables>` | `@Serializable` | `extensions` field is `@Transient` |
+| `GraphError` | `@Serializable` | `path` and `extensions` fields are `@Transient` |
+| `GraphError.Location` | `@Serializable` | Nested `Location` type within `GraphError` |
+| `EmptyGraphQLVariables` | `@Serializable` | Object type, no fields |
+
+These annotations enable kotlinx.serialization to serialize/deserialize these types directly, which is needed when Retrofit passes `GraphContainer<GeneratedData>` as a response type.
+
+### @Transient fields
+
+Several fields are marked `@Transient` because their types cannot be resolved by the kotlinx.serialization compiler plugin (`Map<Any, Any>`, `List<Any>`, `Map<String, Any?>`):
+
+| Field | Type | Gson | kotlinx |
+|-------|------|------|---------|
+| `GraphContainer.extensions` | `Map<Any, Any>?` | Serialized | `@Transient` (excluded) |
+| `GraphQLRequest.extensions` | `Map<String, Any?>` | Serialized | `@Transient` (excluded) |
+| `GraphError.path` | `List<Any>?` | Serialized | `@Transient` (excluded) |
+| `GraphError.extensions` | `Map<String, Any?>?` | Serialized | `@Transient` (excluded) |
+
+These fields remain excluded from kotlinx deserialization. If your application depends on them being serialized or read back exactly, use the Gson-backed `GsonGraphQLJson` or the preserved Gson factory overloads.
+
+If you only need JSON-tree access to the transient fields, define an alternative transport wrapper with concrete kotlinx-compatible types instead of adding a generic custom serializer to `GraphContainer<T>` or `GraphQLRequest<TVariables>`:
+
+```kotlin
+@Serializable
+data class JsonGraphContainer<T>(
+    val data: T? = null,
+    val errors: List<JsonGraphError>? = null,
+    val extensions: JsonObject? = null,
+)
+
+@Serializable
+data class JsonGraphError(
+    val message: String? = null,
+    val path: List<JsonElement>? = null,
+    val locations: List<GraphError.Location>? = null,
+    val extensions: JsonObject? = null,
+)
+
+@POST("graphql")
+suspend fun getCurrentUser(
+    @Body request: GraphQLRequest<EmptyGraphQLVariables>,
+): Response<JsonGraphContainer<GetCurrentUserData>>
+```
+
+No custom serializer is required unless the actual wire structure needs transformation before or after normal serialization.
+
+### APQ behavior (kotlinx)
+
+`GraphQLRequest.withPersistedQuery()` still works on the typed kotlinx request path. `GraphQLRequest.extensions` remains `@Transient` on the data class, but `KotlinxGraphQLJson.encode()` merges supported extension values, including `PersistedQuery`, into the outgoing JSON.
+
+- **Gson path**: `withPersistedQuery()` works as before -- the `extensions` map is serialized reflectively
+- **kotlinx path**: `withPersistedQuery()` works for `GraphQLRequest<TVariables>` requests encoded through `KotlinxGraphQLJson`
+
+If you depend on arbitrary extension payload shapes beyond primitives, lists, maps, `JsonElement`, or `@Serializable` values, prefer the Gson-backed path or provide a custom serializer.
+
+### QueryContainerBuilder behavior (kotlinx)
+
+The legacy `QueryContainerBuilder` flow stays on a Gson-backed serializer internally because `QueryContainer` is not `@Serializable` (it uses mutable properties, manual builders, and untyped maps). When using kotlinx as the serialization backend:
+
+- Use `GraphQLRequest<TVariables>` and the generated `.request(...)` factory methods for the primary request path
+- Existing `QueryContainerBuilder` endpoints continue to work, but they are encoded through Gson for backward compatibility
+
+---
+
 ## Further Reading
 
 - [Sample app migration](app/) — complete `:app` module migration on this branch
 - [Wiki: Migration Guide](https://github.com/AniTrend/retrofit-graphql/wiki/Migration-Guide) — wiki version of this guide
 - [Wiki: Home](https://github.com/AniTrend/retrofit-graphql/wiki) — usage examples and advanced topics
+- [Release artifact documentation](docs/wiki/) — wiki pages for serialization backends, R8, and naming

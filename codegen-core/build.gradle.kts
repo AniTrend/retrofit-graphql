@@ -16,6 +16,8 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.jetbrains.kotlinx.serialization.json)
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.4.10")
+    testImplementation(libs.gson)
+    testImplementation(libs.jetbrains.kotlin.reflect)
+    testImplementation(libs.jetbrains.kotlin.compiler.embeddable)
 }
 

@@ -16,11 +16,15 @@
 
 package co.anitrend.retrofit.graphql.codegen.generate
 
+import co.anitrend.retrofit.graphql.codegen.config.SerializationBackend
 import co.anitrend.retrofit.graphql.codegen.mapping.GraphQLTypeMapper
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLVariableInfo
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
+import co.anitrend.retrofit.graphql.codegen.naming.GeneratedName
+import co.anitrend.retrofit.graphql.codegen.naming.GraphNameAllocator
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -32,41 +36,63 @@ import com.squareup.kotlinpoet.TypeSpec
 /**
  * Generates Kotlin data classes for operation variables.
  *
+ * Backend-dependent annotations:
+ * - [SerializationBackend.KOTLINX]: `@Serializable` on class, `@SerialName(wireName)` on every property.
+ * - [SerializationBackend.GSON]: `@SerializedName(wireName)` on every property.
+ * - [SerializationBackend.NONE]: No serialization annotations.
+ *
  * Example output:
  * ```kotlin
+ * @Serializable
  * public data class GetMarketPlaceAppsVariables(
- *     public val after: String? = null,
- *     public val before: String? = null,
- *     public val first: Int,
+ *     @SerialName("after") public val after: String? = null,
+ *     @SerialName("before") public val before: String? = null,
+ *     @SerialName("first") public val first: Int,
  * ) : GraphQLVariables
  * ```
  */
 object VariableClassGenerator {
     private val VARIABLES_INTERFACE = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLVariables")
+    private val SERIALIZABLE = ClassName("kotlinx.serialization", "Serializable")
+    private val SERIAL_NAME = ClassName("kotlinx.serialization", "SerialName")
+    private val SERIALIZED_NAME = ClassName("com.google.gson.annotations", "SerializedName")
 
     /**
      * Generates a variable class for a single operation that has variables.
      * Returns null if the operation has no variables.
+     *
+     * @param backend The serialization backend to use for annotation emission.
      */
     fun generate(
         operation: GraphQLOperationInfo,
         packageName: String,
         scalarMappings: Map<String, String>,
         schemaIndex: SchemaIndex,
+        backend: SerializationBackend = SerializationBackend.NONE,
     ): FileSpec? {
         if (operation.variables.isEmpty()) return null
 
         val className = "${operation.name}Variables"
+        val allocator = GraphNameAllocator()
+
+        // Pre-allocate all variable names to avoid double-allocation
+        val allocatedNames = operation.variables.associate { variable ->
+            variable.name to allocator.allocatePropertyName(variable.name)
+        }
 
         val typeSpec =
             TypeSpec.classBuilder(className)
                 .addModifiers(KModifier.PUBLIC, KModifier.DATA)
                 .addSuperinterface(VARIABLES_INTERFACE)
                 .apply {
+                    if (backend == SerializationBackend.KOTLINX) {
+                        addAnnotation(SERIALIZABLE)
+                    }
                     // Constructor parameters
                     val constructorParams =
                         operation.variables.map { variable ->
-                            buildConstructorParam(variable, packageName, scalarMappings, schemaIndex)
+                            val allocated = allocatedNames[variable.name]!!
+                            buildConstructorParam(variable, allocated, packageName, scalarMappings, schemaIndex)
                         }
                     primaryConstructor(
                         com.squareup.kotlinpoet.FunSpec.constructorBuilder()
@@ -75,15 +101,30 @@ object VariableClassGenerator {
                     )
                     // Properties
                     operation.variables.forEach { variable ->
-                        addProperty(
+                        val allocated = allocatedNames[variable.name]!!
+                        val propBuilder =
                             PropertySpec.builder(
-                                variable.name,
+                                allocated.kotlinName,
                                 parseKotlinTypeString(variable.type, packageName, scalarMappings, schemaIndex),
                             )
-                                .initializer(variable.name)
+                                .initializer(allocated.kotlinName)
                                 .addModifiers(KModifier.PUBLIC)
-                                .build(),
-                        )
+                        when (backend) {
+                            SerializationBackend.KOTLINX ->
+                                propBuilder.addAnnotation(
+                                    AnnotationSpec.builder(SERIAL_NAME)
+                                        .addMember("%S", allocated.wireName)
+                                        .build(),
+                                )
+                            SerializationBackend.GSON ->
+                                propBuilder.addAnnotation(
+                                    AnnotationSpec.builder(SERIALIZED_NAME)
+                                        .addMember("%S", allocated.wireName)
+                                        .build(),
+                                )
+                            else -> {}
+                        }
+                        addProperty(propBuilder.build())
                     }
                 }
                 .build()
@@ -95,12 +136,13 @@ object VariableClassGenerator {
 
     private fun buildConstructorParam(
         variable: GraphQLVariableInfo,
+        allocated: GeneratedName,
         packageName: String,
         scalarMappings: Map<String, String>,
         schemaIndex: SchemaIndex,
     ): ParameterSpec {
         val kotlinType = parseKotlinTypeString(variable.type, packageName, scalarMappings, schemaIndex)
-        val paramBuilder = ParameterSpec.builder(variable.name, kotlinType)
+        val paramBuilder = ParameterSpec.builder(allocated.kotlinName, kotlinType)
 
         // Apply default value if present, or provide implicit null for nullable params
         if (variable.defaultValue != null) {

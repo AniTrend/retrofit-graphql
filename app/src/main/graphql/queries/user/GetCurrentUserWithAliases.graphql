@@ -1,0 +1,14 @@
+query GetCurrentUserWithAliases {
+    viewer {
+        userId: id
+        userLogin: login
+        userBio: bio
+        userAvatar: avatarUrl
+        userCompany: company
+        status {
+            statusEmoji: emoji
+            statusMessage: message
+            statusCreatedAt: createdAt
+        }
+    }
+}
