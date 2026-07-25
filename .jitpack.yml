@@ -1,5 +1,4 @@
 jdk:
   - openjdk21
 install:
-  - CI=true ./gradlew build publishToMavenLocal
-  - CI=true ./gradlew -p gradle-plugin publishToMavenLocal
+  - CI=true ./gradlew --no-daemon build publishToMavenLocal && CI=true ./gradlew --no-daemon -p gradle-plugin publishToMavenLocal
