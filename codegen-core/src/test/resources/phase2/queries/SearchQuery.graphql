@@ -1,0 +1,15 @@
+query SearchQuery {
+  search(query: "test") {
+    __typename
+    ... on Page {
+      id
+      title
+      url
+    }
+    ... on TextMessage {
+      id
+      body
+      sender
+    }
+  }
+}

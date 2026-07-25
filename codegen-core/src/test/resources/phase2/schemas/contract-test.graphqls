@@ -1,0 +1,131 @@
+"""
+Comprehensive schema for serialization contract tests (Phase 2).
+Exercises keywords, aliases, collisions, enums, interfaces, unions,
+nullable containers, custom scalars, and nested input objects.
+"""
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+"""Root query type."""
+type Query {
+  """Returns the current user profile."""
+  getCurrentUser: User!
+  """Search across multiple result types."""
+  search(query: String!): SearchResult!
+}
+
+"""Root mutation type."""
+type Mutation {
+  """Update a user profile."""
+  updateUser(input: UserInput!): User!
+}
+
+# --- Response types ---
+
+"""A user profile with keyword-named fields."""
+type User {
+  id: ID!
+  login: String!
+  name: String
+  bio: String
+  """Keyword: 'private' is a Kotlin keyword."""
+  private: Boolean
+  """Keyword: 'object' is a Kotlin keyword."""
+  object: String
+  """Keyword: 'when' is a Kotlin keyword."""
+  when: Int
+  """Soft keyword: 'is' -- 'isActive' should NOT be escaped."""
+  isActive: Boolean
+  email: String
+  """Nullable list container."""
+  friends: [User]
+  """Nullable list elements."""
+  items: [String]
+  """Non-null list with nullable elements."""
+  roles: [String]!
+  createdAt: DateTime
+  """Capitalized field name."""
+  Name: String
+  """Enum field in response type."""
+  status: Status
+  """Collision test: myField."""
+  myField: String
+  """Collision test: my_field (normalises to same Kotlin name)."""
+  my_field: String
+}
+
+"""Base entity interface."""
+interface Node {
+  id: ID!
+}
+
+"""A page result with a title."""
+type Page implements Node {
+  id: ID!
+  title: String
+  url: String
+}
+
+"""A text message result."""
+type TextMessage implements Node {
+  id: ID!
+  body: String
+  sender: String
+}
+
+"""Union of search results."""
+union SearchResult = Page | TextMessage
+
+# --- Enums ---
+
+"""User account status."""
+enum Status {
+  OPEN
+  CLOSED
+  PENDING
+  IN_PROGRESS
+  private
+  object
+}
+
+"""Sort direction with lowercase values."""
+enum SortOrder {
+  asc
+  desc
+}
+
+"""Enum with mixed case values."""
+enum MediaType {
+  ANIME
+  MANGA
+  lightNovel
+}
+
+# --- Input types ---
+
+"""Input for updating a user profile."""
+input UserInput {
+  name: String!
+  bio: String
+  private: Boolean
+  object: String
+  email: String
+  status: Status
+  tags: [String]
+  sortOrder: SortOrder
+  nested: NestedInput
+}
+
+"""Nested input object with keyword fields."""
+input NestedInput {
+  when: String
+  is: Boolean
+  values: [Int]
+}
+
+# --- Custom scalars ---
+
+"""ISO-8601 date-time string."""
+scalar DateTime

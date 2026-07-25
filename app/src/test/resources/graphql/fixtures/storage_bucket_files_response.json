@@ -1,0 +1,18 @@
+{
+  "data": {
+    "files": [
+      {
+        "contentType": "image/webp",
+        "filename": "photo.webp",
+        "id": "file-001",
+        "url": "https://storage.example.com/files/photo.webp"
+      },
+      {
+        "contentType": "application/pdf",
+        "filename": "document.pdf",
+        "id": "file-002",
+        "url": "https://storage.example.com/files/document.pdf"
+      }
+    ]
+  }
+}

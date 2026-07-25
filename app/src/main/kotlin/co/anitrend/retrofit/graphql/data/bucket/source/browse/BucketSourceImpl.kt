@@ -10,7 +10,7 @@ import co.anitrend.retrofit.graphql.data.bucket.source.browse.contract.BucketSou
 import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
 import co.anitrend.retrofit.graphql.model.EmptyGraphQLVariables
 import co.anitrend.retrofit.graphql.model.GraphQLRequest
-import co.anitrend.retrofit.graphql.sample.generated.StorageBucketFiles
+import co.anitrend.retrofit.graphql.sample.bucket.StorageBucketFiles
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow

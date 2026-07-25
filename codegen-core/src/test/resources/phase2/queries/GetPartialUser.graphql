@@ -1,0 +1,6 @@
+query GetPartialUser {
+  getCurrentUser {
+    id
+    login
+  }
+}

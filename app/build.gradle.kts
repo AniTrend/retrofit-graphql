@@ -20,6 +20,13 @@ android {
     buildFeatures {
         buildConfig = true
     }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+        }
+    }
+    testBuildType = "release"
     lint {
         abortOnError = false
         baseline = file("lint-baseline.xml")
@@ -29,6 +36,7 @@ android {
 dependencies {
     implementation(project(":runtime"))
     implementation(project(":api"))
+    implementation(project(":serialization-kotlinx"))
 
     implementation(libs.jetbrains.kotlinx.serialization.json)
 
@@ -93,17 +101,27 @@ dependencies {
 
     releaseImplementation(libs.chuncker.release)
     debugImplementation(libs.chuncker.debug)
+
+    testImplementation(libs.jetbrains.kotlinx.coroutines.test)
+
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:core:1.6.1")
+    androidTestImplementation(libs.jetbrains.kotlinx.serialization.json)
+    androidTestImplementation(libs.jetbrains.kotlinx.coroutines.test)
 }
 
 retrofitGraphQL {
     common {
         generateVariables.set(true)
         generateResponses.set(true)
+        serializationBackend.set("KOTLINX")
     }
     packageName.set("co.anitrend.retrofit.graphql.sample.generated")
     schema.set(file("src/main/graphql/schema.graphql"))
     operations.from(fileTree("src/main/graphql") {
         include("**/*.graphql")
+        exclude("**/bucket/**")
     })
     scalars {
         map("DateTime", "kotlin.String")

@@ -1,0 +1,19 @@
+query GetCurrentUser {
+  getCurrentUser {
+    id
+    login
+    name
+    bio
+    private
+    object
+    when
+    isActive
+    email
+    friends {
+      id
+      login
+    }
+    items
+    roles
+  }
+}

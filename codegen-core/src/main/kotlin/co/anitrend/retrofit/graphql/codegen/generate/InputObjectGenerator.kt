@@ -16,10 +16,13 @@
 
 package co.anitrend.retrofit.graphql.codegen.generate
 
+import co.anitrend.retrofit.graphql.codegen.config.SerializationBackend
 import co.anitrend.retrofit.graphql.codegen.mapping.GraphQLTypeMapper
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import co.anitrend.retrofit.graphql.codegen.model.SchemaType
+import co.anitrend.retrofit.graphql.codegen.naming.GraphNameAllocator
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -31,28 +34,40 @@ import com.squareup.kotlinpoet.TypeSpec
 /**
  * Generates Kotlin data classes for schema input object types.
  *
+ * Backend-dependent annotations:
+ * - [SerializationBackend.KOTLINX]: `@Serializable` on class, `@SerialName(wireName)` on every field.
+ * - [SerializationBackend.GSON]: `@SerializedName(wireName)` on every field.
+ * - [SerializationBackend.NONE]: No serialization annotations.
+ *
  * Example output:
  * ```kotlin
+ * @Serializable
  * public data class MediaSort(
- *     public val sort: MediaSortEnum? = null,
- *     public val order: SortOrder? = null,
+ *     @SerialName("sort") public val sort: MediaSortEnum? = null,
+ *     @SerialName("order") public val order: SortOrder? = null,
  * ) : GraphQLVariables
  * ```
  */
 object InputObjectGenerator {
     private val VARIABLES_INTERFACE = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLVariables")
+    private val SERIALIZABLE = ClassName("kotlinx.serialization", "Serializable")
+    private val SERIAL_NAME = ClassName("kotlinx.serialization", "SerialName")
+    private val SERIALIZED_NAME = ClassName("com.google.gson.annotations", "SerializedName")
 
     /**
      * Generates a data class for each input object type in the schema.
+     *
+     * @param backend The serialization backend to use for annotation emission.
      */
     fun generate(
         inputObjects: List<SchemaType.InputObject>,
         packageName: String,
         scalarMappings: Map<String, String>,
         schemaIndex: SchemaIndex,
+        backend: SerializationBackend = SerializationBackend.NONE,
     ): List<FileSpec> {
         return inputObjects.map { inputObject ->
-            generateSingle(inputObject, packageName, scalarMappings, schemaIndex)
+            generateSingle(inputObject, packageName, scalarMappings, schemaIndex, backend)
         }
     }
 
@@ -61,16 +76,28 @@ object InputObjectGenerator {
         packageName: String,
         scalarMappings: Map<String, String>,
         schemaIndex: SchemaIndex,
+        backend: SerializationBackend,
     ): FileSpec {
+        val allocator = GraphNameAllocator()
+
+        // Pre-allocate all field names to avoid double-allocation
+        val allocatedNames = inputObject.fields.associate { field ->
+            field.name to allocator.allocatePropertyName(field.name)
+        }
+
         val typeSpec =
             TypeSpec.classBuilder(inputObject.name)
                 .addModifiers(KModifier.PUBLIC, KModifier.DATA)
                 .addSuperinterface(VARIABLES_INTERFACE)
                 .apply {
+                    if (backend == SerializationBackend.KOTLINX) {
+                        addAnnotation(SERIALIZABLE)
+                    }
                     val params =
                         inputObject.fields.map { field ->
+                            val allocated = allocatedNames[field.name]!!
                             val kotlinType = parseKotlinTypeString(field.type, packageName, scalarMappings, schemaIndex)
-                            val paramBuilder = ParameterSpec.builder(field.name, kotlinType)
+                            val paramBuilder = ParameterSpec.builder(allocated.kotlinName, kotlinType)
                             if (field.defaultValue != null) {
                                 paramBuilder.defaultValue(
                                     GraphQLDefaultValueRenderer.render(
@@ -92,15 +119,30 @@ object InputObjectGenerator {
                     )
                     // Properties
                     inputObject.fields.forEach { field ->
-                        addProperty(
+                        val allocated = allocatedNames[field.name]!!
+                        val propBuilder =
                             PropertySpec.builder(
-                                field.name,
+                                allocated.kotlinName,
                                 parseKotlinTypeString(field.type, packageName, scalarMappings, schemaIndex),
                             )
-                                .initializer(field.name)
+                                .initializer(allocated.kotlinName)
                                 .addModifiers(KModifier.PUBLIC)
-                                .build(),
-                        )
+                        when (backend) {
+                            SerializationBackend.KOTLINX ->
+                                propBuilder.addAnnotation(
+                                    AnnotationSpec.builder(SERIAL_NAME)
+                                        .addMember("%S", allocated.wireName)
+                                        .build(),
+                                )
+                            SerializationBackend.GSON ->
+                                propBuilder.addAnnotation(
+                                    AnnotationSpec.builder(SERIALIZED_NAME)
+                                        .addMember("%S", allocated.wireName)
+                                        .build(),
+                                )
+                            else -> {}
+                        }
+                        addProperty(propBuilder.build())
                     }
                 }
                 .build()

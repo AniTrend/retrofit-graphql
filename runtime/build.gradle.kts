@@ -13,4 +13,6 @@ dependencies {
     api(project(":android-assets"))
     // @GraphQuery only read via reflection internally, never leaked
     implementation(project(":annotations"))
+    // Gson-backed default for backward-compatible factory methods
+    implementation(project(":serialization-gson"))
 }

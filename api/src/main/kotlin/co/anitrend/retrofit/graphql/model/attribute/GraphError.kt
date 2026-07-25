@@ -16,31 +16,54 @@
 
 package co.anitrend.retrofit.graphql.model.attribute
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+
 /**
- * GraphQL error representation that is spec complaint
+ * GraphQL error representation that is spec compliant.
+ *
+ * Annotated with [kotlinx.serialization.Serializable] to enable
+ * deserialization as part of [GraphContainer.errors] when using kotlinx.
+ *
+ * ## Serialization Behavior
+ *
+ * ### kotlinx.serialization
+ * - [message] and [locations] are deserialized normally
+ * - [path] is `@Transient` (excluded) because `List<Any>` cannot be
+ *   statically resolved by the kotlinx compiler plugin
+ * - [extensions] is `@Transient` (excluded) because `Map<String, Any?>`
+ *   cannot be statically resolved by the kotlinx compiler plugin
+ *
+ * ### Gson (via GsonGraphQLJson)
+ * - All fields are serialized/deserialized normally, including [path]
+ *   and [extensions]
  *
  * @param message Description of the error.
- * @param path Path of the the response field that encountered the error, as segments that
- * represent fields should be strings, and path segments that represent list indices
- * should be 0‐indexed integers. If the error happens in an aliased field, the path to the
- * error should use the aliased name, since it represents a path in the response, not in the query.
- * @param locations List of locations within the GraphQL document at which the exception occurred.
+ * @param path Path of the response field that encountered the error.
+ *   Gson-only; `@Transient` for kotlinx.
+ * @param locations List of locations within the GraphQL document at which the error occurred.
  * @param extensions Additional information about the error.
+ *   Gson-only; `@Transient` for kotlinx.
  *
  * @see [GraphQL Error Specification](http://spec.graphql.org/June2018/#sec-Errors)
+ * @see GraphContainer
  */
+@Serializable
 data class GraphError(
-    val message: String?,
+    val message: String? = null,
+    @Transient
     val path: List<Any>? = null,
     val locations: List<Location>? = null,
+    @Transient
     val extensions: Map<String, Any?>? = null,
 ) {
     /**
      * Location describing which part of GraphQL document caused an exception.
      */
+    @Serializable
     data class Location(
-        val line: Int,
-        val column: Int,
+        val line: Int = 0,
+        val column: Int = 0,
     )
 
     override fun toString(): String {

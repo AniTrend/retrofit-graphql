@@ -16,14 +16,15 @@
 
 package co.anitrend.retrofit.graphql.codegen
 
+import co.anitrend.retrofit.graphql.codegen.config.SerializationBackend
 import co.anitrend.retrofit.graphql.codegen.generate.DocumentGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.EnumGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.HashConstantsGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.InputObjectGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.OperationConstantsGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.OperationRequestGenerator
-import co.anitrend.retrofit.graphql.codegen.generate.ResponseModelGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.RegistryGenerator
+import co.anitrend.retrofit.graphql.codegen.generate.ResponseModelGenerator
 import co.anitrend.retrofit.graphql.codegen.generate.VariableClassGenerator
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLFragmentInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
@@ -45,11 +46,14 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
@@ -63,14 +67,21 @@ import java.io.File
  * - Input object classes from schema
  * - Enum classes from schema
  * - Per-operation request helper objects
+ *
+ * Task is cacheable: output depends solely on declared inputs. Input files
+ * are sorted before processing to ensure deterministic name allocation and
+ * byte-identical output across environments.
  */
+@CacheableTask
 abstract class GenerateGraphQLSourcesTask : DefaultTask() {
     @get:Input
     abstract val packageName: Property<String>
 
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
     abstract val operationsDir: ConfigurableFileCollection
 
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     @get:InputFile
     abstract val schemaFile: RegularFileProperty
@@ -94,6 +105,9 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
     abstract val generateResponses: Property<Boolean>
 
     @get:Input
+    abstract val serializationBackend: Property<String>
+
+    @get:Input
     abstract val scalarMappings: MapProperty<String, String>
 
     @TaskAction
@@ -102,7 +116,13 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         val resolver = FragmentResolver()
         val propagator = FragmentVariablePropagator()
 
-        val graphqlFiles = operationsDir.files.filter { it.extension == "graphql" }
+        // Sort by canonical path for deterministic processing order across
+        // environments and filesystems. This is critical because GraphNameAllocator
+        // (backed by KotlinPoet NameAllocator) is order-dependent: the first
+        // encountered name wins, and collision suffixes vary by encounter order.
+        val graphqlFiles = operationsDir.files
+            .filter { it.extension == "graphql" }
+            .sortedBy { it.canonicalPath }
 
         if (graphqlFiles.isEmpty()) {
             logger.info("No .graphql files found in ${operationsDir.asPath}")
@@ -208,6 +228,9 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         val pkg = packageName.get()
         val outputDirectory = outputDir.get().asFile
 
+        // Resolve and validate serialization backend
+        val backend = resolveBackend()
+
         // Clean stale output before generation
         outputDirectory.deleteRecursively()
         outputDirectory.mkdirs()
@@ -247,6 +270,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                 scalarMap,
                 pkg,
                 outputDirectory,
+                backend,
             )
         }
 
@@ -265,6 +289,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                     scalarMap,
                     pkg,
                     outputDirectory,
+                    backend,
                 )
             }
         }
@@ -275,12 +300,52 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         )
     }
 
+    /**
+     * Resolves the effective [SerializationBackend] from the Gradle property,
+     * applying compatibility validation and backward-compatible auto-selection.
+     *
+     * - If [generateResponses] is `true` and the configured backend is [SerializationBackend.NONE],
+     *   auto-selects [SerializationBackend.KOTLINX] with a warning (backward compatibility).
+     * - If [generateResponses] is `true` and the configured backend is [SerializationBackend.GSON],
+     *   throws a [GradleException] because Gson does not support polymorphic response models.
+     * - Otherwise returns the configured backend.
+     */
+    private fun resolveBackend(): SerializationBackend {
+        val configured = serializationBackend.get()
+        val backend = try {
+            SerializationBackend.valueOf(configured)
+        } catch (_: IllegalArgumentException) {
+            throw GradleException(
+                "Invalid serialization backend '$configured'. " +
+                    "Valid values: ${SerializationBackend.entries.joinToString(", ") { it.name }}",
+            )
+        }
+        if (generateResponses.get() && backend == SerializationBackend.NONE) {
+            logger.warn(
+                "generateResponses is enabled but serializationBackend is NONE. " +
+                    "Auto-selecting KOTLINX for backward compatibility. " +
+                    "Explicitly set serializationBackend = KOTLINX to silence this warning.",
+            )
+            return SerializationBackend.KOTLINX
+        }
+        if (generateResponses.get() && backend == SerializationBackend.GSON) {
+            throw GradleException(
+                "generateResponses requires KOTLINX serialization backend. " +
+                    "GSON does not support polymorphic deserialization of response models. " +
+                    "Set serializationBackend = KOTLINX or use GSON only for variables/inputs/enums " +
+                    "by setting generateResponses = false.",
+            )
+        }
+        return backend
+    }
+
     private fun generateVariableArtifacts(
         operations: List<GraphQLOperationInfo>,
         schemaIndex: SchemaIndex,
         scalarMap: Map<String, String>,
         pkg: String,
         outputDirectory: File,
+        backend: SerializationBackend,
     ) {
         // Validate unknown scalars in variables
         GraphQLTypeUsageValidator.validate(operations, schemaIndex, scalarMap)
@@ -293,6 +358,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                     pkg,
                     scalarMap,
                     schemaIndex,
+                    backend,
                 )
             if (varFile != null) {
                 writeFile(varFile, outputDirectory)
@@ -303,13 +369,13 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         // Generate input object classes from schema
         val inputObjects = schemaIndex.inputObjects
         if (inputObjects.isNotEmpty()) {
-            InputObjectGenerator.generate(inputObjects, pkg, scalarMap, schemaIndex)
+            InputObjectGenerator.generate(inputObjects, pkg, scalarMap, schemaIndex, backend)
                 .forEach { writeFile(it, outputDirectory) }
             logger.info("Generated ${inputObjects.size} input object class(es)")
         }
 
         // Generate enum classes from schema
-        generateEnumArtifacts(schemaIndex, pkg, outputDirectory, "variables")
+        generateEnumArtifacts(schemaIndex, pkg, outputDirectory, "variables", backend)
 
         // Generate per-operation request helpers
         operations.forEach { operation ->
@@ -331,12 +397,13 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         scalarMap: Map<String, String>,
         pkg: String,
         outputDirectory: File,
+        backend: SerializationBackend,
     ) {
         val selectionParser = ResponseSelectionParser(schemaIndex)
-        val modelGenerator = ResponseModelGenerator(schemaIndex, scalarMap)
+        val modelGenerator = ResponseModelGenerator(schemaIndex, scalarMap, backend)
 
         // Generate enum classes needed by response types (even if generateVariables is off)
-        generateEnumArtifacts(schemaIndex, pkg, outputDirectory, "responses")
+        generateEnumArtifacts(schemaIndex, pkg, outputDirectory, "responses", backend)
 
         operations.forEach { operation ->
             val selectionSet = selectionParser.parse(operation)
@@ -361,10 +428,11 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         pkg: String,
         outputDirectory: File,
         logPrefix: String,
+        backend: SerializationBackend,
     ) {
         val enums = schemaIndex.enums
         if (enums.isNotEmpty()) {
-            EnumGenerator.generate(enums, pkg).forEach { writeFile(it, outputDirectory) }
+            EnumGenerator.generate(enums, pkg, backend).forEach { writeFile(it, outputDirectory) }
             logger.info("[$logPrefix] Generated ${enums.size} enum class(es)")
         }
     }

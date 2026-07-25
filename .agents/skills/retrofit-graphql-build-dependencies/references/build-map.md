@@ -14,13 +14,14 @@ Use this map to choose the right build file before editing.
 | Publishing options | `buildSrc/.../components/AndroidOptions.kt` (Android), per-module `build.gradle.kts` (JVM), `gradle-plugin/build.gradle.kts`, `gradle-plugin/buildSrc/.../JvmConfiguration.kt`, `.jitpack.yml` | Root Android publications use AGP components. The standalone `gradle-plugin` composite build publishes both the plugin implementation + marker artifacts and republishes included `:codegen-core` with explicit coordinates from `gradle/version.properties`. `.jitpack.yml` must run both root and standalone plugin `publishToMavenLocal` commands with `CI=true` so JitPack excludes `:app` via `settings.gradle.kts`. |
 | Dependency versions and aliases | `gradle/libs.versions.toml` | Add or update aliases here first |
 | Library build | `library/build.gradle.kts` | Applies the shared plugin; no module-specific overrides needed for standard changes |
-| Sample app build | `app/build.gradle.kts` | Applies the shared plugin; Room compiler options, build config fields from `.config/` |
+| Sample app build | `app/build.gradle.kts` | Applies the shared plugin; codegen DSL (`serializationBackend`, `generateResponses`, scalar mappings), R8 enabled (`isMinifyEnabled = true`, `isShrinkResources = true`), Room compiler options, build config fields from `.config/` |
+| R8 keep rules | `app/proguard-rules.pro` | 2 targeted keep rules for Gson upload path (`GraphQLRequest`, `UploadToStorageBucketVariables`). kotlinx.serialization consumer rules protect generated types automatically. |
 | Dokka publication | `.github/workflows/gradle-dokka.yml` | Runs on `develop`, generates `library/build/docs/dokka`, deploys to `docs` branch |
 
 ## Module Dependency Snapshot
 
 - library: **deprecated** aggregator module that transitively re-exports all library sub-modules via api() dependencies (annotations, api, android-assets, runtime, serialization-gson, serialization-kotlinx).
-- app: sample application that depends on :runtime and :api only (no direct :android-assets or :annotations deps). Uses the codegen Gradle plugin for build-time generated types. :android-assets and :annotations are pulled transitively via :runtime.
+- app: sample application that depends on :runtime, :api, and :serialization-kotlinx (no direct :android-assets or :annotations deps). Uses the codegen Gradle plugin for build-time generated types with KOTLINX serialization backend. R8 enabled in release builds with 2 targeted keep rules for Gson upload path. :android-assets and :annotations are pulled transitively via :runtime.
 
 ## Edit Strategy
 

@@ -16,6 +16,7 @@
 
 package co.anitrend.retrofit.graphql.codegen.generate
 
+import co.anitrend.retrofit.graphql.codegen.config.SerializationBackend
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLOperationInfo
 import co.anitrend.retrofit.graphql.codegen.model.GraphQLType
 import co.anitrend.retrofit.graphql.codegen.model.ProjectedField
@@ -27,10 +28,13 @@ import co.anitrend.retrofit.graphql.codegen.model.RuntimePath
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import co.anitrend.retrofit.graphql.codegen.model.SchemaType
 import co.anitrend.retrofit.graphql.codegen.model.SelectionCondition
+import co.anitrend.retrofit.graphql.codegen.naming.GraphNameAllocator
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
@@ -54,16 +58,21 @@ import com.squareup.kotlinpoet.TypeSpec
  * the child's response path and runtime path derived from the current
  * identity. No heuristic fallback searches are used.
  *
+ * The [backend] controls which serialization annotations are emitted.
+ *
  * @property schemaIndex Indexed schema metadata used to resolve type definitions.
  * @property scalarMappings Custom scalar type to Kotlin type mappings.
+ * @property backend The serialization backend controlling annotation emission.
  */
 class ResponseModelGenerator(
     private val schemaIndex: SchemaIndex,
     private val scalarMappings: Map<String, String> = emptyMap(),
+    private val backend: SerializationBackend = SerializationBackend.KOTLINX,
 ) {
     private companion object {
         val SERIALIZABLE = ClassName("kotlinx.serialization", "Serializable")
         val SERIAL_NAME = ClassName("kotlinx.serialization", "SerialName")
+        val SERIALIZED_NAME = ClassName("com.google.gson.annotations", "SerializedName")
 
         val BUILT_IN_SCALARS: Map<String, String> = mapOf(
             "String" to "kotlin.String",
@@ -107,7 +116,9 @@ class ResponseModelGenerator(
 
         val generatedConcreteIdentities = mutableSetOf<ResponseModelIdentity>()
 
-        var identityToClassName = assignClassNames(collected.keys.toList())
+        // File-level allocator for class name assignment
+        val classAllocator = GraphNameAllocator()
+        val identityToClassName = assignClassNames(collected.keys.toList(), classAllocator)
 
         for ((abstractIdentity, abstractProj) in abstractEntries) {
             val abstractTypeName = abstractProj.parentType
@@ -121,7 +132,6 @@ class ResponseModelGenerator(
                 >()
 
             for (concreteTypeName in schemaPossibleTypes) {
-                // P0-2: compose the full runtime path including enclosing assignments
                 val concreteRuntimePath = RuntimePath(
                     assignments = abstractIdentity.runtimePath.assignments +
                         (responsePath to concreteTypeName),
@@ -138,27 +148,26 @@ class ResponseModelGenerator(
                         concreteTypeName to (concreteIdentity to fromCollected),
                     )
                 } else {
-                    // P0-2: always use concreteIdentity (with enclosing context),
-                    // not fall back to abstractIdentity
                     concreteTypeEntries.add(
                         concreteTypeName to (concreteIdentity to abstractProj),
                     )
                 }
             }
 
+            // Per-interface allocator for property names within sealed subtypes
             val sealedSpec = generateSealedInterface(
                 abstractName = abstractTypeName,
+                abstractIdentity = abstractIdentity,
                 interfaceName = interfaceName,
                 concreteIdentities = concreteTypeEntries,
                 dataClassName = dataClassName,
                 packageName = packageName,
                 identityToClassName = identityToClassName,
                 collected = collected,
+                classAllocator = classAllocator,
             )
             allNestedSpecs.add(sealedSpec)
         }
-
-        identityToClassName = assignClassNames(collected.keys.toList())
 
         for ((identity, projSet) in collected) {
             if (identity in abstractEntries) continue
@@ -166,6 +175,7 @@ class ResponseModelGenerator(
             if (identity.responsePath.isEmpty()) continue
 
             val className = identityToClassName[identity] ?: continue
+            val perClassAllocator = GraphNameAllocator()
             val dataSpec = generateDataClass(
                 className = className,
                 projectedSet = projSet,
@@ -173,6 +183,7 @@ class ResponseModelGenerator(
                 packageName = packageName,
                 identityToClassName = identityToClassName,
                 collected = collected,
+                propertyAllocator = perClassAllocator,
             )
             allNestedSpecs.add(dataSpec)
         }
@@ -186,6 +197,8 @@ class ResponseModelGenerator(
             runtimePath = RuntimePath.EMPTY,
         )
 
+        val rootPropAllocator = GraphNameAllocator()
+
         val rootProperties = rootProjected.fields.map { field ->
             toPropertySpec(
                 field = field,
@@ -193,11 +206,12 @@ class ResponseModelGenerator(
                 packageName = packageName,
                 identityToClassName = identityToClassName,
                 currentIdentity = rootIdentity,
+                allocator = rootPropAllocator,
             )
         }
 
         val rootConstructorParams = rootProjected.fields.zip(rootProperties).map { (field, prop) ->
-            val paramBuilder = com.squareup.kotlinpoet.ParameterSpec.builder(prop.name, prop.type)
+            val paramBuilder = ParameterSpec.builder(prop.name, prop.type)
             if (field.condition.mayBeAbsent && prop.type.isNullable) {
                 paramBuilder.defaultValue("null")
             }
@@ -206,9 +220,18 @@ class ResponseModelGenerator(
 
         val rootTypeSpec = TypeSpec.classBuilder(dataClassName)
             .addModifiers(KModifier.PUBLIC, KModifier.DATA)
-            .addAnnotation(SERIALIZABLE)
+            .apply {
+                if (backend == SerializationBackend.KOTLINX) {
+                    addAnnotation(SERIALIZABLE)
+                    addAnnotation(
+                        AnnotationSpec.builder(SERIAL_NAME)
+                            .addMember("%S", dataClassName)
+                            .build(),
+                    )
+                }
+            }
             .primaryConstructor(
-                com.squareup.kotlinpoet.FunSpec.constructorBuilder()
+                FunSpec.constructorBuilder()
                     .addParameters(rootConstructorParams)
                     .build(),
             )
@@ -456,33 +479,49 @@ class ResponseModelGenerator(
 
     private fun generateSealedInterface(
         abstractName: String,
+        abstractIdentity: ResponseModelIdentity,
         interfaceName: String,
         concreteIdentities: List<Pair<String, Pair<ResponseModelIdentity, ProjectedSelectionSet>>>,
         dataClassName: String,
         packageName: String,
         identityToClassName: Map<ResponseModelIdentity, String>,
         collected: LinkedHashMap<ResponseModelIdentity, ProjectedSelectionSet>,
+        classAllocator: GraphNameAllocator,
     ): TypeSpec {
         val interfaceBuilder = TypeSpec.interfaceBuilder(interfaceName)
             .addModifiers(KModifier.PUBLIC, KModifier.SEALED)
-            .addAnnotation(SERIALIZABLE)
-            .addAnnotation(
+            .addKdoc("Sealed interface for the GraphQL abstract type `%L`.", abstractName)
+
+        // Class-level descriptor for sealed interface, using the explicit identity
+        val sealedDescriptor = abstractIdentity.responsePath.let {
+            buildClassDescriptor(dataClassName, it)
+        }
+
+        if (backend == SerializationBackend.KOTLINX) {
+            interfaceBuilder.addAnnotation(SERIALIZABLE)
+            interfaceBuilder.addAnnotation(
+                AnnotationSpec.builder(SERIAL_NAME)
+                    .addMember("%S", sealedDescriptor ?: interfaceName)
+                    .build(),
+            )
+            interfaceBuilder.addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
                     .addMember("%T::class", ClassName("kotlinx.serialization", "ExperimentalSerializationApi"))
                     .build(),
             )
-            .addAnnotation(
+            interfaceBuilder.addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
                     .addMember("%S", "__typename")
                     .build(),
             )
-            .addKdoc("Sealed interface for the GraphQL abstract type `%L`.", abstractName)
+        }
 
         for ((concreteTypeName, identityAndSet) in concreteIdentities) {
             val (currentIdentity, projSet) = identityAndSet
             val className = concreteTypeName
+            // Per-subtype allocator so properties in different subtypes don't collide
+            val subtypePropAllocator = GraphNameAllocator()
 
-            // P0-4: No schema-field synthesis. Only use projected fields.
             val applicableFields = projSet.fields.filter { field ->
                 !(field.schemaName == "__typename" && field.responseName == "__typename")
             }
@@ -494,11 +533,12 @@ class ResponseModelGenerator(
                     packageName = packageName,
                     identityToClassName = identityToClassName,
                     currentIdentity = currentIdentity,
+                    allocator = subtypePropAllocator,
                 )
             }
 
             val constructorParams = applicableFields.zip(properties).map { (field, prop) ->
-                val paramBuilder = com.squareup.kotlinpoet.ParameterSpec.builder(prop.name, prop.type)
+                val paramBuilder = ParameterSpec.builder(prop.name, prop.type)
                 if (field.condition.mayBeAbsent && prop.type.isNullable) {
                     paramBuilder.defaultValue("null")
                 }
@@ -506,29 +546,37 @@ class ResponseModelGenerator(
             }
 
             val subtypeSpec = if (applicableFields.isEmpty()) {
-                // P0-4: Unselected type — emit empty serializable regular class
+                // Unselected type -- emit empty serializable regular class
                 TypeSpec.classBuilder(className)
                     .addModifiers(KModifier.PUBLIC)
-                    .addAnnotation(SERIALIZABLE)
-                    .addAnnotation(
-                        AnnotationSpec.builder(SERIAL_NAME)
-                            .addMember("%S", concreteTypeName)
-                            .build(),
-                    )
+                    .apply {
+                        if (backend == SerializationBackend.KOTLINX) {
+                            addAnnotation(SERIALIZABLE)
+                            addAnnotation(
+                                AnnotationSpec.builder(SERIAL_NAME)
+                                    .addMember("%S", concreteTypeName)
+                                    .build(),
+                            )
+                        }
+                    }
                     .addSuperinterface(ClassName(packageName, dataClassName, interfaceName))
                     .build()
             } else {
                 TypeSpec.classBuilder(className)
                     .addModifiers(KModifier.PUBLIC, KModifier.DATA)
-                    .addAnnotation(SERIALIZABLE)
-                    .addAnnotation(
-                        AnnotationSpec.builder(SERIAL_NAME)
-                            .addMember("%S", concreteTypeName)
-                            .build(),
-                    )
+                    .apply {
+                        if (backend == SerializationBackend.KOTLINX) {
+                            addAnnotation(SERIALIZABLE)
+                            addAnnotation(
+                                AnnotationSpec.builder(SERIAL_NAME)
+                                    .addMember("%S", concreteTypeName)
+                                    .build(),
+                            )
+                        }
+                    }
                     .addSuperinterface(ClassName(packageName, dataClassName, interfaceName))
                     .primaryConstructor(
-                        com.squareup.kotlinpoet.FunSpec.constructorBuilder()
+                        FunSpec.constructorBuilder()
                             .addParameters(constructorParams)
                             .build(),
                     )
@@ -554,6 +602,7 @@ class ResponseModelGenerator(
         packageName: String,
         identityToClassName: Map<ResponseModelIdentity, String>,
         collected: LinkedHashMap<ResponseModelIdentity, ProjectedSelectionSet>,
+        propertyAllocator: GraphNameAllocator,
     ): TypeSpec {
         val sortedFields = projectedSet.fields.sortedBy { it.responseName }
 
@@ -569,22 +618,36 @@ class ResponseModelGenerator(
                 packageName = packageName,
                 identityToClassName = identityToClassName,
                 currentIdentity = currentIdentity,
+                allocator = propertyAllocator,
             )
         }
 
         val constructorParams = sortedFields.zip(properties).map { (field, prop) ->
-            val paramBuilder = com.squareup.kotlinpoet.ParameterSpec.builder(prop.name, prop.type)
+            val paramBuilder = ParameterSpec.builder(prop.name, prop.type)
             if (field.condition.mayBeAbsent && prop.type.isNullable) {
                 paramBuilder.defaultValue("null")
             }
             paramBuilder.build()
         }
 
+        val classDescriptor = buildClassDescriptor(dataClassName, projectedSet.responsePath)
+
         return TypeSpec.classBuilder(className)
             .addModifiers(KModifier.PUBLIC, KModifier.DATA)
-            .addAnnotation(SERIALIZABLE)
+            .apply {
+                if (backend == SerializationBackend.KOTLINX) {
+                    addAnnotation(SERIALIZABLE)
+                    if (classDescriptor != null) {
+                        addAnnotation(
+                            AnnotationSpec.builder(SERIAL_NAME)
+                                .addMember("%S", classDescriptor)
+                                .build(),
+                        )
+                    }
+                }
+            }
             .primaryConstructor(
-                com.squareup.kotlinpoet.FunSpec.constructorBuilder()
+                FunSpec.constructorBuilder()
                     .addParameters(constructorParams)
                     .build(),
             )
@@ -606,6 +669,7 @@ class ResponseModelGenerator(
         packageName: String,
         identityToClassName: Map<ResponseModelIdentity, String>,
         currentIdentity: ResponseModelIdentity,
+        allocator: GraphNameAllocator,
     ): PropertySpec {
         var kotlinType = resolveTypeName(
             graphQLType = field.outputType,
@@ -620,21 +684,30 @@ class ResponseModelGenerator(
             kotlinType = kotlinType.copy(nullable = true)
         }
 
-        val spec = PropertySpec.builder(field.responseName, kotlinType)
+        val allocated = allocator.allocatePropertyName(field.responseName)
+
+        val spec = PropertySpec.builder(allocated.kotlinName, kotlinType)
             .addModifiers(KModifier.PUBLIC)
 
-        if (field.responseName != field.schemaName) {
-            spec.addAnnotation(
-                AnnotationSpec.builder(SERIAL_NAME)
-                    .addMember("%S", field.responseName)
-                    .build(),
-            )
+        when (backend) {
+            SerializationBackend.KOTLINX ->
+                spec.addAnnotation(
+                    AnnotationSpec.builder(SERIAL_NAME)
+                        .addMember("%S", allocated.wireName)
+                        .build(),
+                )
+            SerializationBackend.GSON ->
+                spec.addAnnotation(
+                    AnnotationSpec.builder(SERIALIZED_NAME)
+                        .addMember("%S", allocated.wireName)
+                        .build(),
+                )
+            else -> { /* no annotations */ }
         }
 
         return spec.build()
     }
 
-    // P0-1: use currentIdentity instead of currentRuntimePath
     private fun resolveTypeName(
         graphQLType: GraphQLType,
         dataClassName: String,
@@ -674,9 +747,6 @@ class ResponseModelGenerator(
     /**
      * Resolves a single named GraphQL type to a KotlinPoet [TypeName]
      * using exact [ResponseModelIdentity] matching.
-     *
-     * P0-1: No heuristic fallback searches. Constructs the exact child
-     * identity from [currentIdentity] and looks it up directly.
      */
     private fun resolveNamedTypeName(
         name: String,
@@ -695,14 +765,12 @@ class ResponseModelGenerator(
         // 3. Construct exact child identity
         val childResponsePath = currentIdentity.responsePath + fieldName
 
-        // Compute relevant runtime path assignments: only keep assignments
-        // whose paths are a prefix of childResponsePath.
         val relevantAssignments = currentIdentity.runtimePath.assignments.filterKeys { path ->
             path.size <= childResponsePath.size &&
                 childResponsePath.subList(0, path.size) == path
         }
 
-        // 3. Schema-defined enums and input objects — no identity lookup needed
+        // 3. Schema-defined enums and input objects -- no identity lookup needed
         val def = schemaIndex.definition(name)
         when (def) {
             is SchemaType.InputObject,
@@ -720,7 +788,7 @@ class ResponseModelGenerator(
         )
 
         val generatedName = requireNotNull(identityToClassName[exactChildIdentity]) {
-            val typeLabel = def?.let { it::class.simpleName } ?: "unknown"
+            val typeLabel = def::class.simpleName ?: "unknown"
             "No generated model for $exactChildIdentity " +
                 "(schema type '$name' is $typeLabel). " +
                 "This indicates a missing projection."
@@ -730,23 +798,21 @@ class ResponseModelGenerator(
 
     // --- Naming helpers ---
 
+    /**
+     * Assigns unique Kotlin class names to [ResponseModelIdentity] keys using
+     * the provided [allocator] for deterministic collision-safe allocation.
+     */
     private fun assignClassNames(
         identities: List<ResponseModelIdentity>,
+        allocator: GraphNameAllocator,
     ): Map<ResponseModelIdentity, String> {
         val result = linkedMapOf<ResponseModelIdentity, String>()
-        val seen = mutableMapOf<String, Int>()
 
         for (identity in identities) {
             val identifier = identityToDottedString(identity)
-            val className = dottedToPascalCase(identifier)
-            val count = seen.getOrDefault(className, 0)
-            if (count == 0) {
-                result[identity] = className
-                seen[className] = 1
-            } else {
-                result[identity] = "${className}${count + 1}"
-                seen[className] = count + 1
-            }
+            val suggestion = dottedToPascalCase(identifier)
+            val allocated = allocator.allocateClassName(suggestion)
+            result[identity] = allocated.kotlinName
         }
 
         return result
@@ -768,6 +834,22 @@ class ResponseModelGenerator(
             .joinToString("") {
                 it.replaceFirstChar { c -> c.uppercase() }
             }
+
+    /**
+     * Builds a stable class-level descriptor for `@SerialName` on generated
+     * response model classes.
+     *
+     * Root response: just the data class name (e.g. `"GetCurrentUserData"`).
+     * Nested response: `"$dataClassName.$responsePath"` (e.g. `"GetCurrentUserData.viewer.repositories"`).
+     */
+    private fun buildClassDescriptor(
+        dataClassName: String,
+        responsePath: List<String>,
+    ): String? {
+        if (responsePath.isEmpty()) return null
+        if (responsePath.size == 1 && responsePath.first() == dataClassName) return dataClassName
+        return "$dataClassName.${responsePath.joinToString(".")}"
+    }
 
     // --- Utility ---
 

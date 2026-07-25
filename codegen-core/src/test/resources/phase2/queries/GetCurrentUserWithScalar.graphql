@@ -1,0 +1,7 @@
+query GetCurrentUserWithScalar {
+  getCurrentUser {
+    id
+    login
+    createdAt
+  }
+}

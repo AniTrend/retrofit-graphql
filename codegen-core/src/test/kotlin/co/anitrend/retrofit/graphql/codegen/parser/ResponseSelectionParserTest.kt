@@ -1378,6 +1378,49 @@ class ResponseSelectionParserTest {
         )
     }
 
+    // --- Named fragment on concrete type uses empty runtime paths ---
+
+    @Test
+    fun `named fragment on concrete type uses empty runtime paths`() {
+        val parser = ResponseSelectionParser(githubIndex)
+        val document = """
+            query FragmentOnConcreteType {
+              viewer {
+                ... on User {
+                  login
+                  bio
+                }
+              }
+            }
+        """.trimIndent()
+        val operation = buildOperation(
+            name = "FragmentOnConcreteType",
+            type = OperationType.QUERY,
+            document = document,
+        )
+
+        val result = parser.parse(operation)
+        val viewer = result.fields.first { it.responseName == "viewer" }
+        val viewerFields = viewer.selectionSet!!
+
+        // Fields from inline fragment on the same concrete type (User)
+        // should have EMPTY runtime paths because the fragment type matches
+        // the parent field's concrete type - no polymorphism scoping needed.
+        val loginField = viewerFields.fields.find { it.responseName == "login" }
+        assertNotNull("Should have login field", loginField)
+        assertTrue(
+            "login should have empty runtime paths (same concrete type)",
+            loginField!!.runtimePaths.isEmpty(),
+        )
+
+        val bioField = viewerFields.fields.find { it.responseName == "bio" }
+        assertNotNull("Should have bio field", bioField)
+        assertTrue(
+            "bio should have empty runtime paths (same concrete type)",
+            bioField!!.runtimePaths.isEmpty(),
+        )
+    }
+
     private fun fixtureFile(path: String): File {
         val url =
             checkNotNull(

@@ -6,6 +6,8 @@ this project is a retrofit converter which injects `.graphql` query or mutation 
 into a request body along with any GraphQL variables. Supports both runtime asset-based
 discovery and optional build-time code generation for type-safe request helpers.
 
+> **Note:** As of v3.x, retrofit-graphql offers first-class support for kotlinx.serialization with generated `@Serializable` response models, Gson-for-upload paths, and R8-safe serialization. See [MIGRATION.md](MIGRATION.md) for migration guidance from v2.x GraphQLJson + Gson workflows.
+
 ## Why This Project Exists?
 
 Many might wonder why this exists when an android GraphQL library like [Apollo](https://github.com/apollographql/apollo-android) exists. Unfortunately Apollo for Android still lacks some basic but important features/functionality which led to the following questions about [General Design Questions Regarding Apollo](https://github.com/apollographql/apollo-android/issues/847), [Polymorphic Type Handling](https://github.com/apollographql/apollo-android/issues/334) and [Non Shared Types](https://github.com/apollographql/apollo-android/issues/898). Don't get me wrong Apollo is not inferior any way, it has amazing features such as:
@@ -19,7 +21,9 @@ Also Android Performance best practice suggests that developers should use Strin
 enums and [here's why](https://stackoverflow.com/questions/29183904/should-i-strictly-avoid-using-enums-on-android), with the exception of kotlin
 especially when using R8.
 
-> **Note:** As of v2.x, retrofit-graphql also offers optional build-time code generation via a Gradle plugin. This combines the flexibility of file-based queries with type-safe request helpers when desired. See [MIGRATION.md](MIGRATION.md) for details.
+> **Note:** As of v2.x, retrofit-graphql also offers optional build-time code generation via a Gradle plugin. This combines the flexibility of file-based queries with type-safe request helpers when desired.
+>
+> As of v3.x, retrofit-graphql adds first-class kotlinx.serialization support with `@Serializable` generated response DTOs, a serialization-backend-agnostic `GraphQLJson` abstraction, and R8-safe serialization. Gson remains supported for request-only consumers and the multipart upload path. See [MIGRATION.md](MIGRATION.md) for migration guidance.
 
 Strangely there are tons of simple examples all over Medium using apollo graphql for Android,
 but none of them address these issues because most of them just construct a simple single resource
@@ -103,6 +107,28 @@ dependencies {
 
 For code generation support, apply the Gradle plugin and add a `retrofitGraphQL { }` config block. The plugin generates operation constants, a document registry, enum classes, variable classes, typed request helpers, and optionally response model data classes. See [MIGRATION.md](MIGRATION.md) for the full migration guide and the [wiki Code Generation page](https://github.com/AniTrend/retrofit-graphql/wiki/Codegen) for the DSL reference.
 
+### Serialization Backend Configuration
+
+The codegen plugin emits serialization annotations (`@Serializable`/`@SerialName` for kotlinx, `@SerializedName` for Gson) on generated types. The `serializationBackend` property selects which backend to use:
+
+```kotlin
+retrofitGraphQL {
+    common {
+        serializationBackend.set("KOTLINX")  // or "GSON" or "NONE"
+    }
+}
+```
+
+| Value | Behavior |
+|-------|----------|
+| `NONE` | No serialization annotations emitted. Classes are generated as plain data holders. |
+| `KOTLINX` | Emits `@Serializable`, `@SerialName`, and polymorphic markers. **Required** for response model generation (`generateResponses = true`). |
+| `GSON` | Emits `@SerializedName` on properties. Does **not** support polymorphic response models (union/interface deserialization). GSON + `generateResponses = true` is not yet supported. |
+
+**Auto-selection (convenience)**: When `serializationBackend` is `NONE` (the default) and `generateResponses` is `true`, the codegen automatically selects `KOTLINX`. This means consumers who only care about typed responses can set `generateResponses.set(true)` without explicitly configuring the backend. Consumers who want Gson annotations for variables/input objects without response models should set `serializationBackend.set("GSON")` and leave `generateResponses` at `false`.
+
+The `serializationBackend` property can be set in `common {}` (applies to all targets) and overridden per-target in `target("name") { }` blocks.
+
 ### Response Model Generation (Opt-in)
 
 When `generateResponses` is enabled, the codegen plugin generates kotlinx-serializable response model data classes from the operation selection sets. Each operation produces a `{OperationName}Data` root class with nested data classes for every selected GraphQL object type.
@@ -111,6 +137,7 @@ When `generateResponses` is enabled, the codegen plugin generates kotlinx-serial
 retrofitGraphQL {
     common {
         generateResponses.set(true)  // default false
+        // serializationBackend automatically selects KOTLINX when generateResponses=true
     }
     target("anilist") {
         schema.set(file("src/main/graphql/schema.graphql"))
@@ -125,25 +152,108 @@ Generated response models:
 - Handle list nullability (container + element)
 - Support conditional fields (`@include`/`@skip`) with nullable types
 - Generate sealed interfaces for GraphQL interfaces and unions with `__typename`-based polymorphism
+- Escape Kotlin keywords by appending `Value` suffix (e.g. `private` -> `privateValue`) while preserving the original wire name in `@SerialName`
+
+**Using generated response DTOs with Retrofit**:
 
 ```kotlin
-// Generated example
-@Serializable
-data class GetUserData(
-    @SerialName("viewer")
-    val viewer: User?,
-) {
-    @Serializable
-    data class User(
-        val id: String,
-        val login: String,
-        val name: String?,
-        val bio: String?,
-    )
+// Retrofit interface: declare GraphContainer<GeneratedOperationData> as the return type
+internal interface UserRemoteSource {
+    @POST("graphql")
+    suspend fun getCurrentUser(
+        @Body request: GraphQLRequest<EmptyGraphQLVariables>
+    ): Response<GraphContainer<GetCurrentUserData>>
+}
+
+// Generated types are kotlinx.serialization-compatible transport DTOs
+// Map them to your domain models at the Retrofit boundary:
+class UserResponseMapper : GraphQLMapper<GetCurrentUserData, UserEntity>() {
+    override suspend fun onResponseMapFrom(source: GetCurrentUserData): UserEntity {
+        val viewer = source.viewer ?: throw IllegalStateException("No viewer data")
+        return UserEntity(
+            id = viewer.id,
+            login = viewer.login,
+            name = viewer.name,
+            bio = viewer.bio,
+        )
+    }
 }
 ```
 
 Generated types are transport DTOs designed for the Retrofit/network boundary. Map them to your domain models rather than exposing generated classes throughout your application.
+
+### Serialization: kotlinx vs Gson
+
+**Recommended production path**: Use `kotlinx.serialization` (`:serialization-kotlinx`) for the Retrofit response path. It offers:
+
+- Compile-time serializer generation -- no reflection, R8-safe by default
+- Automatic `@SerialName` matching on generated response DTOs
+- No need for custom keep rules on generated types
+
+**Gson compatibility**: Gson (`:serialization-gson`) remains supported for:
+
+- **Request-only consumers**: When you only serialize `GraphQLRequest<T>` bodies (no response deserialization needed), Gson works the same as before
+- **Multipart upload path**: The `UploadMutationHelper` sample uses Gson for serializing the operations payload in multipart requests. Two targeted R8 keep rules are needed for this path (see R8 section below)
+- **Legacy `QueryContainerBuilder` flow**: The `QueryContainer` class is not `@Serializable`, so the runtime keeps this builder-based flow on an internal Gson serializer even when responses use `KotlinxGraphQLJson`
+
+**Gson + generated responses**: Not supported. Gson cannot deserialize polymorphic sealed interfaces, which are needed for GraphQL union and interface response types. Use `KOTLINX` with `generateResponses = true`.
+
+See the [Serialization Backends](docs/wiki/Serialization-Backends.md) wiki page for detailed compatibility matrix.
+
+More wiki documentation:
+- [Code Generation](docs/wiki/Codegen.md) -- plugin setup, DSL, and generated output
+- [Generated Response DTOs](docs/wiki/Generated-Response-DTOs.md) -- using generated response models with Retrofit
+- [Naming Contract](docs/wiki/Naming-Contract.md) -- Kotlin name, wire name, and descriptor name rules
+- [R8 / ProGuard](docs/wiki/R8-ProGuard.md) -- R8 configuration and keep rules
+- [Parameterized Types](docs/wiki/Parameterized-Types.md) -- how parameterized types flow through serialization
+
+### R8 / ProGuard
+
+R8 is the recommended code shrinker for Android release builds. The sample app demonstrates a working R8 configuration:
+
+```kotlin
+// app/build.gradle.kts
+android {
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+        }
+    }
+}
+```
+
+**kotlinx.serialization: No custom rules needed**. The kotlinx.serialization compiler plugin generates R8-consumer-rules that automatically keep `@Serializable` classes and their serial descriptors. Generated response DTOs, `GraphContainer`, `GraphError`, `GraphQLRequest`, and `EmptyGraphQLVariables` are all protected by these consumer rules.
+
+**Gson upload path: 2 targeted keep rules needed**. The sample app uses Gson for the multipart upload path (`UploadMutationHelper`). Because Gson uses reflection (`java.lang.reflect.Field.getName()`) to derive JSON keys, field names must survive R8 renaming. Two keep rules are required:
+
+```proguard
+# GraphQLRequest: serialized by Gson in UploadMutationHelper.createOperationsPart()
+-keep class co.anitrend.retrofit.graphql.model.GraphQLRequest {
+    <fields>;
+    <init>(...);
+}
+
+# UploadToStorageBucketVariables: serialized by Gson as nested variables
+-keep class co.anitrend.retrofit.graphql.sample.bucket.UploadToStorageBucketVariables {
+    <fields>;
+    <init>(...);
+}
+```
+
+These rules are narrowly scoped to the exact classes used in the Gson upload path. If your project uses Gson for the entire Retrofit path (no kotlinx), you may need broader keep rules for your model classes. The library's own consumer-rules are shipped from `:library` and are included automatically.
+
+**APQ + Gson trap**: `GraphQLRequest.withPersistedQuery()` works on the typed kotlinx request path because `KotlinxGraphQLJson.encode()` merges supported `extensions` entries into the outgoing JSON. If you use APQ in the Gson upload path, add:
+
+```proguard
+-keep class co.anitrend.retrofit.graphql.model.request.PersistedQuery { <fields>; }
+```
+
+**Verifying R8 safety**: The sample app's test suite validates R8 correctness:
+
+- `./gradlew :app:testReleaseUnitTest` -- runs unit tests against the R8-optimized APK (11 tests: 6 serialization + 5 mapper)
+- `./gradlew :app:connectedReleaseAndroidTest` -- runs instrumented tests against the R8-optimized APK on a device/emulator
+- Inspect `app/build/outputs/mapping/release/mapping.txt` to verify no serialization-critical fields are renamed
 
 ### Gradle Plugin Consumption
 
@@ -189,7 +299,7 @@ val converter = GraphConverter.create(
 )
 ```
 
-In registry-only mode, if an operation is missing from the registry, the request body is still built and the serialized GraphQL `query` remains `null`.
+In registry-only mode, if a `@GraphQuery`-annotated operation is missing from the registry, the converter throws `IllegalStateException`. Non-annotated operations (codegen-only consumers using `GraphQLRequest<T>`) proceed without a query lookup. See [MIGRATION.md](MIGRATION.md) for details.
 
 - __Optional R8 / ProGuard Rules__
 

@@ -1,7 +1,7 @@
 package co.anitrend.retrofit.graphql.data.bucket.helper
 
 import co.anitrend.retrofit.graphql.model.GraphQLRequest
-import co.anitrend.retrofit.graphql.sample.generated.UploadToStorageBucketVariables
+import co.anitrend.retrofit.graphql.sample.bucket.UploadToStorageBucketVariables
 import com.google.gson.Gson
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -11,7 +11,18 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
 /**
- * Mutation helper for crating upload request bodies
+ * Mutation helper for creating GraphQL multipart upload request bodies.
+ *
+ * Uses Gson directly for serializing the operations and map parts of the
+ * multipart body. This is intentionally separate from the Retrofit converter
+ * chain which uses kotlinx.serialization. Gson is used here because:
+ * - The multipart body format requires constructing JSON from
+ *   [Map] and [GraphQLRequest] objects which may contain
+ *   [kotlinx.serialization.Transient] fields.
+ * - kotlinx.serialization does not support [Map<String, Any?>] types
+ *   used in [GraphQLRequest.extensions].
+ * - The Gson usage is scoped to multipart uploads only and does not
+ *   affect the main request/response serialization pipeline.
  */
 internal object UploadMutationHelper {
 

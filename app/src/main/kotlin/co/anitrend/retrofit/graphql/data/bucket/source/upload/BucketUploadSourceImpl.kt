@@ -9,7 +9,7 @@ import co.anitrend.retrofit.graphql.data.bucket.helper.UploadMutationHelper.crea
 import co.anitrend.retrofit.graphql.data.bucket.mapper.UploadResponseMapper
 import co.anitrend.retrofit.graphql.data.bucket.source.upload.contract.BucketUploadSource
 import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
-import co.anitrend.retrofit.graphql.sample.generated.UploadToStorageBucket
+import co.anitrend.retrofit.graphql.sample.bucket.UploadToStorageBucket
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async

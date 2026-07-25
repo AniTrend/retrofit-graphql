@@ -200,11 +200,25 @@ class ResponseSelectionParser(
                     val dirCond = directivesToCondition(selection.directives)
                     if (dirCond == null) continue
 
-                    val fragPaths = fragmentRuntimePaths(
-                        responsePath = responsePath,
-                        typeName = fragmentTypeName,
-                        schemaIndex = schemaIndex,
-                    )
+                    // Runtime paths are only needed when the fragment's type
+                    // condition differs from the enclosing parent type
+                    // (e.g. interface/union fragments). For fragments on the
+                    // same concrete type as the parent, treat fields as direct
+                    // selections without runtime path scoping.
+                    // If the parent type is abstract, runtime paths are still
+                    // needed even for same-name fragments (to resolve concretes).
+                    val fragPaths = if (
+                        fragmentTypeName == parentType.name &&
+                        !schemaIndex.isAbstractType(parentType.name)
+                    ) {
+                        emptySet()
+                    } else {
+                        fragmentRuntimePaths(
+                            responsePath = responsePath,
+                            typeName = fragmentTypeName,
+                            schemaIndex = schemaIndex,
+                        )
+                    }
                     val composedPaths = composeRuntimePaths(enclosingRuntimePaths, fragPaths)
 
                     // P0-3: parse fragment body with composedPaths as enclosing,
@@ -235,14 +249,21 @@ class ResponseSelectionParser(
                     val dirCond = directivesToCondition(selection.directives)
                     if (dirCond == null) continue
 
-                    val fragPaths = if (selection.typeCondition != null) {
-                        fragmentRuntimePaths(
+                    // Runtime paths are only needed when the inline fragment's
+                    // type condition differs from the enclosing parent type.
+                    // For fragments on the same concrete type (or no type
+                    // condition), treat fields as direct selections.
+                    // If parent is abstract, runtime paths are still needed
+                    // even for same-name fragments (to resolve concretes).
+                    val fragPaths = when {
+                        selection.typeCondition == null -> emptySet()
+                        inlineTypeName == parentType.name &&
+                            !schemaIndex.isAbstractType(parentType.name) -> emptySet()
+                        else -> fragmentRuntimePaths(
                             responsePath = responsePath,
                             typeName = inlineTypeName,
                             schemaIndex = schemaIndex,
                         )
-                    } else {
-                        emptySet()
                     }
 
                     val composedPaths = composeRuntimePaths(enclosingRuntimePaths, fragPaths)

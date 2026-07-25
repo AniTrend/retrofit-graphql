@@ -7,7 +7,9 @@ import co.anitrend.retrofit.graphql.converter.GraphConverter
 import co.anitrend.retrofit.graphql.logger.contract.ILogger
 import co.anitrend.retrofit.graphql.logger.core.AbstractLogger
 import co.anitrend.retrofit.graphql.model.GraphQLDocumentRegistry
+import co.anitrend.retrofit.graphql.model.GraphQLJson
 import co.anitrend.retrofit.graphql.model.request.QueryContainerBuilder
+import co.anitrend.retrofit.graphql.serialization.gson.GsonGraphQLJson
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
@@ -21,6 +23,7 @@ import retrofit2.Retrofit
 
 class GraphRequestConverterTest {
     private val gson: Gson = GsonBuilder().serializeNulls().create()
+    private val json: GraphQLJson = GsonGraphQLJson(gson)
 
     @Test
     fun `registry hit does not require processor fallback`() {
@@ -28,7 +31,7 @@ class GraphRequestConverterTest {
             GraphRequestConverter(
                 methodAnnotations = methodAnnotations("RegisteredOperation"),
                 graphProcessor = ThrowingGraphProcessor(),
-                gson = gson,
+                json = json,
                 registry = MapRegistry(mapOf("RegisteredOperation" to "query RegisteredOperation { viewer { login } }")),
             )
 
@@ -47,7 +50,7 @@ class GraphRequestConverterTest {
             GraphRequestConverter(
                 methodAnnotations = methodAnnotations("MissingFromRegistry"),
                 graphProcessor = processor,
-                gson = gson,
+                json = json,
                 registry = MapRegistry(emptyMap()),
             )
 
@@ -56,6 +59,26 @@ class GraphRequestConverterTest {
         assertEquals(1, processor.getQueryCalls)
         assertEquals(
             "query MissingFromRegistry { repository { id } }",
+            requestJson(requestBody).get("query").asString,
+        )
+    }
+
+    @Test
+    fun `query container builder remains functional with kotlinx backend`() {
+        val processor = TrackingGraphProcessor("query LegacyOperation { viewer { login } }")
+        val converter =
+            GraphRequestConverter(
+                methodAnnotations = methodAnnotations("MissingFromRegistry"),
+                graphProcessor = processor,
+                json = ThrowingJson(),
+                registry = MapRegistry(emptyMap()),
+            )
+
+        val requestBody = converter.convert(QueryContainerBuilder())
+
+        assertEquals(1, processor.getQueryCalls)
+        assertEquals(
+            "query LegacyOperation { viewer { login } }",
             requestJson(requestBody).get("query").asString,
         )
     }
@@ -124,6 +147,22 @@ class GraphRequestConverterTest {
         override fun document(operationName: String): String? = documents[operationName]
 
         override fun hash(operationName: String): String? = null
+    }
+
+    private class ThrowingJson : GraphQLJson {
+        override fun <T : Any> encode(
+            value: T,
+            type: java.lang.reflect.Type?,
+        ): String {
+            throw AssertionError("Legacy QueryContainerBuilder path should fall back to internal Gson serializer")
+        }
+
+        override fun <T : Any> decode(
+            json: String,
+            type: java.lang.reflect.Type,
+        ): T {
+            throw AssertionError("decode should not be used in GraphRequestConverter tests")
+        }
     }
 
     private class ThrowingGraphProcessor : BaseTestGraphProcessor() {

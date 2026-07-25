@@ -86,10 +86,31 @@ abstract class GraphQLTargetExtension @Inject constructor(val name: String) {
 
     //
     // Whether to generate response model data classes from operation
-    // selection sets. Requires [schema] to be set.
+    // selection sets. Default false. Requires [schema] to be set.
     // Falls back to the common {} block if not set on this target.
     //
     abstract val generateResponses: Property<Boolean>
+
+    //
+    // Which serialization backend to use for generated annotations.
+    //
+    // Accepted values (case-sensitive):
+    // - `"NONE"` — No serialization annotations emitted. Classes are generated
+    //   as plain data holders. This is the default.
+    // - `"KOTLINX"` — Emits `@Serializable`, `@SerialName`, and polymorphic
+    //   markers. Required when [generateResponses] is true.
+    // - `"GSON"` — Emits `@SerializedName` on properties. Not compatible
+    //   with [generateResponses] (Gson cannot deserialize polymorphic sealed
+    //   interfaces needed for GraphQL unions/interfaces).
+    //
+    // Auto-selection: When set to `"NONE"` (default) and [generateResponses]
+    // is `true`, the codegen automatically selects `"KOTLINX"`. This is a
+    // convenience for consumers who only want typed responses.
+    //
+    // Falls back to the common {} block if not set on this target.
+    // Default: "NONE"
+    //
+    abstract val serializationBackend: Property<String>
 
     //
     // The output directory for generated sources.
@@ -152,12 +173,26 @@ abstract class CommonExtension {
     //
     abstract val generateResponses: Property<Boolean>
 
+    //
+    // Which serialization backend to use for generated annotations across
+    // all targets. Each target can override this individually via its own
+    // [GraphQLTargetExtension.serializationBackend].
+    //
+    // Accepted values: `"NONE"`, `"KOTLINX"`, `"GSON"` (case-sensitive).
+    // Default: `"NONE"`. When `"NONE"` and [generateResponses] is `true`,
+    // the codegen auto-selects `"KOTLINX"`.
+    //
+    // @see GraphQLTargetExtension.serializationBackend
+    //
+    abstract val serializationBackend: Property<String>
+
     init {
         generateOperationConstants.convention(true)
         generateDocuments.convention(true)
         generateHashes.convention(true)
         generateVariables.convention(false)
         generateResponses.convention(false)
+        serializationBackend.convention("NONE")
     }
 }
 
@@ -244,6 +279,9 @@ open class RetrofitGraphQLExtension @Inject constructor(objects: ObjectFactory) 
 
     @get:org.gradle.api.tasks.Input
     val generateResponses: Property<Boolean> = objects.property(Boolean::class.java)
+
+    @get:org.gradle.api.tasks.Input
+    val serializationBackend: Property<String> = objects.property(String::class.java)
 
     @get:org.gradle.api.tasks.OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty()
