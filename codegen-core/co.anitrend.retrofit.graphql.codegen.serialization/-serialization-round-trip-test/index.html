@@ -1,0 +1,505 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>SerializationRoundTripTest</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    retrofit-graphql
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":codegen-core/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":codegen-core/main" data-filter=":codegen-core/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    retrofit-graphql
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="retrofit-graphql-codegen-core::co.anitrend.retrofit.graphql.codegen.serialization/SerializationRoundTripTest///PointingToDeclaration//-166212119">
+  <div class="breadcrumbs"><a href="../../index.html">retrofit-graphql-codegen-core</a><span class="delimiter">/</span><a href="../index.html">co.anitrend.retrofit.graphql.codegen.serialization</a><span class="delimiter">/</span><span class="current">SerializationRoundTripTest</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Serialization</span><wbr><span>Round</span><wbr><span>Trip</span><wbr><span><span>Test</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">SerializationRoundTripTest</a></div><p class="paragraph">Tests that generated types correctly serialize and deserialize JSON.</p><p class="paragraph"><strong>Layer E: Structural JSON Round-Trip Tests.</strong></p><p class="paragraph">These tests verify that generated types can:</p><ol><li><p class="paragraph">Parse fixture JSON into generated types, then re-serialize back.</p></li><li><p class="paragraph">Construct instances programmatically, serialize, then parse back.</p></li></ol><p class="paragraph">JSON structures are compared using parsed JsonElement trees (not textual key ordering) to verify structural equality.</p><p class="paragraph">Gson is used for the actual serialization because it does not require a compiler plugin. The generated source code is compiled at test time via the embedded K2JVMCompiler.</p><p class="paragraph">For kotlinx.serialization-specific features (like polymorphic interface discrimination via <code class="lang-kotlin">__typename</code>), source-level annotation verification is used since the kotlinx compiler plugin is not available at test time.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="-1197448915%2FConstructors%2F-166212119" anchor-label="SerializationRoundTripTest" id="-1197448915%2FConstructors%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-serialization-round-trip-test.html"><span>Serialization</span><wbr><span>Round</span><wbr><span>Trip</span><wbr><span><span>Test</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1197448915%2FConstructors%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-918024228%2FFunctions%2F-166212119" anchor-label="alias field JSON key is the alias not the schema name" id="-918024228%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="alias field -j-s-o-n key is the alias not the schema name.html"><span><span>alias</span></span> <span><span>field</span></span> <span><span>JSON</span></span> <span><span>key</span></span> <span><span>is</span></span> <span><span>the</span></span> <span><span>alias</span></span> <span><span>not</span></span> <span><span>the</span></span> <span><span>schema</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-918024228%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="alias field -j-s-o-n key is the alias not the schema name.html"><span class="token function">alias field JSON key is the alias not the schema name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1044597000%2FFunctions%2F-166212119" anchor-label="collision fields round trip with both wire names preserved" id="1044597000%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="collision fields round trip with both wire names preserved.html"><span><span>collision</span></span> <span><span>fields</span></span> <span><span>round</span></span> <span><span>trip</span></span> <span><span>with</span></span> <span><span>both</span></span> <span><span>wire</span></span> <span><span>names</span></span> <span><span>preserved</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1044597000%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="collision fields round trip with both wire names preserved.html"><span class="token function">collision fields round trip with both wire names preserved</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2033480141%2FFunctions%2F-166212119" anchor-label="concrete subtypes have SerialName matching __typename values" id="-2033480141%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="concrete subtypes have -serial-name matching __typename values.html"><span><span>concrete</span></span> <span><span>subtypes</span></span> <span><span>have</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>matching</span></span> <span>_</span><wbr><span>_</span><wbr><span><span>typename</span></span> <span><span>values</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2033480141%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="concrete subtypes have -serial-name matching __typename values.html"><span class="token function">concrete subtypes have SerialName matching __typename values</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1949341206%2FFunctions%2F-166212119" anchor-label="custom scalar DateTime round trips parse then serialize through Gson" id="-1949341206%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="custom scalar -date-time round trips parse then serialize through -gson.html"><span><span>custom</span></span> <span><span>scalar</span></span> <span>Date</span><wbr><span><span>Time</span></span> <span><span>round</span></span> <span><span>trips</span></span> <span><span>parse</span></span> <span><span>then</span></span> <span><span>serialize</span></span> <span><span>through</span></span> <span><span>Gson</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1949341206%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="custom scalar -date-time round trips parse then serialize through -gson.html"><span class="token function">custom scalar DateTime round trips parse then serialize through Gson</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1748664889%2FFunctions%2F-166212119" anchor-label="enum field in response round trips with wire name preserved" id="-1748664889%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="enum field in response round trips with wire name preserved.html"><span><span>enum</span></span> <span><span>field</span></span> <span><span>in</span></span> <span><span>response</span></span> <span><span>round</span></span> <span><span>trips</span></span> <span><span>with</span></span> <span><span>wire</span></span> <span><span>name</span></span> <span><span>preserved</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1748664889%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="enum field in response round trips with wire name preserved.html"><span class="token function">enum field in response round trips with wire name preserved</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="572996233%2FFunctions%2F-166212119" anchor-label="enum round trips construct then parse with keyword values" id="572996233%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="enum round trips construct then parse with keyword values.html"><span><span>enum</span></span> <span><span>round</span></span> <span><span>trips</span></span> <span><span>construct</span></span> <span><span>then</span></span> <span><span>parse</span></span> <span><span>with</span></span> <span><span>keyword</span></span> <span><span>values</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="572996233%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="enum round trips construct then parse with keyword values.html"><span class="token function">enum round trips construct then parse with keyword values</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1813397024%2FFunctions%2F-166212119" anchor-label="enum round trips parse then serialize with lowercase values" id="1813397024%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="enum round trips parse then serialize with lowercase values.html"><span><span>enum</span></span> <span><span>round</span></span> <span><span>trips</span></span> <span><span>parse</span></span> <span><span>then</span></span> <span><span>serialize</span></span> <span><span>with</span></span> <span><span>lowercase</span></span> <span><span>values</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1813397024%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="enum round trips parse then serialize with lowercase values.html"><span class="token function">enum round trips parse then serialize with lowercase values</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="902754113%2FFunctions%2F-166212119" anchor-label="enum round trips parse then serialize with uppercase values" id="902754113%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="enum round trips parse then serialize with uppercase values.html"><span><span>enum</span></span> <span><span>round</span></span> <span><span>trips</span></span> <span><span>parse</span></span> <span><span>then</span></span> <span><span>serialize</span></span> <span><span>with</span></span> <span><span>uppercase</span></span> <span><span>values</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="902754113%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="enum round trips parse then serialize with uppercase values.html"><span class="token function">enum round trips parse then serialize with uppercase values</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2066749087%2FFunctions%2F-166212119" anchor-label="explicit null value is preserved in JSON" id="-2066749087%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="explicit null value is preserved in -j-s-o-n.html"><span><span>explicit</span></span> <span><span>null</span></span> <span><span>value</span></span> <span><span>is</span></span> <span><span>preserved</span></span> <span><span>in</span></span> <span><span>JSON</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2066749087%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="explicit null value is preserved in -j-s-o-n.html"><span class="token function">explicit null value is preserved in JSON</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-275853575%2FFunctions%2F-166212119" anchor-label="field present in schema but absent in JSON deserializes as null" id="-275853575%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="field present in schema but absent in -j-s-o-n deserializes as null.html"><span><span>field</span></span> <span><span>present</span></span> <span><span>in</span></span> <span><span>schema</span></span> <span><span>but</span></span> <span><span>absent</span></span> <span><span>in</span></span> <span><span>JSON</span></span> <span><span>deserializes</span></span> <span><span>as</span></span> <span><span>null</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-275853575%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="field present in schema but absent in -j-s-o-n deserializes as null.html"><span class="token function">field present in schema but absent in JSON deserializes as null</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1131648361%2FFunctions%2F-166212119" anchor-label="GraphContainer with data only round trips parse then serialize" id="1131648361%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-graph-container with data only round trips parse then serialize.html"><span>Graph</span><wbr><span><span>Container</span></span> <span><span>with</span></span> <span><span>data</span></span> <span><span>only</span></span> <span><span>round</span></span> <span><span>trips</span></span> <span><span>parse</span></span> <span><span>then</span></span> <span><span>serialize</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1131648361%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="-graph-container with data only round trips parse then serialize.html"><span class="token function">GraphContainer with data only round trips parse then serialize</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="844898514%2FFunctions%2F-166212119" anchor-label="GraphContainer with data plus errors round trips parse then serialize" id="844898514%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-graph-container with data plus errors round trips parse then serialize.html"><span>Graph</span><wbr><span><span>Container</span></span> <span><span>with</span></span> <span><span>data</span></span> <span><span>plus</span></span> <span><span>errors</span></span> <span><span>round</span></span> <span><span>trips</span></span> <span><span>parse</span></span> <span><span>then</span></span> <span><span>serialize</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="844898514%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="-graph-container with data plus errors round trips parse then serialize.html"><span class="token function">GraphContainer with data plus errors round trips parse then serialize</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-260224530%2FFunctions%2F-166212119" anchor-label="GraphContainer with partial data (null data) round trips parse then serialize" id="-260224530%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-graph-container with partial data (null data) round trips parse then serialize.html"><span>Graph</span><wbr><span><span>Container</span></span> <span><span>with</span></span> <span><span>partial</span></span> <span><span>data</span></span> <span><span>(null</span></span> <span><span>data)</span></span> <span><span>round</span></span> <span><span>trips</span></span> <span><span>parse</span></span> <span><span>then</span></span> <span><span>serialize</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-260224530%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="-graph-container with partial data (null data) round trips parse then serialize.html"><span class="token function">GraphContainer with partial data (null data) round trips parse then serialize</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1995916090%2FFunctions%2F-166212119" anchor-label="keyword field wire name is preserved in JSON not escaped kotlin name" id="-1995916090%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="keyword field wire name is preserved in -j-s-o-n not escaped kotlin name.html"><span><span>keyword</span></span> <span><span>field</span></span> <span><span>wire</span></span> <span><span>name</span></span> <span><span>is</span></span> <span><span>preserved</span></span> <span><span>in</span></span> <span><span>JSON</span></span> <span><span>not</span></span> <span><span>escaped</span></span> <span><span>kotlin</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1995916090%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="keyword field wire name is preserved in -j-s-o-n not escaped kotlin name.html"><span class="token function">keyword field wire name is preserved in JSON not escaped kotlin name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1026153846%2FFunctions%2F-166212119" anchor-label="list with null elements preserves null entries" id="-1026153846%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="list with null elements preserves null entries.html"><span><span>list</span></span> <span><span>with</span></span> <span><span>null</span></span> <span><span>elements</span></span> <span><span>preserves</span></span> <span><span>null</span></span> <span><span>entries</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1026153846%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="list with null elements preserves null entries.html"><span class="token function">list with null elements preserves null entries</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-303972588%2FFunctions%2F-166212119" anchor-label="nested input object with keyword fields round trips" id="-303972588%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="nested input object with keyword fields round trips.html"><span><span>nested</span></span> <span><span>input</span></span> <span><span>object</span></span> <span><span>with</span></span> <span><span>keyword</span></span> <span><span>fields</span></span> <span><span>round</span></span> <span><span>trips</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-303972588%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="nested input object with keyword fields round trips.html"><span class="token function">nested input object with keyword fields round trips</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1255487152%2FFunctions%2F-166212119" anchor-label="null list container serializes as null by default" id="1255487152%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="null list container serializes as null by default.html"><span><span>null</span></span> <span><span>list</span></span> <span><span>container</span></span> <span><span>serializes</span></span> <span><span>as</span></span> <span><span>null</span></span> <span><span>by</span></span> <span><span>default</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1255487152%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="null list container serializes as null by default.html"><span class="token function">null list container serializes as null by default</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1889531862%2FFunctions%2F-166212119" anchor-label="ordinary response object round trips parse then serialize" id="-1889531862%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="ordinary response object round trips parse then serialize.html"><span><span>ordinary</span></span> <span><span>response</span></span> <span><span>object</span></span> <span><span>round</span></span> <span><span>trips</span></span> <span><span>parse</span></span> <span><span>then</span></span> <span><span>serialize</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1889531862%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="ordinary response object round trips parse then serialize.html"><span class="token function">ordinary response object round trips parse then serialize</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1677188250%2FFunctions%2F-166212119" anchor-label="polymorphic sealed interface has JsonClassDiscriminator with __typename" id="-1677188250%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="polymorphic sealed interface has -json-class-discriminator with __typename.html"><span><span>polymorphic</span></span> <span><span>sealed</span></span> <span><span>interface</span></span> <span><span>has</span></span> <span>Json</span><wbr><span>Class</span><wbr><span><span>Discriminator</span></span> <span><span>with</span></span> <span>_</span><wbr><span>_</span><wbr><span>typename</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1677188250%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="polymorphic sealed interface has -json-class-discriminator with __typename.html"><span class="token function">polymorphic sealed interface has JsonClassDiscriminator with __typename</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1171732752%2FFunctions%2F-166212119" anchor-label="polymorphic subtype deserializes to correct type based on __typename" id="1171732752%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="polymorphic subtype deserializes to correct type based on __typename.html"><span><span>polymorphic</span></span> <span><span>subtype</span></span> <span><span>deserializes</span></span> <span><span>to</span></span> <span><span>correct</span></span> <span><span>type</span></span> <span><span>based</span></span> <span><span>on</span></span> <span>_</span><wbr><span>_</span><wbr><span>typename</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1171732752%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="polymorphic subtype deserializes to correct type based on __typename.html"><span class="token function">polymorphic subtype deserializes to correct type based on __typename</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="933486147%2FFunctions%2F-166212119" anchor-label="response object round trips construct then parse" id="933486147%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="response object round trips construct then parse.html"><span><span>response</span></span> <span><span>object</span></span> <span><span>round</span></span> <span><span>trips</span></span> <span><span>construct</span></span> <span><span>then</span></span> <span><span>parse</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="933486147%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="response object round trips construct then parse.html"><span class="token function">response object round trips construct then parse</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1232341317%2FFunctions%2F-166212119" anchor-label="setUp" id="-1232341317%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set-up.html"><span>set</span><wbr><span><span>Up</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1232341317%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="set-up.html"><span class="token function">setUp</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-680095569%2FFunctions%2F-166212119" anchor-label="variable class round trips construct then parse" id="-680095569%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="variable class round trips construct then parse.html"><span><span>variable</span></span> <span><span>class</span></span> <span><span>round</span></span> <span><span>trips</span></span> <span><span>construct</span></span> <span><span>then</span></span> <span><span>parse</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-680095569%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="variable class round trips construct then parse.html"><span class="token function">variable class round trips construct then parse</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1308131400%2FFunctions%2F-166212119" anchor-label="variable class with keyword fields round trips parse then serialize" id="1308131400%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="variable class with keyword fields round trips parse then serialize.html"><span><span>variable</span></span> <span><span>class</span></span> <span><span>with</span></span> <span><span>keyword</span></span> <span><span>fields</span></span> <span><span>round</span></span> <span><span>trips</span></span> <span><span>parse</span></span> <span><span>then</span></span> <span><span>serialize</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1308131400%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="variable class with keyword fields round trips parse then serialize.html"><span class="token function">variable class with keyword fields round trips parse then serialize</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

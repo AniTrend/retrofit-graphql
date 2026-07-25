@@ -1,0 +1,175 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>NamePolicy</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    retrofit-graphql
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":codegen-core/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":codegen-core/main" data-filter=":codegen-core/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    retrofit-graphql
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="retrofit-graphql-codegen-core::co.anitrend.retrofit.graphql.codegen.naming/NamePolicy///PointingToDeclaration//-166212119">
+  <div class="breadcrumbs"><a href="../../index.html">retrofit-graphql-codegen-core</a><span class="delimiter">/</span><a href="../index.html">co.anitrend.retrofit.graphql.codegen.naming</a><span class="delimiter">/</span><span class="current">NamePolicy</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Name</span><wbr><span><span>Policy</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="index.html">NamePolicy</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/AniTrend/retrofit-graphql/tree/develop/codegen-core/src/main/kotlin/co/anitrend/retrofit/graphql/codegen/naming/NamePolicy.kt#L91">source</a>)</span></span></div><p class="paragraph">Documents the keyword escaping and identifier normalisation rules used by <a href="../-graph-name-allocator/index.html">GraphNameAllocator</a> when transforming GraphQL names into Kotlin identifiers.</p><h2 class="">Keyword Escaping Policy</h2><h3 class="">Hard keywords (always escaped)</h3><p class="paragraph">The full set of Kotlin <strong>hard keywords</strong> cannot be used as identifiers in any context. When a GraphQL name matches a hard keyword, the allocator appends the suffix <code class="lang-kotlin">Value</code> to produce a readable renamed identifier:</p><ul><li><p class="paragraph"><code class="lang-kotlin">private</code>  -&gt;<code class="lang-kotlin">privateValue</code></p></li><li><p class="paragraph"><code class="lang-kotlin">object</code>   -&gt;<code class="lang-kotlin">objectValue</code></p></li><li><p class="paragraph"><code class="lang-kotlin">when</code>     -&gt;<code class="lang-kotlin">whenValue</code></p></li><li><p class="paragraph"><code class="lang-kotlin">is</code>       -&gt;<code class="lang-kotlin">isValue</code></p></li><li><p class="paragraph"><code class="lang-kotlin">class</code>    -&gt;<code class="lang-kotlin">classValue</code></p></li><li><p class="paragraph"><code class="lang-kotlin">fun</code>      -&gt;<code class="lang-kotlin">funValue</code></p></li></ul><p class="paragraph">The <strong>original</strong> wire name is preserved separately in <a href="../-generated-name/wire-name.html">GeneratedName.wireName</a> and used for <code class="lang-kotlin">@SerialName</code> / <code class="lang-kotlin">@SerializedName</code> annotations. This means the JSON key always matches the GraphQL schema, regardless of Kotlin keyword escaping.</p><p class="paragraph">Backticks are intentionally <strong>not</strong> used because they degrade readability in generated source code that consumers are expected to inspect directly.</p><h3 class="">Visibility modifiers (escaped as soft keywords)</h3><p class="paragraph">The visibility modifiers <code class="lang-kotlin">private</code>, <code class="lang-kotlin">protected</code>, <code class="lang-kotlin">public</code>, and <code class="lang-kotlin">internal</code> are also escaped with the <code class="lang-kotlin">Value</code> suffix. While these are technically soft keywords (valid as property names in data class member positions), they cause compilation ambiguity when used alongside actual visibility declarations. For safety, they are treated as reserved.</p><h3 class="">Digits at start</h3><p class="paragraph">GraphQL names that start with a digit are prefixed with an underscore (e.g. <code class="lang-kotlin">3dModel</code> -&gt;<code class="lang-kotlin">_3dModel</code>).</p><h3 class="">Soft keywords (not escaped)</h3><p class="paragraph">Other soft keywords (e.g. <code class="lang-kotlin">actual</code>, <code class="lang-kotlin">data</code>, <code class="lang-kotlin">inner</code>, <code class="lang-kotlin">sealed</code>, <code class="lang-kotlin">open</code>) are <strong>not</strong> escaped because they are valid identifiers in most generated contexts (property names, parameter names, class names). If a consumer encounters a problem with a specific soft keyword in a specific context, file an issue and the policy will be extended.</p><h2 class="">Collision Resolution</h2><p class="paragraph">When two distinct GraphQL names normalise to the same Kotlin identifier candidate, <a href="../-graph-name-allocator/index.html">GraphNameAllocator</a> delegates to KotlinPoet's <code class="lang-kotlin">NameAllocator</code> which appends a deterministic underscore-based suffix (e.g. <code class="lang-kotlin">foo</code>, <code class="lang-kotlin">foo_</code>, <code class="lang-kotlin">foo__</code>). This resolution is:</p><ul><li><p class="paragraph">Scoped per allocator instance (per class, per operation, etc.)</p></li><li><p class="paragraph">Deterministic for the same input and same allocation order</p></li><li><p class="paragraph">Applied <strong>after</strong> keyword escaping</p></li></ul><h2 class="">Case conventions</h2><ul><li><p class="paragraph"><strong>Property names</strong>: lowerCamelCase (the escaped name's first character is lowercased; the rest is preserved as-is from the GraphQL name).</p></li><li><p class="paragraph"><strong>Class names</strong>: PascalCase (the escaped name's first character is uppercased).</p></li><li><p class="paragraph"><strong>Enum constants</strong>: SCREAMING_SNAKE_CASE (the escaped name is uppercased in its entirety).</p></li></ul><span class="kdoc-tag"><h4 class="">Since</h4><p class="paragraph">1.0</p></span><h4 class="tableheader">See also</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-graph-name-allocator/index.html"><span>Graph</span><wbr><span>Name</span><wbr><span><span>Allocator</span></span></a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-generated-name/index.html"><span>Generated</span><wbr><span><span>Name</span></span></a></div></span></div><div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="832280234%2FProperties%2F-166212119" anchor-label="HARD_KEYWORDS" id="832280234%2FProperties%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-h-a-r-d_-k-e-y-w-o-r-d-s.html"><span>HARD_</span><wbr><span>KEYWORDS</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="832280234%2FProperties%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="-h-a-r-d_-k-e-y-w-o-r-d-s.html">HARD_KEYWORDS</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-set/index.html">Set</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Kotlin <strong>hard keywords</strong> that cannot be used as identifiers in any context.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="1476034756%2FFunctions%2F-166212119" anchor-label="escapeKeyword" id="1476034756%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="escape-keyword.html"><span>escape</span><wbr><span><span>Keyword</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1476034756%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="escape-keyword.html"><span class="token function">escapeKeyword</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Returns a safe Kotlin identifier for the given GraphQL <a href="escape-keyword.html">name</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="24335675%2FFunctions%2F-166212119" anchor-label="isKeyword" id="24335675%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is-keyword.html"><span>is</span><wbr><span><span>Keyword</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="24335675%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="is-keyword.html"><span class="token function">isKeyword</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if <a href="is-keyword.html">name</a> is a Kotlin keyword (hard or soft).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

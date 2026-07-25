@@ -1,0 +1,535 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>SerializationDescriptorTest</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    retrofit-graphql
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":codegen-core/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":codegen-core/main" data-filter=":codegen-core/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    retrofit-graphql
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="retrofit-graphql-codegen-core::co.anitrend.retrofit.graphql.codegen.serialization/SerializationDescriptorTest///PointingToDeclaration//-166212119">
+  <div class="breadcrumbs"><a href="../../index.html">retrofit-graphql-codegen-core</a><span class="delimiter">/</span><a href="../index.html">co.anitrend.retrofit.graphql.codegen.serialization</a><span class="delimiter">/</span><span class="current">SerializationDescriptorTest</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Serialization</span><wbr><span>Descriptor</span><wbr><span><span>Test</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">SerializationDescriptorTest</a></div><p class="paragraph">Verifies that generated serialization annotations produce correct descriptor contracts.</p><p class="paragraph"><strong>Layer D: Serialization Descriptor Contract Tests.</strong></p><p class="paragraph">These tests verify that <code class="lang-kotlin">@SerialName</code> and <code class="lang-kotlin">@SerializedName</code> annotation values in generated source code match the exact expected wire names. Ordinary response model classes intentionally omit class-level <code class="lang-kotlin">@SerialName</code> so kotlinx.serialization uses the generated fully qualified class name as the descriptor identity. Property annotations and enum literal annotations still correspond to <code class="lang-kotlin">serializer().descriptor.getElementName(index)</code> values.</p><p class="paragraph">All assertions use EXACT string matching, not substring matching.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="885710889%2FConstructors%2F-166212119" anchor-label="SerializationDescriptorTest" id="885710889%2FConstructors%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-serialization-descriptor-test.html"><span>Serialization</span><wbr><span>Descriptor</span><wbr><span><span>Test</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="885710889%2FConstructors%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-1379632491%2FFunctions%2F-166212119" anchor-label="aliased field uses response alias in SerialName not schema name" id="-1379632491%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="aliased field uses response alias in -serial-name not schema name.html"><span><span>aliased</span></span> <span><span>field</span></span> <span><span>uses</span></span> <span><span>response</span></span> <span><span>alias</span></span> <span><span>in</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>not</span></span> <span><span>schema</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1379632491%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="aliased field uses response alias in -serial-name not schema name.html"><span class="token function">aliased field uses response alias in SerialName not schema name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-474852461%2FFunctions%2F-166212119" anchor-label="capitalized GraphQL key preserved in SerialName with lowercased kotlinName" id="-474852461%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="capitalized -graph-q-l key preserved in -serial-name with lowercased kotlin-name.html"><span><span>capitalized</span></span> <span>Graph</span><wbr><span><span>QL</span></span> <span><span>key</span></span> <span><span>preserved</span></span> <span><span>in</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>with</span></span> <span><span>lowercased</span></span> <span>kotlin</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-474852461%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="capitalized -graph-q-l key preserved in -serial-name with lowercased kotlin-name.html"><span class="token function">capitalized GraphQL key preserved in SerialName with lowercased kotlinName</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-80626140%2FFunctions%2F-166212119" anchor-label="collision fields get distinct SerialName values for each wire name" id="-80626140%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="collision fields get distinct -serial-name values for each wire name.html"><span><span>collision</span></span> <span><span>fields</span></span> <span><span>get</span></span> <span><span>distinct</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>values</span></span> <span><span>for</span></span> <span><span>each</span></span> <span><span>wire</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-80626140%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="collision fields get distinct -serial-name values for each wire name.html"><span class="token function">collision fields get distinct SerialName values for each wire name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="870372514%2FFunctions%2F-166212119" anchor-label="concrete subtype SerialName equals exact __typename value" id="870372514%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="concrete subtype -serial-name equals exact __typename value.html"><span><span>concrete</span></span> <span><span>subtype</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>equals</span></span> <span><span>exact</span></span> <span>_</span><wbr><span>_</span><wbr><span><span>typename</span></span> <span><span>value</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="870372514%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="concrete subtype -serial-name equals exact __typename value.html"><span class="token function">concrete subtype SerialName equals exact __typename value</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1088114404%2FFunctions%2F-166212119" anchor-label="doubly nested response data class omits full path descriptor" id="1088114404%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="doubly nested response data class omits full path descriptor.html"><span><span>doubly</span></span> <span><span>nested</span></span> <span><span>response</span></span> <span><span>data</span></span> <span><span>class</span></span> <span><span>omits</span></span> <span><span>full</span></span> <span><span>path</span></span> <span><span>descriptor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1088114404%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="doubly nested response data class omits full path descriptor.html"><span class="token function">doubly nested response data class omits full path descriptor</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1516079849%2FFunctions%2F-166212119" anchor-label="enum class has Serializable annotation for KOTLINX backend" id="1516079849%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="enum class has -serializable annotation for -k-o-t-l-i-n-x backend.html"><span><span>enum</span></span> <span><span>class</span></span> <span><span>has</span></span> <span><span>Serializable</span></span> <span><span>annotation</span></span> <span><span>for</span></span> <span><span>KOTLINX</span></span> <span><span>backend</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1516079849%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="enum class has -serializable annotation for -k-o-t-l-i-n-x backend.html"><span class="token function">enum class has Serializable annotation for KOTLINX backend</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1207683792%2FFunctions%2F-166212119" anchor-label="enum field in response type has SerialName with wire name" id="-1207683792%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="enum field in response type has -serial-name with wire name.html"><span><span>enum</span></span> <span><span>field</span></span> <span><span>in</span></span> <span><span>response</span></span> <span><span>type</span></span> <span><span>has</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>with</span></span> <span><span>wire</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1207683792%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="enum field in response type has -serial-name with wire name.html"><span class="token function">enum field in response type has SerialName with wire name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-211118352%2FFunctions%2F-166212119" anchor-label="enum keyword values have wire name preserved and kotlinName escaped" id="-211118352%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="enum keyword values have wire name preserved and kotlin-name escaped.html"><span><span>enum</span></span> <span><span>keyword</span></span> <span><span>values</span></span> <span><span>have</span></span> <span><span>wire</span></span> <span><span>name</span></span> <span><span>preserved</span></span> <span><span>and</span></span> <span>kotlin</span><wbr><span><span>Name</span></span> <span><span>escaped</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-211118352%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="enum keyword values have wire name preserved and kotlin-name escaped.html"><span class="token function">enum keyword values have wire name preserved and kotlinName escaped</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-937078899%2FFunctions%2F-166212119" anchor-label="enum with lowercase values preserves wire name in SerialName" id="-937078899%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="enum with lowercase values preserves wire name in -serial-name.html"><span><span>enum</span></span> <span><span>with</span></span> <span><span>lowercase</span></span> <span><span>values</span></span> <span><span>preserves</span></span> <span><span>wire</span></span> <span><span>name</span></span> <span><span>in</span></span> <span>Serial</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-937078899%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="enum with lowercase values preserves wire name in -serial-name.html"><span class="token function">enum with lowercase values preserves wire name in SerialName</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-31377860%2FFunctions%2F-166212119" anchor-label="enum with mixed case values preserves exact wire name" id="-31377860%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="enum with mixed case values preserves exact wire name.html"><span><span>enum</span></span> <span><span>with</span></span> <span><span>mixed</span></span> <span><span>case</span></span> <span><span>values</span></span> <span><span>preserves</span></span> <span><span>exact</span></span> <span><span>wire</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-31377860%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="enum with mixed case values preserves exact wire name.html"><span class="token function">enum with mixed case values preserves exact wire name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="604052948%2FFunctions%2F-166212119" anchor-label="every enum literal SerialName returns exact GraphQL value" id="604052948%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="every enum literal -serial-name returns exact -graph-q-l value.html"><span><span>every</span></span> <span><span>enum</span></span> <span><span>literal</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>returns</span></span> <span><span>exact</span></span> <span>Graph</span><wbr><span><span>QL</span></span> <span><span>value</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="604052948%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="every enum literal -serial-name returns exact -graph-q-l value.html"><span class="token function">every enum literal SerialName returns exact GraphQL value</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="704907164%2FFunctions%2F-166212119" anchor-label="GSON backend emits SerializedName on all property types" id="704907164%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-g-s-o-n backend emits -serialized-name on all property types.html"><span><span>GSON</span></span> <span><span>backend</span></span> <span><span>emits</span></span> <span>Serialized</span><wbr><span><span>Name</span></span> <span><span>on</span></span> <span><span>all</span></span> <span><span>property</span></span> <span><span>types</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="704907164%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="-g-s-o-n backend emits -serialized-name on all property types.html"><span class="token function">GSON backend emits SerializedName on all property types</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="509813258%2FFunctions%2F-166212119" anchor-label="input field SerialName matches GraphQL input field name" id="509813258%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="input field -serial-name matches -graph-q-l input field name.html"><span><span>input</span></span> <span><span>field</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>matches</span></span> <span>Graph</span><wbr><span><span>QL</span></span> <span><span>input</span></span> <span><span>field</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="509813258%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="input field -serial-name matches -graph-q-l input field name.html"><span class="token function">input field SerialName matches GraphQL input field name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-821852%2FFunctions%2F-166212119" anchor-label="keyword input field has kotlinName escaped but SerialName uses wire name" id="-821852%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="keyword input field has kotlin-name escaped but -serial-name uses wire name.html"><span><span>keyword</span></span> <span><span>input</span></span> <span><span>field</span></span> <span><span>has</span></span> <span>kotlin</span><wbr><span><span>Name</span></span> <span><span>escaped</span></span> <span><span>but</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>uses</span></span> <span><span>wire</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-821852%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="keyword input field has kotlin-name escaped but -serial-name uses wire name.html"><span class="token function">keyword input field has kotlinName escaped but SerialName uses wire name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1750355843%2FFunctions%2F-166212119" anchor-label="keyword property has kotlinName escaped but SerialName uses wire name" id="-1750355843%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="keyword property has kotlin-name escaped but -serial-name uses wire name.html"><span><span>keyword</span></span> <span><span>property</span></span> <span><span>has</span></span> <span>kotlin</span><wbr><span><span>Name</span></span> <span><span>escaped</span></span> <span><span>but</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>uses</span></span> <span><span>wire</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1750355843%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="keyword property has kotlin-name escaped but -serial-name uses wire name.html"><span class="token function">keyword property has kotlinName escaped but SerialName uses wire name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="87244004%2FFunctions%2F-166212119" anchor-label="keyword variable has kotlinName escaped but SerialName uses wire name" id="87244004%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="keyword variable has kotlin-name escaped but -serial-name uses wire name.html"><span><span>keyword</span></span> <span><span>variable</span></span> <span><span>has</span></span> <span>kotlin</span><wbr><span><span>Name</span></span> <span><span>escaped</span></span> <span><span>but</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>uses</span></span> <span><span>wire</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="87244004%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="keyword variable has kotlin-name escaped but -serial-name uses wire name.html"><span class="token function">keyword variable has kotlinName escaped but SerialName uses wire name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="914484832%2FFunctions%2F-166212119" anchor-label="nested input object field SerialName matches wire name" id="914484832%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="nested input object field -serial-name matches wire name.html"><span><span>nested</span></span> <span><span>input</span></span> <span><span>object</span></span> <span><span>field</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>matches</span></span> <span><span>wire</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="914484832%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="nested input object field -serial-name matches wire name.html"><span class="token function">nested input object field SerialName matches wire name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1322446867%2FFunctions%2F-166212119" anchor-label="nested response data class omits path-qualified SerialName" id="1322446867%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="nested response data class omits path-qualified -serial-name.html"><span><span>nested</span></span> <span><span>response</span></span> <span><span>data</span></span> <span><span>class</span></span> <span><span>omits</span></span> <span><span>path-qualified</span></span> <span>Serial</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1322446867%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="nested response data class omits path-qualified -serial-name.html"><span class="token function">nested response data class omits path-qualified SerialName</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2653743%2FFunctions%2F-166212119" anchor-label="NONE backend emits no serialization annotations" id="-2653743%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-n-o-n-e backend emits no serialization annotations.html"><span><span>NONE</span></span> <span><span>backend</span></span> <span><span>emits</span></span> <span><span>no</span></span> <span><span>serialization</span></span> <span><span>annotations</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2653743%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="-n-o-n-e backend emits no serialization annotations.html"><span class="token function">NONE backend emits no serialization annotations</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-405787918%2FFunctions%2F-166212119" anchor-label="ordinary property SerialName matches GraphQL wire name" id="-405787918%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="ordinary property -serial-name matches -graph-q-l wire name.html"><span><span>ordinary</span></span> <span><span>property</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>matches</span></span> <span>Graph</span><wbr><span><span>QL</span></span> <span><span>wire</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-405787918%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="ordinary property -serial-name matches -graph-q-l wire name.html"><span class="token function">ordinary property SerialName matches GraphQL wire name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="548401001%2FFunctions%2F-166212119" anchor-label="repeated schema projections rely on distinct default descriptors" id="548401001%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="repeated schema projections rely on distinct default descriptors.html"><span><span>repeated</span></span> <span><span>schema</span></span> <span><span>projections</span></span> <span><span>rely</span></span> <span><span>on</span></span> <span><span>distinct</span></span> <span><span>default</span></span> <span><span>descriptors</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="548401001%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="repeated schema projections rely on distinct default descriptors.html"><span class="token function">repeated schema projections rely on distinct default descriptors</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="887080663%2FFunctions%2F-166212119" anchor-label="root response data class omits class-level SerialName" id="887080663%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="root response data class omits class-level -serial-name.html"><span><span>root</span></span> <span><span>response</span></span> <span><span>data</span></span> <span><span>class</span></span> <span><span>omits</span></span> <span><span>class-level</span></span> <span>Serial</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="887080663%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="root response data class omits class-level -serial-name.html"><span class="token function">root response data class omits class-level SerialName</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1393909246%2FFunctions%2F-166212119" anchor-label="sealed interface omits class-level SerialName descriptor" id="-1393909246%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sealed interface omits class-level -serial-name descriptor.html"><span><span>sealed</span></span> <span><span>interface</span></span> <span><span>omits</span></span> <span><span>class-level</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>descriptor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1393909246%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="sealed interface omits class-level -serial-name descriptor.html"><span class="token function">sealed interface omits class-level SerialName descriptor</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2082130781%2FFunctions%2F-166212119" anchor-label="setUp" id="2082130781%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set-up.html"><span>set</span><wbr><span><span>Up</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2082130781%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="set-up.html"><span class="token function">setUp</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1067087843%2FFunctions%2F-166212119" anchor-label="soft keyword isActive is NOT escaped" id="-1067087843%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="soft keyword is-active is -n-o-t escaped.html"><span><span>soft</span></span> <span><span>keyword</span></span> <span>is</span><wbr><span><span>Active</span></span> <span><span>is</span></span> <span><span>NOT</span></span> <span><span>escaped</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1067087843%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="soft keyword is-active is -n-o-t escaped.html"><span class="token function">soft keyword isActive is NOT escaped</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1144761940%2FFunctions%2F-166212119" anchor-label="variable SerialName matches GraphQL variable name" id="-1144761940%2FFunctions%2F-166212119" data-filterable-set=":codegen-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":codegen-core/main" data-filterable-set=":codegen-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="variable -serial-name matches -graph-q-l variable name.html"><span><span>variable</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>matches</span></span> <span>Graph</span><wbr><span><span>QL</span></span> <span><span>variable</span></span> <span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1144761940%2FFunctions%2F-166212119"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":codegen-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="variable -serial-name matches -graph-q-l variable name.html"><span class="token function">variable SerialName matches GraphQL variable name</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

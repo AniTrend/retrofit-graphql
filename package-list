@@ -24,13 +24,17 @@ co.anitrend.retrofit.graphql.model.body
 co.anitrend.retrofit.graphql.model.request
 module:retrofit-graphql-codegen-core
 co.anitrend.retrofit.graphql.codegen
+co.anitrend.retrofit.graphql.codegen.config
 co.anitrend.retrofit.graphql.codegen.generate
+co.anitrend.retrofit.graphql.codegen.generate.helper
 co.anitrend.retrofit.graphql.codegen.hash
 co.anitrend.retrofit.graphql.codegen.mapping
 co.anitrend.retrofit.graphql.codegen.model
+co.anitrend.retrofit.graphql.codegen.naming
 co.anitrend.retrofit.graphql.codegen.parser
 co.anitrend.retrofit.graphql.codegen.resolve
 co.anitrend.retrofit.graphql.codegen.schema
+co.anitrend.retrofit.graphql.codegen.serialization
 co.anitrend.retrofit.graphql.codegen.validate
 module:library
 co.anitrend.retrofit.graphql.annotation.processor

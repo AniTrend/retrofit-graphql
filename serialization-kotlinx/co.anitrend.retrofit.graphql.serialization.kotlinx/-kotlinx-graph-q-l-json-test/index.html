@@ -1,0 +1,434 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>KotlinxGraphQLJsonTest</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    retrofit-graphql
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":serialization-kotlinx/release">release</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":serialization-kotlinx/release" data-filter=":serialization-kotlinx/release">
+                                <span class="checkbox--icon"></span>
+                                release
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    retrofit-graphql
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="serialization-kotlinx::co.anitrend.retrofit.graphql.serialization.kotlinx/KotlinxGraphQLJsonTest///PointingToDeclaration//-886383280">
+  <div class="breadcrumbs"><a href="../../index.html">serialization-kotlinx</a><span class="delimiter">/</span><a href="../index.html">co.anitrend.retrofit.graphql.serialization.kotlinx</a><span class="delimiter">/</span><span class="current">KotlinxGraphQLJsonTest</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Kotlinx</span><wbr><span>Graph</span><wbr><span>QLJson</span><wbr><span><span>Test</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">KotlinxGraphQLJsonTest</a></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="1150448249%2FConstructors%2F-886383280" anchor-label="KotlinxGraphQLJsonTest" id="1150448249%2FConstructors%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kotlinx-graph-q-l-json-test.html"><span>Kotlinx</span><wbr><span>Graph</span><wbr><span>QLJson</span><wbr><span><span>Test</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1150448249%2FConstructors%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="-20016990%2FClasslikes%2F-886383280" anchor-label="GetCurrentUserData" id="-20016990%2FClasslikes%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-get-current-user-data/index.html"><span>Get</span><wbr><span>Current</span><wbr><span>User</span><wbr><span><span>Data</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-20016990%2FClasslikes%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="-get-current-user-data/index.html">GetCurrentUserData</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>viewer<span class="token operator">: </span><a href="-get-current-user-data/-viewer/index.html">KotlinxGraphQLJsonTest.GetCurrentUserData.Viewer</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1274516936%2FClasslikes%2F-886383280" anchor-label="GetMarketPlaceAppsVariables" id="-1274516936%2FClasslikes%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-get-market-place-apps-variables/index.html"><span>Get</span><wbr><span>Market</span><wbr><span>Place</span><wbr><span>Apps</span><wbr><span><span>Variables</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1274516936%2FClasslikes%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="-get-market-place-apps-variables/index.html">GetMarketPlaceAppsVariables</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>first<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>after<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="../../../api/co.anitrend.retrofit.graphql.model/-graph-q-l-variables/index.html">GraphQLVariables</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="52315978%2FClasslikes%2F-886383280" anchor-label="NonSerializableVisibility" id="52315978%2FClasslikes%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-non-serializable-visibility/index.html"><span>Non</span><wbr><span>Serializable</span><wbr><span><span>Visibility</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="52315978%2FClasslikes%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-non-serializable-visibility/index.html">NonSerializableVisibility</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-non-serializable-visibility/index.html">KotlinxGraphQLJsonTest.NonSerializableVisibility</a><span class="token operator">&gt; </span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1083194296%2FClasslikes%2F-886383280" anchor-label="Visibility" id="-1083194296%2FClasslikes%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-visibility/index.html"><span><span>Visibility</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1083194296%2FClasslikes%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">enum </span><a href="-visibility/index.html">Visibility</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-visibility/index.html">KotlinxGraphQLJsonTest.Visibility</a><span class="token operator">&gt; </span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="2004959606%2FFunctions%2F-886383280" anchor-label="decode handles GraphContainer with both data and errors" id="2004959606%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="decode handles -graph-container with both data and errors.html"><span><span>decode</span></span> <span><span>handles</span></span> <span>Graph</span><wbr><span><span>Container</span></span> <span><span>with</span></span> <span><span>both</span></span> <span><span>data</span></span> <span><span>and</span></span> <span><span>errors</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2004959606%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="decode handles -graph-container with both data and errors.html"><span class="token function">decode handles GraphContainer with both data and errors</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1716876172%2FFunctions%2F-886383280" anchor-label="decode handles GraphContainer with errors (partial data)" id="1716876172%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="decode handles -graph-container with errors (partial data).html"><span><span>decode</span></span> <span><span>handles</span></span> <span>Graph</span><wbr><span><span>Container</span></span> <span><span>with</span></span> <span><span>errors</span></span> <span><span>(partial</span></span> <span><span>data)</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1716876172%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="decode handles -graph-container with errors (partial data).html"><span class="token function">decode handles GraphContainer with errors (partial data)</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="382302816%2FFunctions%2F-886383280" anchor-label="decode handles GraphContainer with parameterized type" id="382302816%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="decode handles -graph-container with parameterized type.html"><span><span>decode</span></span> <span><span>handles</span></span> <span>Graph</span><wbr><span><span>Container</span></span> <span><span>with</span></span> <span><span>parameterized</span></span> <span><span>type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="382302816%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="decode handles -graph-container with parameterized type.html"><span class="token function">decode handles GraphContainer with parameterized type</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="873494918%2FFunctions%2F-886383280" anchor-label="decode handles List of parameterized type" id="873494918%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="decode handles -list of parameterized type.html"><span><span>decode</span></span> <span><span>handles</span></span> <span><span>List</span></span> <span><span>of</span></span> <span><span>parameterized</span></span> <span><span>type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="873494918%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="decode handles -list of parameterized type.html"><span class="token function">decode handles List of parameterized type</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2054860026%2FFunctions%2F-886383280" anchor-label="decode handles Map of parameterized type" id="-2054860026%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="decode handles -map of parameterized type.html"><span><span>decode</span></span> <span><span>handles</span></span> <span><span>Map</span></span> <span><span>of</span></span> <span><span>parameterized</span></span> <span><span>type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2054860026%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="decode handles -map of parameterized type.html"><span class="token function">decode handles Map of parameterized type</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1797637650%2FFunctions%2F-886383280" anchor-label="decode produces actionable exception for unsupported type shape" id="1797637650%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="decode produces actionable exception for unsupported type shape.html"><span><span>decode</span></span> <span><span>produces</span></span> <span><span>actionable</span></span> <span><span>exception</span></span> <span><span>for</span></span> <span><span>unsupported</span></span> <span><span>type</span></span> <span><span>shape</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1797637650%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="decode produces actionable exception for unsupported type shape.html"><span class="token function">decode produces actionable exception for unsupported type shape</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1978268898%2FFunctions%2F-886383280" anchor-label="decode produces actionable exception when serializer not found" id="-1978268898%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="decode produces actionable exception when serializer not found.html"><span><span>decode</span></span> <span><span>produces</span></span> <span><span>actionable</span></span> <span><span>exception</span></span> <span><span>when</span></span> <span><span>serializer</span></span> <span><span>not</span></span> <span><span>found</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1978268898%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="decode produces actionable exception when serializer not found.html"><span class="token function">decode produces actionable exception when serializer not found</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1597817612%2FFunctions%2F-886383280" anchor-label="decode with raw Class type works as before" id="-1597817612%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="decode with raw -class type works as before.html"><span><span>decode</span></span> <span><span>with</span></span> <span><span>raw</span></span> <span><span>Class</span></span> <span><span>type</span></span> <span><span>works</span></span> <span><span>as</span></span> <span><span>before</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1597817612%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="decode with raw -class type works as before.html"><span class="token function">decode with raw Class type works as before</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1203346102%2FFunctions%2F-886383280" anchor-label="encode falls back to Enum name for non serializable enum extension values" id="1203346102%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="encode falls back to -enum name for non serializable enum extension values.html"><span><span>encode</span></span> <span><span>falls</span></span> <span><span>back</span></span> <span><span>to</span></span> <span><span>Enum</span></span> <span><span>name</span></span> <span><span>for</span></span> <span><span>non</span></span> <span><span>serializable</span></span> <span><span>enum</span></span> <span><span>extension</span></span> <span><span>values</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1203346102%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="encode falls back to -enum name for non serializable enum extension values.html"><span class="token function">encode falls back to Enum name for non serializable enum extension values</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1138430996%2FFunctions%2F-886383280" anchor-label="encode handles GraphQLRequest with parameterized variables type" id="-1138430996%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="encode handles -graph-q-l-request with parameterized variables type.html"><span><span>encode</span></span> <span><span>handles</span></span> <span>Graph</span><wbr><span><span>QLRequest</span></span> <span><span>with</span></span> <span><span>parameterized</span></span> <span><span>variables</span></span> <span><span>type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1138430996%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="encode handles -graph-q-l-request with parameterized variables type.html"><span class="token function">encode handles GraphQLRequest with parameterized variables type</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1101473881%2FFunctions%2F-886383280" anchor-label="encode preserves persisted query extensions for kotlinx" id="1101473881%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="encode preserves persisted query extensions for kotlinx.html"><span><span>encode</span></span> <span><span>preserves</span></span> <span><span>persisted</span></span> <span><span>query</span></span> <span><span>extensions</span></span> <span><span>for</span></span> <span><span>kotlinx</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1101473881%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="encode preserves persisted query extensions for kotlinx.html"><span class="token function">encode preserves persisted query extensions for kotlinx</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="125087600%2FFunctions%2F-886383280" anchor-label="encode preserves SerialName for enum values in recursively nested extensions" id="125087600%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="encode preserves -serial-name for enum values in recursively nested extensions.html"><span><span>encode</span></span> <span><span>preserves</span></span> <span>Serial</span><wbr><span><span>Name</span></span> <span><span>for</span></span> <span><span>enum</span></span> <span><span>values</span></span> <span><span>in</span></span> <span><span>recursively</span></span> <span><span>nested</span></span> <span><span>extensions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="125087600%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="encode preserves -serial-name for enum values in recursively nested extensions.html"><span class="token function">encode preserves SerialName for enum values in recursively nested extensions</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1922102378%2FFunctions%2F-886383280" anchor-label="encode with null type falls back to runtime class" id="-1922102378%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="encode with null type falls back to runtime class.html"><span><span>encode</span></span> <span><span>with</span></span> <span><span>null</span></span> <span><span>type</span></span> <span><span>falls</span></span> <span><span>back</span></span> <span><span>to</span></span> <span><span>runtime</span></span> <span><span>class</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1922102378%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="encode with null type falls back to runtime class.html"><span class="token function">encode with null type falls back to runtime class</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="331514479%2FFunctions%2F-886383280" anchor-label="GraphError deserializes message and locations only" id="331514479%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-graph-error deserializes message and locations only.html"><span>Graph</span><wbr><span><span>Error</span></span> <span><span>deserializes</span></span> <span><span>message</span></span> <span><span>and</span></span> <span><span>locations</span></span> <span><span>only</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="331514479%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="-graph-error deserializes message and locations only.html"><span class="token function">GraphError deserializes message and locations only</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="621388741%2FFunctions%2F-886383280" anchor-label="round-trip encode then decode preserves data" id="621388741%2FFunctions%2F-886383280" data-filterable-set=":serialization-kotlinx/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":serialization-kotlinx/release" data-filterable-set=":serialization-kotlinx/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="round-trip encode then decode preserves data.html"><span><span>round-trip</span></span> <span><span>encode</span></span> <span><span>then</span></span> <span><span>decode</span></span> <span><span>preserves</span></span> <span><span>data</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="621388741%2FFunctions%2F-886383280"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":serialization-kotlinx/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="round-trip encode then decode preserves data.html"><span class="token function">round-trip encode then decode preserves data</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
