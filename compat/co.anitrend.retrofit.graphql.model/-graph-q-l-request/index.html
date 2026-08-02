@@ -1,0 +1,224 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>GraphQLRequest</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    retrofit-graphql
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":compat/release">release</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":compat/release" data-filter=":compat/release">
+                                <span class="checkbox--icon"></span>
+                                release
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    retrofit-graphql
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="compat::co.anitrend.retrofit.graphql.model/GraphQLRequest///PointingToDeclaration//1469808502">
+  <div class="breadcrumbs"><a href="../../index.html">compat</a><span class="delimiter">/</span><a href="../index.html">co.anitrend.retrofit.graphql.model</a><span class="delimiter">/</span><span class="current">GraphQLRequest</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Graph</span><wbr><span><span>QLRequest</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":compat/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html"><strike>GraphQLRequest</strike></a><span class="token operator">&lt;</span><a href="index.html">TVariables</a><span class="token operator"> : </span><a href="../../../api/co.anitrend.retrofit.graphql.model/-graph-q-l-variables/index.html">GraphQLVariables</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>query<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>operationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>variables<span class="token operator">: </span><a href="index.html">TVariables</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>extensions<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator"> = </span>emptyMap()</span></span><span class="token punctuation">)</span><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/AniTrend/retrofit-graphql/tree/develop/compat/src/main/kotlin/co/anitrend/retrofit/graphql/model/GraphQLRequest.kt#L110">source</a>)</span></span></div><div class="deprecation-content"><h3 class="">Deprecated</h3><p class="paragraph">Legacy serializer-coupled request payload. Use GraphQLOperationRequest with the backend-neutral GraphQLConverterFactory instead.</p></div><p class="paragraph">A typed GraphQL request payload.</p><p class="paragraph"><strong>Legacy</strong>: this serializer-coupled request type lives in <code class="lang-kotlin">:compat</code> for backward compatibility with the deprecated <a href="../../co.anitrend.retrofit.graphql.converter/-graph-converter/index.html">co.anitrend.retrofit.graphql.converter.GraphConverter</a> flow. New code should use the backend-neutral <a href="../../../api/co.anitrend.retrofit.graphql.model.request/-graph-q-l-operation-request/index.html">co.anitrend.retrofit.graphql.model.request.GraphQLOperationRequest</a> with <a href="../../../runtime/co.anitrend.retrofit.graphql.converter/-graph-q-l-converter-factory/index.html">co.anitrend.retrofit.graphql.converter.GraphQLConverterFactory</a>.</p><p class="paragraph">It is annotated with <span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/">kotlinx.serialization.Serializable</span> to enable serialization by KotlinxGraphQLJson when Retrofit passes a parameterized type like <code class="lang-kotlin">GraphQLRequest&lt;GetMarketPlaceAppsVariables&gt;</code>.</p><p class="paragraph">When using the codegen Gradle plugin, generated operation objects provide <code class="lang-kotlin">.request(...)</code> factory methods that construct <a href="../../../api/co.anitrend.retrofit.graphql.model.request/-graph-q-l-operation-request/index.html">co.anitrend.retrofit.graphql.model.request.GraphQLOperationRequest</a> instances with type-safe variable classes. For asset-based workflows, construct <a href="index.html">GraphQLRequest</a> manually or use QueryContainerBuilder.</p><h2 class="">Serialization Behavior</h2><h3 class="">kotlinx.serialization</h3><ul><li><p class="paragraph"><span data-unresolved-link="co.anitrend.retrofit.graphql.model/GraphQLRequest//#kotlin.String#kotlin.String#TypeParam(bounds=[co.anitrend.retrofit.graphql.model.GraphQLVariables])?#kotlin.collections.Map[kotlin.String,kotlin.Any?]/PointingToCallableParameters(0)/">query</span>, <span data-unresolved-link="co.anitrend.retrofit.graphql.model/GraphQLRequest//#kotlin.String#kotlin.String#TypeParam(bounds=[co.anitrend.retrofit.graphql.model.GraphQLVariables])?#kotlin.collections.Map[kotlin.String,kotlin.Any?]/PointingToCallableParameters(1)/">operationName</span>, and <span data-unresolved-link="co.anitrend.retrofit.graphql.model/GraphQLRequest//#kotlin.String#kotlin.String#TypeParam(bounds=[co.anitrend.retrofit.graphql.model.GraphQLVariables])?#kotlin.collections.Map[kotlin.String,kotlin.Any?]/PointingToCallableParameters(2)/">variables</span> are serialized normally</p></li><li><p class="paragraph"><span data-unresolved-link="co.anitrend.retrofit.graphql.model/GraphQLRequest//#kotlin.String#kotlin.String#TypeParam(bounds=[co.anitrend.retrofit.graphql.model.GraphQLVariables])?#kotlin.collections.Map[kotlin.String,kotlin.Any?]/PointingToCallableParameters(3)/">extensions</span> remains <code class="lang-kotlin">@Transient</code> on the data class because <code class="lang-kotlin">Map&lt;String, Any?&gt;</code> cannot be statically resolved by the compiler plugin</p></li><li><p class="paragraph">KotlinxGraphQLJson.encode merges supported extension payloads into the encoded JSON at runtime so common request extensions, including APQ, continue to work on the typed request flow</p></li></ul><h3 class="">Gson (via GsonGraphQLJson)</h3><ul><li><p class="paragraph">All fields are serialized normally, including <span data-unresolved-link="co.anitrend.retrofit.graphql.model/GraphQLRequest//#kotlin.String#kotlin.String#TypeParam(bounds=[co.anitrend.retrofit.graphql.model.GraphQLVariables])?#kotlin.collections.Map[kotlin.String,kotlin.Any?]/PointingToCallableParameters(3)/">extensions</span></p></li></ul><h3 class="">Accessing <span data-unresolved-link="co.anitrend.retrofit.graphql.model/GraphQLRequest//#kotlin.String#kotlin.String#TypeParam(bounds=[co.anitrend.retrofit.graphql.model.GraphQLVariables])?#kotlin.collections.Map[kotlin.String,kotlin.Any?]/PointingToCallableParameters(3)/">extensions</span> with kotlinx</h3><p class="paragraph">withPersistedQuery() already works through KotlinxGraphQLJson.encode without a custom serializer. For other extension values (e.g. custom protocol extensions, vendor-specific metadata), define your own <code class="lang-kotlin">@Serializable</code> request wrapper with concrete JSON element types. No custom serializer is required unless the actual wire structure needs transformation:</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">@Serializable<br>data class JsonGraphQLRequest&lt;TVariables : GraphQLVariables&gt;(<br>    val query: String,<br>    val operationName: String,<br>    val variables: TVariables? = null,<br>    val extensions: JsonObject? = null,<br>)</code></pre><span class="copy-tooltip"><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div><span class="copy-icon"></span></span></div><p class="paragraph">Use this wrapper only as the request body type for endpoints whose extension payloads are already represented as JSON. Keep using <a href="index.html">GraphQLRequest</a> when KotlinxGraphQLJson.encode can encode the extension values directly. withPersistedQuery() handles APQ without any custom serializer. This example covers arbitrary extension payloads beyond APQ.</p><h3 class="">APQ behavior</h3><p class="paragraph">withPersistedQuery() still works with KotlinxGraphQLJson for the typed <a href="index.html">GraphQLRequest</a> flow. The runtime encoder merges <code class="lang-kotlin">extensions.persistedQuery</code> into the outgoing JSON even though <span data-unresolved-link="co.anitrend.retrofit.graphql.model/GraphQLRequest//#kotlin.String#kotlin.String#TypeParam(bounds=[co.anitrend.retrofit.graphql.model.GraphQLVariables])?#kotlin.collections.Map[kotlin.String,kotlin.Any?]/PointingToCallableParameters(3)/">extensions</span> stays <code class="lang-kotlin">@Transient</code> on the data class. The legacy QueryContainerBuilder flow remains Gson-backed.</p><h2 class="">Usage</h2><p class="paragraph">Manual (asset-based):</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">val request = GraphQLRequest&lt;EmptyGraphQLVariables&gt;(<br>    query = "query GetCurrentUser { viewer { login } }",<br>    operationName = "GetCurrentUser",<br>)</code></pre><span class="copy-tooltip"><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div><span class="copy-icon"></span></span></div><h4 class="tableheader">Type Parameters</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":compat/release" data-filterable-set=":compat/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>TVariables</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The type of variables, or <a href="../../../api/co.anitrend.retrofit.graphql.model/-empty-graph-q-l-variables/index.html">EmptyGraphQLVariables</a> for operations without variables.</p></div></div></div></div></div><h4 class="tableheader">See also</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":compat/release" data-filterable-set=":compat/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../../api/co.anitrend.retrofit.graphql.model/-graph-q-l-variables/index.html"><span>Graph</span><wbr><span><span>QLVariables</span></span></a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":compat/release" data-filterable-set=":compat/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../../api/co.anitrend.retrofit.graphql.model/-empty-graph-q-l-variables/index.html"><span>Empty</span><wbr><span>Graph</span><wbr><span><span>QLVariables</span></span></a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":compat/release" data-filterable-set=":compat/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../../api/co.anitrend.retrofit.graphql.model/-graph-q-l-document-registry/index.html"><span>Graph</span><wbr><span>QLDocument</span><wbr><span><span>Registry</span></span></a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":compat/release" data-filterable-set=":compat/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../../api/co.anitrend.retrofit.graphql.model.request/-graph-q-l-operation-request/index.html"><span>Graph</span><wbr><span>QLOperation</span><wbr><span><span>Request</span></span></a></div></span></div><div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="-1004284641%2FConstructors%2F1469808502" anchor-label="GraphQLRequest" id="-1004284641%2FConstructors%2F1469808502" data-filterable-set=":compat/release"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":compat/release" data-filterable-set=":compat/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-graph-q-l-request.html"><span>Graph</span><wbr><span><span>QLRequest</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1004284641%2FConstructors%2F1469808502"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":compat/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">query<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">operationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">variables<span class="token operator">: </span><a href="index.html">TVariables</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">extensions<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator"> = </span>emptyMap()</span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="-1937513381%2FProperties%2F1469808502" anchor-label="extensions" id="-1937513381%2FProperties%2F1469808502" data-filterable-set=":compat/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":compat/release" data-filterable-set=":compat/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="extensions.html"><span><span>extensions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1937513381%2FProperties%2F1469808502"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":compat/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Transient///PointingToDeclaration/"><span class="token annotation builtin">Transient</span></span></div></div><span class="token keyword">val </span><a href="extensions.html">extensions</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Optional extensions map (e.g. persistedQuery). Stored on the request object and serialized by Gson directly; KotlinxGraphQLJson merges supported entries into the outgoing JSON at encode time.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1434935303%2FProperties%2F1469808502" anchor-label="operationName" id="-1434935303%2FProperties%2F1469808502" data-filterable-set=":compat/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":compat/release" data-filterable-set=":compat/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="operation-name.html"><span>operation</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1434935303%2FProperties%2F1469808502"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":compat/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="operation-name.html">operationName</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The operation name.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1817561469%2FProperties%2F1469808502" anchor-label="query" id="-1817561469%2FProperties%2F1469808502" data-filterable-set=":compat/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":compat/release" data-filterable-set=":compat/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="query.html"><span><span>query</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1817561469%2FProperties%2F1469808502"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":compat/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="query.html">query</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The full GraphQL document string.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1003475532%2FProperties%2F1469808502" anchor-label="variables" id="-1003475532%2FProperties%2F1469808502" data-filterable-set=":compat/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":compat/release" data-filterable-set=":compat/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="variables.html"><span><span>variables</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1003475532%2FProperties%2F1469808502"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":compat/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="variables.html">variables</a><span class="token operator">: </span><a href="index.html">TVariables</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The operation variables, or null if there are none.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="596391085%2FFunctions%2F1469808502" anchor-label="withPersistedQuery" id="596391085%2FFunctions%2F1469808502" data-filterable-set=":compat/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":compat/release" data-filterable-set=":compat/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="with-persisted-query.html"><span>with</span><wbr><span>Persisted</span><wbr><span><span>Query</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="596391085%2FFunctions%2F1469808502"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":compat/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="with-persisted-query.html"><span class="token function">withPersistedQuery</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">sha256Hash<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">version<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">1</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">GraphQLRequest</a><span class="token operator">&lt;</span><a href="index.html">TVariables</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a copy of this request with a persisted query extension added.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
