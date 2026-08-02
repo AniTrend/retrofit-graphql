@@ -28,6 +28,8 @@ fun Project.isLibraryModule() =
         Modules.Components.Api.id,
         Modules.Components.AndroidAssets.id,
         Modules.Components.Runtime.id,
+        Modules.Components.Compat.id,
+        Modules.Components.SerializationApi.id,
         Modules.Components.SerializationGson.id,
         Modules.Components.SerializationKotlinx.id,
     )

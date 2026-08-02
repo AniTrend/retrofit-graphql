@@ -18,8 +18,10 @@ internal object Modules {
         Api("api"),
         AndroidAssets("android-assets"),
         Runtime("runtime"),
+        Compat("compat"),
         CodegenCore("codegen-core"),
         GradlePlugin("gradle-plugin"),
+        SerializationApi("serialization-api"),
         SerializationGson("serialization-gson"),
         SerializationKotlinx("serialization-kotlinx"),
     }

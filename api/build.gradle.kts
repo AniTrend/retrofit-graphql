@@ -1,7 +1,5 @@
 plugins {
     id("co.anitrend.retrofit.graphql")
-    id("kotlin-parcelize")
-    kotlin("plugin.serialization")
 }
 
 android {
@@ -9,6 +7,8 @@ android {
 }
 
 dependencies {
-    // @Serializable annotation and runtime types for kotlinx.serialization support
-    implementation(libs.jetbrains.kotlinx.serialization.core)
+    // :api contains only backend-neutral protocol/operation/registry contracts
+    // and standard Kotlin/Java types. It must not apply Parcelize or Kotlin
+    // serialization, depend on Gson/Kotlinx, or expose Android framework types.
+    // The legacy serializer/Android-coupled models moved to :compat.
 }

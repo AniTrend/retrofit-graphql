@@ -76,6 +76,25 @@ internal fun defaultShouldRetry(exception: Exception) = when (exception) {
 }
 
 /**
+ * Maps the body of a Retrofit [Response] while preserving the raw response
+ * (status code, headers) so the retry/error handling in the controller layer
+ * keeps working on the mapped response.
+ *
+ * @param transform A mapping applied to the non-null body.
+ * @return A new [Response] carrying the mapped body over the same raw response.
+ */
+internal fun <T, R> Response<T>.mapBody(transform: (T) -> R): Response<R> {
+    val raw = raw()
+    val body = body()
+    return if (body != null) {
+        Response.success(transform(body), raw)
+    } else {
+        @Suppress("UNCHECKED_CAST")
+        Response.success(null, raw) as Response<R>
+    }
+}
+
+/**
  * Extension to help us create a controller from a a mapper instance
  */
 internal fun <S, D> SupportResponseMapper<S, D>.controller(

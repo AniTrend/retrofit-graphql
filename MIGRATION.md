@@ -1,6 +1,6 @@
 # Migration Guide
 
-This guide covers migrating consumer projects from the deprecated `:library` aggregator to the new modular architecture, and from v2.x Gson-based workflows to v0.13.x GraphQLJson abstraction with kotlinx.serialization support.
+This guide covers migrating consumer projects from the deprecated `:library` aggregator to the new modular architecture, from v2.x Gson-based workflows to the v0.13.x `GraphQLJson` abstraction, and from the serializer-coupled surface to the backend-neutral `GraphQLOperationRequest`/`GraphQLResponse`/`GraphQLTransportCodec` contracts.
 
 ## Table of Contents
 
@@ -13,6 +13,10 @@ This guide covers migrating consumer projects from the deprecated `:library` agg
   - [@Transient fields](#transient-fields)
   - [APQ behavior (kotlinx)](#apq-behavior-kotlinx)
   - [QueryContainerBuilder limitation (kotlinx)](#querycontainerbuilder-limitation-kotlinx)
+- [Backend-Neutral Contract Migration](#backend-neutral-contract-migration)
+  - [Compatibility guarantee](#compatibility-guarantee)
+  - [New codegen request path](#new-codegen-request-path)
+  - [Legacy `GraphConverter` stays available](#legacy-graphconverter-stays-available)
 
 ---
 
@@ -34,14 +38,16 @@ The `:library` module remains available as a backward-compatible facade, but it 
 | Module | Type | Purpose | Depends On |
 |--------|------|---------|------------|
 | `:annotations` | JVM | `@GraphQuery` annotation | (none) |
-| `:api` | Android | Public API interfaces and models (`GraphQLOperation`, `GraphQLDocumentRegistry`, `QueryContainerBuilder`) | (none) |
+| `:api` | Android | Backend-neutral protocol/operation/registry contracts (`GraphQLOperation`, `GraphQLDocumentRegistry`, `GraphQLVariables`, `EmptyGraphQLVariables`, `GraphQLOperationRequest`, `GraphQLResponse`) | (none) |
 | `:android-assets` | Android | Runtime asset-based query discovery (`GraphProcessor`, `AssetManagerDiscoveryPlugin`, APQ) | `:annotations` |
-| `:runtime` | Android | Retrofit converter (`GraphConverter`, `GraphRequestConverter`) | `:api`, `:android-assets`, `:annotations` |
+| `:runtime` | Android | Backend-neutral Retrofit converter factory (`GraphQLConverterFactory`, `GraphQLRequestConverter`, `GraphQLResponseConverter`) | `:api`, `:serialization-api`, `:android-assets`, `:annotations` |
+| `:compat` | Android | **Deprecated** legacy implementation (`GraphConverter`, `GraphRequestConverter`, `GraphResponseConverter`, `GraphErrorUtil`, `GraphQLRequest`, `GraphQLJson`, `GsonGraphQLJson`, `KotlinxGraphQLJson`, `GraphContainer`, `GraphError`, `QueryContainer(Builder)`, persisted-query URL types, `GraphQLResponseException`/helpers, and the 37 `io.github.wax911.library.*` type aliases) | `:api`, `:runtime`, `:android-assets`, `:annotations`, Gson, kotlinx.serialization |
 | `:codegen-core` | JVM | Build-time code generation engine (parses `.graphql`, generates Kotlin) | (external: graphql-java, KotlinPoet) |
 | `:gradle-plugin` | Gradle | Plugin (`id("co.anitrend.retrofit.graphql.codegen")`) that runs codegen as a Gradle task | `:codegen-core` |
-| `:serialization-gson` | Android | Gson-backed `GraphQLJson` implementation | `:api` |
-| `:serialization-kotlinx` | Android | kotlinx.serialization-backed `GraphQLJson` implementation | `:api` |
-| `:library` | Android | **Deprecated** — backward-compatible aggregator (transitively re-exports all modules via `api()`) | All of the above |
+| `:serialization-api` | Android | Backend-neutral transport contract (`GraphQLTransportCodec` + codec exceptions) | `:api` |
+| `:serialization-gson` | Android | Gson-backed `GraphQLTransportCodec` (`GsonGraphQLTransportCodec`) | `:api`, `:serialization-api`, Gson |
+| `:serialization-kotlinx` | Android | kotlinx.serialization-backed `GraphQLTransportCodec` (`KotlinxGraphQLTransportCodec`) | `:api`, `:serialization-api`, kotlinx |
+| `:library` | Android | **Deprecated** — backward-compatible aggregator (transitively re-exports all modules via `api()`, including `:compat`) | All of the above |
 
 ## Migration by Use Case
 
@@ -69,18 +75,23 @@ dependencies {
     implementation("com.github.AniTrend.retrofit-graphql:api:{tag}")
     implementation("com.github.AniTrend.retrofit-graphql:android-assets:{tag}")
     implementation("com.github.AniTrend.retrofit-graphql:annotations:{tag}")
+    // Only when you still use the deprecated GraphConverter/GraphContainer/
+    // GraphQLRequest/QueryContainerBuilder surface (asset-based flows):
+    implementation("com.github.AniTrend.retrofit-graphql:compat:{tag}")
 }
 ```
 
-> **Note:** `:runtime` currently publishes `:android-assets` with `api` scope, so those types are already available transitively. Keep a direct `android-assets` dependency only when you want that module called out explicitly in your build. Even with build-time code generation, `android-assets` is still pulled transitively today because `GraphConverter` exposes `AbstractGraphProcessor` in its public API.
+> **Note:** `:runtime` still publishes `:android-assets` with `api` scope, so those types are available transitively. The legacy `GraphConverter` and its models are NOT in `:runtime` anymore: they moved to `:compat`. Add `:compat` whenever your code imports `GraphConverter`, `GraphContainer`, `GraphError`, `GraphQLRequest`, `GraphQLJson`, `QueryContainerBuilder`, `PersistedQuery*`, or any `io.github.wax911.library.*` alias. The `:library` aggregator still re-exports everything, so consumers that keep `:library` do not need to change anything.
 
 **After (internal development with project references):**
 ```kotlin
 dependencies {
-    implementation(project(":runtime"))       // GraphConverter, GraphRequestConverter
-    implementation(project(":api"))            // QueryContainerBuilder, GraphQLDocumentRegistry
+    implementation(project(":runtime"))       // GraphQLConverterFactory (backend-neutral)
+    implementation(project(":api"))            // GraphQLOperationRequest, GraphQLResponse, GraphQLDocumentRegistry
     implementation(project(":android-assets")) // GraphProcessor, AssetManagerDiscoveryPlugin
     implementation(project(":annotations"))    // @GraphQuery
+    implementation(project(":compat"))         // deprecated GraphConverter/GraphContainer surface (legacy flows only)
+    implementation(project(":serialization-kotlinx")) // or :serialization-gson; explicit codec for the new path
 }
 ```
 
@@ -132,7 +143,7 @@ retrofitGraphQL {
 }
 ```
 
-> **Note:** Code generation removes the need to declare `android-assets` directly. `:runtime` still brings it in transitively today because `GraphConverter` publicly accepts `AbstractGraphProcessor`, but that is a module-boundary detail, not a signal that codegen still relies on asset discovery.
+> **Note:** Code generation removes the need to declare `android-assets` directly. `:runtime` still brings it in transitively today, which is a module-boundary detail, not a signal that codegen still relies on asset discovery.
 > **Note:** The `:annotations` dependency (for `@GraphQuery`) is also not required for codegen-only consumers. It remains useful for projects that use a mix of asset-based and codegen workflows.
 
 Place your `.graphql` files in `src/main/graphql/` instead of `assets/graphql/`.
@@ -143,44 +154,53 @@ Generated output (under `build/generated/source/graphql/`) includes:
 - Enum classes — GraphQL enum types generated as Kotlin enum classes
 - Variable classes — typed data classes implementing `GraphQLVariables` (when `generateVariables = true`)
 - Input object classes — typed data classes for GraphQL input types (when `generateVariables = true`)
-- Request helpers — `.request(...)` factory methods on operation objects returning `GraphQLRequest<VariableType>` (when `generateVariables = true`)
-- Response model classes — kotlinx-serializable `{OperationName}Data` classes with nested types for selected fields (when `generateResponses = true`)
+- Request helpers — `.request(...)` factory methods on operation objects returning the backend-neutral `GraphQLOperationRequest<VariableType>` (when `generateVariables = true`)
+- Response model classes — `{OperationName}Data` classes with nested types for selected fields (when `generateResponses = true`; serialization annotations are emitted per the configured `serializationBackend`)
 
-Wire the registry into your converter via Koin or manual construction:
+Wire the registry into the backend-neutral factory via Koin or manual construction (the codec is explicit; the registry is retained for API parity and is never consulted while the neutral request carries its document):
+
 ```kotlin
-// Koin, registry-only (no Context required)
+// Koin, no Context required
 single<GraphQLDocumentRegistry> { GeneratedGraphQLRegistry }
-factory { GraphConverter.create(registry = get()) }
-
-// Koin, mixed asset + codegen fallback
-factory { GraphConverter.create(context = get(), registry = get()) }
+factory {
+    GraphQLConverterFactory.create(
+        codec = KotlinxGraphQLTransportCodec(),   // or GsonGraphQLTransportCodec()
+        registry = get(),
+    )
+}
 
 // Manual, registry-only
-val registryOnlyFactory = GraphConverter.create(
-    registry = GeneratedGraphQLRegistry,
-)
-
-// Manual, custom Gson + registry-only
-val customGsonFactory = GraphConverter.create(
-    gson = GsonBuilder().serializeNulls().create(),
-    registry = GeneratedGraphQLRegistry,
-)
-
-// Manual, mixed asset + codegen fallback
-val mixedFactory = GraphConverter.create(
-    context = context,
+val registryOnlyFactory = GraphQLConverterFactory.create(
+    codec = KotlinxGraphQLTransportCodec(),
     registry = GeneratedGraphQLRegistry,
 )
 ```
 
-> **Note:** `GraphConverter.create(registry)` and `GraphConverter.create(gson, registry)` are the new codegen-first factories. Use `GraphConverter.create(context, registry)` when you still want asset-based fallback during a mixed migration.
-> **Note:** In registry-only mode, if a `@GraphQuery`-annotated operation is missing from the registry, the converter throws `IllegalStateException`. Non-annotated operations (codegen-only consumers using `GraphQLRequest<T>`) proceed without a query lookup because the request already contains the document string.
+Legacy `GraphConverter` (deprecated, `:compat`) remains available for asset-based or mixed migrations:
+
+```kotlin
+// Legacy (deprecated, :compat): registry-only, no Context required
+single<GraphQLDocumentRegistry> { GeneratedGraphQLRegistry }
+factory { GraphConverter.create(registry = get()) }
+
+// Legacy (deprecated, :compat): mixed asset + codegen fallback
+factory { GraphConverter.create(context = get(), registry = get()) }
+
+// Legacy (deprecated, :compat): custom Gson + registry-only
+val customGsonFactory = GraphConverter.create(
+    gson = GsonBuilder().serializeNulls().create(),
+    registry = GeneratedGraphQLRegistry,
+)
+```
+
+> **Note (legacy path):** In registry-only mode, if a `@GraphQuery`-annotated operation is missing from the registry, `GraphConverter` throws `IllegalStateException`. Non-annotated operations (codegen-only consumers using `GraphQLOperationRequest<T>`) proceed without a query lookup because the request already contains the document string.
 
 ### Multipart Uploads
 
-For file uploads, register a `RequestBodyPassThroughConverterFactory` before the `GraphConverter` so that `MultipartBody` and `RequestBody` instances bypass GraphQL conversion:
+For file uploads, register a `RequestBodyPassThroughConverterFactory` before the converter so that `MultipartBody` and `RequestBody` instances bypass GraphQL conversion. The sample app keeps the bucket upload on the legacy `GraphConverter` (`:compat`) because the upload mutation uses the separate bucket schema:
 
 ```kotlin
+// Legacy (deprecated, :compat) bucket endpoint
 val retrofit = Retrofit.Builder()
     .addConverterFactory(RequestBodyPassThroughConverterFactory())
     .addConverterFactory(GraphConverter.create(context, registry = GeneratedGraphQLRegistry))
@@ -191,10 +211,10 @@ val retrofit = Retrofit.Builder()
 Use generated operation metadata for the upload mutation:
 ```kotlin
 val request = UploadToStorageBucket.request(upload = filePath)
-// Build MultipartBody from the GraphQLRequest fields
+// Build MultipartBody from the generated request fields
 ```
 
-See the [sample app](app/) for a complete migration example.
+See the [sample app](app/) for a complete migration example (GitHub endpoints use `GraphQLConverterFactory` + `KotlinxGraphQLTransportCodec`; the bucket endpoint keeps the legacy flow).
 
 ### Scalar Mappings
 
@@ -217,21 +237,22 @@ Scalars that appear in the schema but are not mapped will cause a build error wi
 
 ### Response Model Generation
 
-When `generateResponses` is enabled (default `false`), the codegen plugin generates kotlinx-serializable response model data classes for each operation's selection set.
+When `generateResponses` is enabled (default `false`), the codegen plugin generates response model data classes for each operation's selection set, annotated per the configured `serializationBackend` (strict `NONE` stays plain; `KOTLINX` emits `@Serializable`/`@SerialName`; `GSON` emits `@SerializedName`).
 
 **Features:**
 - Operation-scoped models representing the exact JSON shape of each query/mutation
-- `@Serializable` and `@SerialName` annotations for kotlinx serialization
+- Per-backend annotations as configured; `NONE` emits plain data holders (and plain sealed interfaces for abstract types) with no serializer imports
 - Alias-aware property naming (distinct property per aliased field)
 - List nullability preservation (container and element nullability)
 - Conditional field handling (`@include`/`@skip` → nullable types with `null` defaults)
-- Sealed interface generation for GraphQL interfaces and unions with `__typename`-based polymorphism
+- Sealed interface generation for GraphQL interfaces and unions; `KOTLINX` adds `@JsonClassDiscriminator("__typename")` for automatic dispatch, `NONE` emits plain sealed structures
 
 **Usage:**
 ```kotlin
 retrofitGraphQL {
     common {
         generateResponses.set(true)
+        serializationBackend.set(SerializationBackend.KOTLINX)  // explicit; no auto-selection
     }
     target("anilist") {
         schema.set(file("src/main/graphql/anilist/schema.graphql"))
@@ -240,43 +261,44 @@ retrofitGraphQL {
 }
 ```
 
-**Consumer integration:**
+**Consumer integration (backend-neutral contracts):**
 ```kotlin
-// No global Json configuration needed for __typename discrimination.
-// Generated sealed interfaces carry @JsonClassDiscriminator("__typename"),
-// so kotlinx.serialization automatically handles polymorphic deserialization
-// without any manual Json configuration.
+// No global Json configuration needed for __typename discrimination with KOTLINX:
+// generated sealed interfaces carry @JsonClassDiscriminator("__typename"), so
+// kotlinx.serialization automatically handles polymorphic deserialization.
 //
-// Decode responses into generated types as normal:
-@GET("graphql")
-suspend fun getMedia(@Body request: GraphQLRequest<GetMediaDetailVariables>): GraphContainer<GetMediaDetailData>
+// Declare endpoints with the neutral request/response contracts:
+@POST("graphql")
+suspend fun getMedia(
+    @Body request: GraphQLOperationRequest<GetMediaDetailVariables>,
+): GraphQLResponse<GetMediaDetailData>
 ```
 
 Generated types are transport DTOs. Map them to your domain models at the Retrofit boundary rather than exposing generated classes throughout your application.
 
 ### Custom Serialization Backend
 
-If you currently use `:library` for its bundled serialization modules:
+The runtime serialization layer is a backend-neutral codec SPI. If you currently use `:library` for its bundled serialization modules:
 
 **JitPack external coordinates:**
 ```kotlin
-// Gson users
+// Gson codec
 implementation("com.github.AniTrend.retrofit-graphql:serialization-gson:{tag}")
 
-// kotlinx.serialization users
+// kotlinx.serialization codec
 implementation("com.github.AniTrend.retrofit-graphql:serialization-kotlinx:{tag}")
 ```
 
 **Internal development with project references:**
 ```kotlin
-// Gson users (already provided by Retrofit's own Gson converter -- skip if unused)
+// Gson codec (skip if unused)
 implementation(project(":serialization-gson"))
 
-// kotlinx.serialization users
+// kotlinx.serialization codec
 implementation(project(":serialization-kotlinx"))
 ```
 
-Most consumers do **not** need these. The `:runtime` module uses Gson internally by default.
+The `:runtime` module is backend-neutral and uses no serializer by default: `GraphQLConverterFactory.create(...)` requires an explicit `GraphQLTransportCodec` instance, and the codec you pass is the only serialization path used. Custom codecs implement `GraphQLTransportCodec` (from `:serialization-api`) and own adapter resolution for parameterized types, wire names, enum handling, polymorphism, scalar mapping, and their own R8 rules. The legacy `GraphQLJson` seam (`:compat`) is separate and deprecated; it exists only for the `GraphConverter` flow.
 
 ### Minimal (Converter Only)
 
@@ -314,9 +336,9 @@ dependencies {
 }
 ```
 
-All types under `io.github.wax911.library.*` are now type aliases pointing to their new locations at `co.anitrend.retrofit.graphql.*`. Using `:library` generates deprecation warnings at compile time.
+All types under `io.github.wax911.library.*` are Kotlin type aliases pointing to their targets at `co.anitrend.retrofit.graphql.*`, now shipped from `:compat`. Using `:library` generates deprecation warnings at compile time.
 
-> Root artifact coordinates use `com.github.AniTrend`, while module coordinates use `com.github.AniTrend.retrofit-graphql`.
+> Root artifact coordinates use `com.github.AniTrend`, while module coordinates use `com.github.AniTrend.retrofit-graphql`. `:compat` publishes its own module artifact (`com.github.AniTrend.retrofit-graphql:compat`) for consumers that want the legacy surface without the aggregator.
 
 ## Consumer Code Changes
 
@@ -329,47 +351,114 @@ import io.github.wax911.library.converter.GraphConverter
 import io.github.wax911.library.model.body.GraphContainer
 ```
 
-New imports (direct module paths):
+New imports (direct module paths; legacy FQCNs resolve from `:compat`):
 ```kotlin
 import co.anitrend.retrofit.graphql.annotation.GraphQuery
-import co.anitrend.retrofit.graphql.converter.GraphConverter
-import co.anitrend.retrofit.graphql.model.body.GraphContainer
+import co.anitrend.retrofit.graphql.converter.GraphConverter      // legacy, :compat
+import co.anitrend.retrofit.graphql.model.body.GraphContainer     // legacy, :compat
+```
+
+For the backend-neutral path:
+```kotlin
+import co.anitrend.retrofit.graphql.converter.GraphQLConverterFactory          // :runtime
+import co.anitrend.retrofit.graphql.model.request.GraphQLOperationRequest      // :api
+import co.anitrend.retrofit.graphql.model.GraphQLResponse                      // :api
+import co.anitrend.retrofit.graphql.serialization.kotlinx.KotlinxGraphQLTransportCodec  // :serialization-kotlinx
 ```
 
 ### Converter Wiring
 
-Old (no registry):
+Legacy (deprecated, `:compat` -- optional registry for codegen):
 ```kotlin
-GraphConverter(processor, gson)
-```
-
-New (with optional registry for codegen):
-```kotlin
-GraphConverter(processor, gson, registry = GeneratedGraphQLRegistry)
+GraphConverter(processor, json, registry = GeneratedGraphQLRegistry)
 // or via static factory:
 GraphConverter.create(androidContext(), registry = GeneratedGraphQLRegistry)
 GraphConverter.create(registry = GeneratedGraphQLRegistry)
 GraphConverter.create(gson, registry = GeneratedGraphQLRegistry)
 ```
 
-### Query Resolution
+Backend-neutral (new -- explicit codec required):
+```kotlin
+GraphQLConverterFactory.create(
+    codec = KotlinxGraphQLTransportCodec(),   // or GsonGraphQLTransportCodec()
+    registry = GeneratedGraphQLRegistry,
+)
+```
 
-If you subclass `GraphRequestConverter`, the `resolveQuery()` method is now `protected open` and checks the registry first before falling back to asset-based discovery. Override it to customize resolution.
+### Query Resolution (legacy path)
+
+If you subclass the legacy `GraphRequestConverter` (`:compat`), the `resolveQuery()` method is `protected open` and checks the registry first before falling back to asset-based discovery. Override it to customize resolution. The neutral `GraphQLRequestConverter` never consults a registry because `GraphQLOperationRequest` always carries its document.
+
+---
+
+# Backend-Neutral Contract Migration
+
+The serializer-coupled request/response surface (`GraphQLRequest`, `GraphContainer`, `GraphError`, `GraphQLJson`, `QueryContainerBuilder`, `GraphConverter`, and the `GsonGraphQLJson`/`KotlinxGraphQLJson` wrappers) is deprecated. New code should use the backend-neutral contracts and the explicit-codec converter:
+
+| Legacy (deprecated, `:compat`) | Neutral (`:api` / `:runtime` / `:serialization-*`) |
+|--------------------------------|----------------------------------------------------|
+| `GraphQLRequest<TVariables>` | `GraphQLOperationRequest<TVariables>` |
+| `GraphContainer<T>` / `GraphError` | `GraphQLResponse<T>` / `GraphQLResponseError` (+ `GraphQLData`, `GraphQLPathSegment`, `GraphQLValue`) |
+| `GraphConverter` / `GraphRequestConverter` / `GraphResponseConverter` | `GraphQLConverterFactory` / `GraphQLRequestConverter` / `GraphQLResponseConverter` |
+| `GraphQLJson` / `GsonGraphQLJson` / `KotlinxGraphQLJson` | `GraphQLTransportCodec` / `GsonGraphQLTransportCodec` / `KotlinxGraphQLTransportCodec` |
+| `QueryContainerBuilder` / `QueryContainer` / `PersistedQuery*` | `GraphQLOperationRequest.withPersistedQuery(...)` |
+
+## Compatibility guarantee
+
+- Every legacy class keeps its historical fully qualified name and is shipped **exactly once**, by `:compat` only. `:api`, `:runtime`, `:serialization-api`, `:serialization-gson`, and `:serialization-kotlinx` never carry a legacy class, so the `:library` aggregate classpath has no duplicates (verified by tests in `:compat` and `:library`).
+- The 37 `io.github.wax911.library.*` type aliases move with the legacy surface into `:compat` and keep their exact `@Deprecated(WARNING)` + `ReplaceWith` expressions. Type aliases produce no classes themselves; each typealias-only source file emits only an empty `*Kt` file-facade class with no members, so no keep rules are needed (the deprecated `consumer-rules.pro` rule matched only those empty facades and was removed as behaviorally inert).
+- `:api`, `:serialization-api`, and `:runtime` resolve no Gson or kotlinx.serialization artifacts; `:compat` owns the legacy backend path. Both sides are enforced by classpath-scan unit tests (`BackendDependencyBoundaryTest` in the neutral modules, `CompatOwnsLegacyBackendTest` in `:compat`) that run on the resolved test runtime classpath.
+- The legacy `EmptyGraphQLVariables` sentinel in `:api` is now a plain object (no `@Serializable`); the legacy `KotlinxGraphQLJson` in `:compat` special-cases it so `GraphQLRequest<EmptyGraphQLVariables>` keeps encoding as `{}` without a serializer dependency in `:api`.
+
+## New codegen request path
+
+Generated `.request(...)` helpers return `GraphQLOperationRequest<TVariables>`. Register the explicit codec factory on Retrofit:
+
+```kotlin
+val retrofit = Retrofit.Builder()
+    .addConverterFactory(
+        GraphQLConverterFactory.create(
+            codec = KotlinxGraphQLTransportCodec(), // or GsonGraphQLTransportCodec()
+            registry = GeneratedGraphQLRegistry,
+        )
+    )
+    .baseUrl(baseUrl)
+    .build()
+```
+
+Declare Retrofit endpoints with the neutral contracts:
+
+```kotlin
+@POST("graphql")
+suspend fun getCurrentUser(
+    @Body request: GraphQLOperationRequest<EmptyGraphQLVariables>,
+): Response<GraphQLResponse<GetCurrentUserData>>
+```
+
+The codec path never consults the registry (the request already carries its document) and never falls back to asset discovery; the codec instance you pass is the only serialization path used.
+
+## Legacy `GraphConverter` stays available
+
+The deprecated `GraphConverter` (with every factory overload, Gson default, and the `GraphQLJson` seam) remains source- and binary-compatible inside `:compat`, reachable through `:library` or the `:compat` artifact. Mixing both paths in one app is supported: use `GraphQLConverterFactory` for generated endpoints and `GraphConverter` for legacy asset-based endpoints, each on its own Retrofit instance (see the sample app's `data/arch/koin/Modules.kt`).
+
+The legacy surface (`:compat`, `:library`, the `io.github.wax911.library.*` aliases, and the `GraphConverter`/`GraphQLJson` flow) is guaranteed for the current major version; like `:library`, it will be removed in a future major release. The compatibility guarantee above keeps every legacy FQCN exactly once on the aggregate classpath until then, so migration can happen incrementally.
 
 ---
 
 # v0.13.x Serialization Contract Migration
 
-This section covers migrating from v2.x Gson-based `GraphConverter` construction to the v0.13.x `GraphQLJson` abstraction, and related serialization contract changes.
+This section is a historical record of the v0.13.x migration from v2.x Gson-based `GraphConverter` construction to the `GraphQLJson` abstraction. **Both `GraphConverter` and `GraphQLJson` are now deprecated legacy types shipped from `:compat`**; new code should use the backend-neutral `GraphQLOperationRequest`/`GraphQLResponse`/`GraphQLTransportCodec` contracts described in the [Backend-Neutral Contract Migration](#backend-neutral-contract-migration) section above.
 
 ### Gson-to-GraphQLJson
 
-The `GraphConverter` factory methods now accept a `GraphQLJson` instance instead of a `Gson` instance. The library ships two implementations:
+The `GraphConverter` factory methods accept a `GraphQLJson` instance instead of a `Gson` instance. The library ships two implementations, both now living in `:compat` with the deprecated converter surface:
 
 | Backend | Module | Class |
 |---------|--------|-------|
-| kotlinx.serialization | `:serialization-kotlinx` | `KotlinxGraphQLJson(Json)` |
-| Gson | `:serialization-gson` | `GsonGraphQLJson(Gson)` |
+| kotlinx.serialization | `:compat` (legacy) | `KotlinxGraphQLJson(Json)` |
+| Gson | `:compat` (legacy) | `GsonGraphQLJson(Gson)` |
+
+The optional peer modules `:serialization-kotlinx`/`:serialization-gson` no longer ship these wrappers; they ship the new transport codecs (`KotlinxGraphQLTransportCodec`/`GsonGraphQLTransportCodec`) only.
 
 **Before (v2.x -- deprecated Gson overloads):**
 
@@ -381,10 +470,10 @@ val converter = GraphConverter.create(
 )
 ```
 
-**After (v0.13.x -- new GraphQLJson overload):**
+**After (v0.13.x -- new GraphQLJson overload, legacy `:compat` path):**
 
 ```kotlin
-// kotlinx.serialization path (recommended for response DTOs)
+// kotlinx.serialization path
 val json = KotlinxGraphQLJson(
     Json { ignoreUnknownKeys = true; encodeDefaults = false }
 )
@@ -402,6 +491,8 @@ val converter = GraphConverter.create(
     registry = GeneratedGraphQLRegistry,
 )
 ```
+
+> **New code:** use the backend-neutral path instead -- `GraphQLConverterFactory.create(codec = KotlinxGraphQLTransportCodec(), registry = ...)` with `GraphQLOperationRequest`/`GraphQLResponse` contracts. The `GraphQLJson` seam above exists only for the deprecated `GraphConverter` flow in `:compat`.
 
 **Gson overloads preserved**: The 6 existing `GraphConverter.create(context, gson, ...)` and `GraphConverter.create(gson, registry, ...)` overloads are **preserved** for backward compatibility. They internally wrap the `Gson` instance in `GsonGraphQLJson`. No migration is required if you continue using the Gson-backed overloads.
 
@@ -432,18 +523,11 @@ class CustomConverter(processor: AbstractGraphProcessor, json: GraphQLJson) :
 
 **Consumer impact**: None for consumers using generated response DTOs. The fix is internal. If you implemented a custom `GraphQLJson` backend, ensure your `decode(json, type)` implementation handles parameterized types.
 
-### @Serializable on API types
+### @Serializable on legacy API types (historical, now `:compat`)
 
-For v0.13.x, the public `:api` models are intentionally kotlinx-enabled. Modular consumers must keep `org.jetbrains.kotlinx:kotlinx-serialization-core` on the runtime classpath, even when they choose the Gson backend. The `:api` module declares that dependency internally with `implementation`, so declare it in applications that depend on `:api` directly rather than relying on it as a transitive API dependency.
+In v0.13.x the serializer-coupled models were annotated with `@Serializable` and lived in `:api`. Since the backend-neutral split, **these types are legacy and shipped from `:compat`**; `:api` applies no kotlinx.serialization and carries no serializer dependency. Modular consumers of `:api` alone never need `kotlinx-serialization-core`.
 
-```kotlin
-dependencies {
-    implementation("com.github.AniTrend.retrofit-graphql:api:{tag}")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
-}
-```
-
-The following API types are now annotated with `@Serializable` for kotlinx.serialization compatibility:
+If you still use the legacy `GraphQLJson`/`GraphConverter` path, the `:compat` module (or the `:library` aggregator) provides these types with their serializer annotations:
 
 | Type | Annotations | Notes |
 |------|------------|-------|
@@ -451,13 +535,14 @@ The following API types are now annotated with `@Serializable` for kotlinx.seria
 | `GraphQLRequest<TVariables>` | `@Serializable` | `extensions` field is `@Transient` |
 | `GraphError` | `@Serializable` | `path` and `extensions` fields are `@Transient` |
 | `GraphError.Location` | `@Serializable` | Nested `Location` type within `GraphError` |
-| `EmptyGraphQLVariables` | `@Serializable` | Object type, no fields |
+| `PersistedQuery` | `@Serializable` | APQ extension payload of the `QueryContainer` flow |
+| `EmptyGraphQLVariables` | none (plain object) | Previously `@Serializable`; now a plain sentinel. The legacy `KotlinxGraphQLJson` special-cases it and encodes it as `{}` |
 
-These annotations enable kotlinx.serialization to serialize/deserialize these types directly, which is needed when Retrofit passes `GraphContainer<GeneratedData>` as a response type.
+These annotations enable the legacy kotlinx wrapper (`KotlinxGraphQLJson`) to serialize/deserialize these types when Retrofit passes `GraphContainer<GeneratedData>` as a response type. The new codec path (`GraphQLTransportCodec`) decodes the neutral `GraphQLResponse` envelope without these annotations.
 
-### @Transient fields
+### @Transient fields (legacy `:compat` models)
 
-Several fields are marked `@Transient` because their types cannot be resolved by the kotlinx.serialization compiler plugin (`Map<Any, Any>`, `List<Any>`, `Map<String, Any?>`):
+Several legacy fields are marked `@Transient` because their types cannot be resolved by the kotlinx.serialization compiler plugin (`Map<Any, Any>`, `List<Any>`, `Map<String, Any?>`). This applies to the deprecated serializer-coupled models in `:compat`; the neutral `GraphQLResponse`/`GraphQLValue` contract represents the same data without `@Transient` fields:
 
 | Field | Type | Gson | kotlinx |
 |-------|------|------|---------|
@@ -466,9 +551,9 @@ Several fields are marked `@Transient` because their types cannot be resolved by
 | `GraphError.path` | `List<Any>?` | Serialized | `@Transient` (excluded) |
 | `GraphError.extensions` | `Map<String, Any?>?` | Serialized | `@Transient` (excluded) |
 
-These fields remain excluded from kotlinx deserialization. If your application depends on them being serialized or read back exactly, use the Gson-backed `GsonGraphQLJson` or the preserved Gson factory overloads.
+These fields remain excluded from kotlinx deserialization. If your application depends on them being serialized or read back exactly, use the Gson-backed `GsonGraphQLJson` or the preserved Gson factory overloads (all in `:compat`). On the backend-neutral path, `GraphQLResponse.extensions`, `GraphQLResponseError.extensions`, and error `path` are represented structurally as `GraphQLValue` trees, so nothing is `@Transient`.
 
-If you only need JSON-tree access to the transient fields, define an alternative transport wrapper with concrete kotlinx-compatible types instead of adding a generic custom serializer to `GraphContainer<T>` or `GraphQLRequest<TVariables>`:
+If you only need JSON-tree access to the transient fields on the legacy path, define an alternative transport wrapper with concrete kotlinx-compatible types instead of adding a generic custom serializer to `GraphContainer<T>` or `GraphQLRequest<TVariables>`:
 
 ```kotlin
 @Serializable
@@ -494,21 +579,23 @@ suspend fun getCurrentUser(
 
 No custom serializer is required unless the actual wire structure needs transformation before or after normal serialization.
 
-### APQ behavior (kotlinx)
+### APQ behavior (legacy kotlinx path)
 
-`GraphQLRequest.withPersistedQuery()` still works on the typed kotlinx request path. `GraphQLRequest.extensions` remains `@Transient` on the data class, but `KotlinxGraphQLJson.encode()` merges supported extension values, including `PersistedQuery`, into the outgoing JSON.
+`GraphQLRequest.withPersistedQuery()` works on the typed legacy kotlinx request path. `GraphQLRequest.extensions` remains `@Transient` on the data class, but `KotlinxGraphQLJson.encode()` merges supported extension values, including `PersistedQuery`, into the outgoing JSON.
 
 - **Gson path**: `withPersistedQuery()` works as before -- the `extensions` map is serialized reflectively
 - **kotlinx path**: `withPersistedQuery()` works for `GraphQLRequest<TVariables>` requests encoded through `KotlinxGraphQLJson`
 
 If you depend on arbitrary extension payload shapes beyond primitives, lists, maps, `JsonElement`, or `@Serializable` values, prefer the Gson-backed path or provide a custom serializer.
 
-### QueryContainerBuilder behavior (kotlinx)
+On the backend-neutral path, use `GraphQLOperationRequest.withPersistedQuery(sha256Hash, version)`, which stores the extension structurally as `GraphQLValue.ObjectValue` and works with every `GraphQLTransportCodec` implementation.
+
+### QueryContainerBuilder behavior (legacy kotlinx path)
 
 The legacy `QueryContainerBuilder` flow stays on a Gson-backed serializer internally because `QueryContainer` is not `@Serializable` (it uses mutable properties, manual builders, and untyped maps). When using kotlinx as the serialization backend:
 
-- Use `GraphQLRequest<TVariables>` and the generated `.request(...)` factory methods for the primary request path
-- Existing `QueryContainerBuilder` endpoints continue to work, but they are encoded through Gson for backward compatibility
+- Use the generated `.request(...)` factory methods (which return the neutral `GraphQLOperationRequest<TVariables>`) for the primary request path
+- Existing `QueryContainerBuilder` endpoints continue to work through `:compat`, but they are encoded through Gson for backward compatibility
 
 ---
 

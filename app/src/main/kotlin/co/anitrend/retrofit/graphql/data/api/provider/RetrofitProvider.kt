@@ -51,7 +51,9 @@ internal object RetrofitProvider {
     }
 
     private fun createRetrofit(endpointType: EndpointType, scope: Scope) : Retrofit {
-        return scope.get<Retrofit.Builder>()
+        return scope.get<Retrofit.Builder> {
+                parametersOf(endpointType)
+            }
             .client(
                 provideOkHttpClient(
                     endpointType,

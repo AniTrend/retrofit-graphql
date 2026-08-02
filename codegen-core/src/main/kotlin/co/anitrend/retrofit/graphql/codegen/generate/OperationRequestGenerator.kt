@@ -39,8 +39,8 @@ import com.squareup.kotlinpoet.TypeSpec
  *     override val document: String = GraphQLDocuments.GetMarketPlaceApps
  *     override val sha256Hash: String = GraphQLHashes.GetMarketPlaceApps
  *
- *     public fun request(after: String? = null, before: String? = null, first: Int): GraphQLRequest<GetMarketPlaceAppsVariables> =
- *         GraphQLRequest(query = document, operationName = name, variables = GetMarketPlaceAppsVariables(...))
+ *     public fun request(after: String? = null, before: String? = null, first: Int): GraphQLOperationRequest<GetMarketPlaceAppsVariables> =
+ *         GraphQLOperationRequest(query = document, operationName = name, variables = GetMarketPlaceAppsVariables(...))
  * }
  * ```
  *
@@ -52,11 +52,17 @@ import com.squareup.kotlinpoet.TypeSpec
  *     override val sha256Hash: String = ...
  * }
  * ```
+ *
+ * Request helpers use the backend-neutral
+ * [co.anitrend.retrofit.graphql.model.request.GraphQLOperationRequest] contract,
+ * not the legacy serializer-coupled
+ * [co.anitrend.retrofit.graphql.model.GraphQLRequest]. Operation name,
+ * document, hash, and registry semantics are unchanged.
  */
 object OperationRequestGenerator {
     private val GRAPHQL_OPERATION = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLOperation")
     private val GRAPHQL_NO_VAR_OPERATION = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLNoVarOperation")
-    private val GRAPHQL_REQUEST = ClassName("co.anitrend.retrofit.graphql.model", "GraphQLRequest")
+    private val GRAPHQL_OPERATION_REQUEST = ClassName("co.anitrend.retrofit.graphql.model.request", "GraphQLOperationRequest")
 
     /**
      * Generates a request helper object for a single operation.
@@ -156,10 +162,10 @@ object OperationRequestGenerator {
         return FunSpec.builder("request")
             .addModifiers(KModifier.PUBLIC)
             .addParameters(params)
-            .returns(GRAPHQL_REQUEST.parameterizedBy(variablesClass))
+            .returns(GRAPHQL_OPERATION_REQUEST.parameterizedBy(variablesClass))
             .addStatement(
                 "return %T(query = document, operationName = name, variables = $constructorCall)",
-                GRAPHQL_REQUEST,
+                GRAPHQL_OPERATION_REQUEST,
                 variablesClass,
             )
             .build()

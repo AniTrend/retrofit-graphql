@@ -23,6 +23,8 @@ import co.anitrend.retrofit.graphql.codegen.model.GraphQLVariableInfo
 import co.anitrend.retrofit.graphql.codegen.model.OperationType
 import co.anitrend.retrofit.graphql.codegen.model.SchemaIndex
 import co.anitrend.retrofit.graphql.codegen.model.SchemaType
+import co.anitrend.retrofit.graphql.codegen.parser.ResponseSelectionParser
+import co.anitrend.retrofit.graphql.codegen.parser.SchemaParser
 import org.jetbrains.kotlin.cli.common.ExitCode
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.junit.Assert.assertEquals
@@ -150,6 +152,60 @@ class CompilationTest {
         assertFalse(source.contains("com.google.gson"))
     }
 
+    // ---- NONE backend response models are plain Kotlin ----
+
+    @Test
+    fun `NONE concrete response model compiles as plain Kotlin without serializer imports`() {
+        val schemaFile = fixtureFile("fixtures/simple/schemas/github-simple.graphqls")
+        val schemaResult = SchemaParser().parseWithRootTypes(schemaFile)
+        val schemaIndex = SchemaIndex.from(
+            types = schemaResult.types,
+            queryTypeName = schemaResult.queryTypeName,
+            mutationTypeName = schemaResult.mutationTypeName,
+            subscriptionTypeName = schemaResult.subscriptionTypeName,
+        )
+        val document = fixtureText("fixtures/simple/queries/GetUser.graphql")
+        val operation = buildOperation("GetUser", document = document)
+        val selectionSet = ResponseSelectionParser(schemaIndex).parse(operation)
+        val source = ResponseModelGenerator(schemaIndex, backend = SerializationBackend.NONE)
+            .generate(operation, selectionSet, "com.example")
+            .single()
+            .toString()
+
+        assertFalse(source.contains("kotlinx.serialization"))
+        assertFalse(source.contains("com.google.gson"))
+        assertFalse(source.contains("@Serializable"))
+        assertTrue(source.contains("public data class GetUserData"))
+
+        compileAndAssertOk(source, "com/example/GetUserData.kt")
+    }
+
+    @Test
+    fun `NONE abstract response model compiles as plain sealed structure`() {
+        val schemaFile = fixtureFile("fixtures/advanced/unions/ThreeImplementors.graphqls")
+        val schemaResult = SchemaParser().parseWithRootTypes(schemaFile)
+        val schemaIndex = SchemaIndex.from(
+            types = schemaResult.types,
+            queryTypeName = schemaResult.queryTypeName,
+            mutationTypeName = schemaResult.mutationTypeName,
+            subscriptionTypeName = schemaResult.subscriptionTypeName,
+        )
+        val document = fixtureText("fixtures/advanced/unions/ThreeImplementors.graphql")
+        val operation = buildOperation("ThreeImplementors", document = document)
+        val selectionSet = ResponseSelectionParser(schemaIndex).parse(operation)
+        val source = ResponseModelGenerator(schemaIndex, backend = SerializationBackend.NONE)
+            .generate(operation, selectionSet, "com.example")
+            .single()
+            .toString()
+
+        assertFalse(source.contains("kotlinx.serialization"))
+        assertFalse(source.contains("com.google.gson"))
+        assertTrue(source.contains("public sealed interface Result"))
+        assertTrue(source.contains("public data class Success("))
+
+        compileAndAssertOk(source, "com/example/ThreeImplementorsData.kt")
+    }
+
     // ---- Compilation helpers ----
 
     private fun compileAndAssertOk(
@@ -188,13 +244,23 @@ class CompilationTest {
     private fun buildOperation(
         name: String,
         variables: List<GraphQLVariableInfo> = emptyList(),
+        document: String = "query $name",
     ): GraphQLOperationInfo {
         return GraphQLOperationInfo(
             name = name,
             type = OperationType.QUERY,
-            document = "query $name",
+            document = document,
             sourceFile = "$name.graphql",
             variables = variables,
         )
     }
+
+    private fun fixtureFile(path: String): File {
+        val url = checkNotNull(
+            this::class.java.classLoader.getResource(path),
+        ) { "Fixture not found: $path" }
+        return File(url.toURI())
+    }
+
+    private fun fixtureText(path: String): String = fixtureFile(path).readText()
 }

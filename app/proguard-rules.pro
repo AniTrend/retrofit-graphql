@@ -37,6 +37,9 @@
 # GraphQLVariables is an interface; it does not carry serializable state.
 
 # GraphQLRequest: serialized by Gson in UploadMutationHelper.createOperationsPart()
+# of the legacy bucket upload path. The class is published from :compat with
+# the same fully qualified name. The neutral GraphQLOperationRequest path is
+# NOT kept here: the explicit codec serializes it without reflection.
 -keep class co.anitrend.retrofit.graphql.model.GraphQLRequest {
     <fields>;
     <init>(...);

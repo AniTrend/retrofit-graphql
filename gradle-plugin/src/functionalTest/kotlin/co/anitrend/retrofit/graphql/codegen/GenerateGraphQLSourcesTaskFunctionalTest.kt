@@ -314,17 +314,250 @@ class GenerateGraphQLSourcesTaskFunctionalTest {
     }
 
     @Test
-    fun `task re-runs when serialization backend changes`() {
+    fun `NONE with generateResponses emits plain unannotated response models and plain sealed structures`() {
+        val projectDir = createProject("none-responses")
+        val generatedDir = projectDir.resolve("build/generated/source/graphql/sample/generated")
+
+        writeSingleTargetProject(
+            projectDir = projectDir,
+            schemaContent = responseSchema(),
+            serializationBackend = SerializationBackend.NONE,
+            generateResponses = true,
+        )
+        writeGraphQLFile(projectDir, "GetViewer.graphql", "query GetViewer { viewer { id login } }")
+        writeGraphQLFile(
+            projectDir,
+            "Search.graphql",
+            "query Search { search { ... on User { login } ... on Repository { name } } }",
+        )
+
+        val result = gradleRunner(projectDir, "generateGraphQLSources").build()
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateGraphQLSources")?.outcome)
+
+        // Concrete response: plain data class, no serializer imports or annotations
+        val concreteData = generatedDir.resolve("GetViewerData.kt")
+        assertTrue(concreteData.exists())
+        val concreteSource = concreteData.readText()
+        assertTrue(concreteSource.contains("public data class GetViewerData"))
+        assertFalse(concreteSource.contains("kotlinx.serialization"))
+        assertFalse(concreteSource.contains("com.google.gson"))
+        assertFalse(concreteSource.contains("@Serializable"))
+        assertFalse(concreteSource.contains("@SerializedName"))
+
+        // Abstract response: plain sealed structure, still backend-independent
+        val abstractData = generatedDir.resolve("SearchData.kt")
+        assertTrue(abstractData.exists())
+        val abstractSource = abstractData.readText()
+        assertTrue(abstractSource.contains("sealed interface"))
+        assertFalse(abstractSource.contains("kotlinx.serialization"))
+        assertFalse(abstractSource.contains("com.google.gson"))
+        assertFalse(abstractSource.contains("@Serializable"))
+        assertFalse(abstractSource.contains("@SerialName"))
+        assertFalse(abstractSource.contains("@SerializedName"))
+        assertFalse(abstractSource.contains("JsonClassDiscriminator"))
+
+        // __typename is still injected into the executable document for the abstract operation
+        val documents = generatedDir.resolve("GraphQLDocuments.kt").readText()
+        assertTrue(documents.contains("__typename"))
+    }
+
+    @Test
+    fun `NONE with generateResponses never auto-selects KOTLINX`() {
+        val projectDir = createProject("none-responses-no-autoselect")
+        val generatedDir = projectDir.resolve("build/generated/source/graphql/sample/generated")
+
+        writeSingleTargetProject(
+            projectDir = projectDir,
+            schemaContent = responseSchema(),
+            serializationBackend = SerializationBackend.NONE,
+            generateResponses = true,
+        )
+        writeGraphQLFile(projectDir, "GetViewer.graphql", "query GetViewer { viewer { id login } }")
+
+        val result = gradleRunner(projectDir, "generateGraphQLSources").build()
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateGraphQLSources")?.outcome)
+
+        val concreteSource = generatedDir.resolve("GetViewerData.kt").readText()
+        assertFalse(
+            "NONE must stay NONE: response models must not gain kotlinx annotations",
+            concreteSource.contains("kotlinx.serialization"),
+        )
+        assertFalse(concreteSource.contains("@Serializable"))
+        assertFalse(result.output.contains("Auto-selecting KOTLINX"))
+    }
+
+    @Test
+    fun `documents hashes and operation constants are identical across serialization backends`() {
+        val projectDir = createProject("backend-independent-artifacts")
+        val generatedDir = projectDir.resolve("build/generated/source/graphql/sample/generated")
+
+        writeSingleTargetProject(
+            projectDir = projectDir,
+            schemaContent = responseSchema(),
+            serializationBackend = SerializationBackend.NONE,
+            generateResponses = true,
+        )
+        writeGraphQLFile(projectDir, "GetViewer.graphql", "query GetViewer { viewer { id login } }")
+        writeGraphQLFile(
+            projectDir,
+            "Search.graphql",
+            "query Search { search { ... on User { login } ... on Repository { name } } }",
+        )
+
+        gradleRunner(projectDir, "generateGraphQLSources").build()
+        val noneOperations = generatedDir.resolve("GraphQLOperations.kt").readText()
+        val noneDocuments = generatedDir.resolve("GraphQLDocuments.kt").readText()
+        val noneHashes = generatedDir.resolve("GraphQLHashes.kt").readText()
+        val noneData = generatedDir.resolve("GetViewerData.kt").readText()
+        assertFalse("NONE run must not emit kotlinx annotations in response models", noneData.contains("kotlinx.serialization"))
+
+        // Switch to KOTLINX: variable/response artifacts change, documents/hashes/constants must not.
+        val buildFile = projectDir.resolve("build.gradle.kts")
+        Files.writeString(
+            buildFile,
+            buildFile.readText().replace("SerializationBackend.NONE", "SerializationBackend.KOTLINX"),
+        )
+
+        gradleRunner(projectDir, "generateGraphQLSources").build()
+        val kotlinxOperations = generatedDir.resolve("GraphQLOperations.kt").readText()
+        val kotlinxDocuments = generatedDir.resolve("GraphQLDocuments.kt").readText()
+        val kotlinxHashes = generatedDir.resolve("GraphQLHashes.kt").readText()
+
+        assertEquals("Operation constants must be backend independent", noneOperations, kotlinxOperations)
+        assertEquals("Documents must be backend independent", noneDocuments, kotlinxDocuments)
+        assertEquals("Hashes must be backend independent", noneHashes, kotlinxHashes)
+        // And the response artifacts did change, proving the backend input is effective.
+        assertTrue(
+            "KOTLINX run must emit kotlinx annotations in response models",
+            generatedDir.resolve("GetViewerData.kt").readText().contains("@Serializable"),
+        )
+    }
+
+    @Test
+    fun `documents hashes and operation constants are identical between NONE and GSON for concrete operations`() {
+        val projectDir = createProject("backend-independent-artifacts-gson")
+        val generatedDir = projectDir.resolve("build/generated/source/graphql/sample/generated")
+
+        writeSingleTargetProject(
+            projectDir = projectDir,
+            schemaContent = responseSchema(),
+            serializationBackend = SerializationBackend.NONE,
+            generateResponses = true,
+        )
+        writeGraphQLFile(projectDir, "GetViewer.graphql", "query GetViewer { viewer { id login } }")
+
+        gradleRunner(projectDir, "generateGraphQLSources").build()
+        val noneOperations = generatedDir.resolve("GraphQLOperations.kt").readText()
+        val noneDocuments = generatedDir.resolve("GraphQLDocuments.kt").readText()
+        val noneHashes = generatedDir.resolve("GraphQLHashes.kt").readText()
+
+        // Switch to GSON: response DTOs gain @SerializedName, documents/hashes/constants must not change.
+        val buildFile = projectDir.resolve("build.gradle.kts")
+        Files.writeString(
+            buildFile,
+            buildFile.readText().replace("SerializationBackend.NONE", "SerializationBackend.GSON"),
+        )
+
+        gradleRunner(projectDir, "generateGraphQLSources").build()
+        assertEquals("Operation constants must be backend independent", noneOperations, generatedDir.resolve("GraphQLOperations.kt").readText())
+        assertEquals("Documents must be backend independent", noneDocuments, generatedDir.resolve("GraphQLDocuments.kt").readText())
+        assertEquals("Hashes must be backend independent", noneHashes, generatedDir.resolve("GraphQLHashes.kt").readText())
+        assertTrue(
+            "GSON run must emit @SerializedName in response models",
+            generatedDir.resolve("GetViewerData.kt").readText().contains("@SerializedName(\"viewer\")"),
+        )
+    }
+
+    @Test
+    fun `target serializationBackend overrides common`() {
+        val projectDir = createProject("backend-precedence")
+
+        writeFile(
+            projectDir.resolve("settings.gradle.kts"),
+            settingsFile(),
+        )
+        writeFile(
+            projectDir.resolve("build.gradle.kts"),
+            """
+            import co.anitrend.retrofit.graphql.codegen.config.SerializationBackend
+
+            plugins {
+                kotlin("jvm") version "$KOTLIN_VERSION"
+                id("co.anitrend.retrofit.graphql.codegen")
+            }
+
+            ${javaReleaseBlock()}
+
+            retrofitGraphQL {
+                common {
+                    generateVariables.set(true)
+                    serializationBackend.set(SerializationBackend.KOTLINX)
+                }
+                target("gson") {
+                    packageName.set("sample.generated.gson")
+                    serializationBackend.set(SerializationBackend.GSON)
+                    operations.from(fileTree("src/main/graphql/gson") {
+                        include("**/*.graphql")
+                    })
+                }
+                target("kotlinx") {
+                    packageName.set("sample.generated.kotlinx")
+                    operations.from(fileTree("src/main/graphql/kotlinx") {
+                        include("**/*.graphql")
+                    })
+                }
+            }
+            """.trimIndent(),
+        )
+        writeGraphQLSupportSources(projectDir)
+        writeFile(
+            projectDir.resolve("src/main/graphql/gson/GetGsonViewer.graphql"),
+            "query GetGsonViewer(\$q: String!) { viewer { login } }",
+        )
+        writeFile(
+            projectDir.resolve("src/main/graphql/kotlinx/GetKotlinxViewer.graphql"),
+            "query GetKotlinxViewer(\$q: String!) { viewer { login } }",
+        )
+
+        val result = gradleRunner(projectDir, "generateGraphQLSourcesGson", "generateGraphQLSourcesKotlinx").build()
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateGraphQLSourcesGson")?.outcome)
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateGraphQLSourcesKotlinx")?.outcome)
+
+        val gsonVariables = projectDir.resolve("build/generated/source/graphql/gson/sample/generated/gson/GetGsonViewerVariables.kt").readText()
+        assertTrue(
+            "Target override to GSON must emit SerializedName",
+            gsonVariables.contains("import com.google.gson.annotations.SerializedName"),
+        )
+        assertFalse(gsonVariables.contains("kotlinx.serialization"))
+
+        val kotlinxVariables = projectDir.resolve("build/generated/source/graphql/kotlinx/sample/generated/kotlinx/GetKotlinxViewerVariables.kt").readText()
+        assertTrue(
+            "Target inheriting KOTLINX from common must emit @Serializable",
+            kotlinxVariables.contains("import kotlinx.serialization.Serializable"),
+        )
+    }
+
+    @Test
+    fun `task re-runs when serialization backend changes and output reflects the backend`() {
         val projectDir = createProject("backend-change")
 
         writeSingleTargetProject(
             projectDir = projectDir,
             serializationBackend = SerializationBackend.NONE,
+            generateVariables = true,
         )
-        writeGraphQLFile(projectDir, "GetViewer.graphql", "query GetViewer { viewer { login } }")
+        writeGraphQLFile(projectDir, "GetViewer.graphql", "query GetViewer(\$q: String!) { viewer { login } }")
 
         val first = gradleRunner(projectDir, "generateGraphQLSources").build()
         assertEquals(TaskOutcome.SUCCESS, first.task(":generateGraphQLSources")?.outcome)
+
+        val generatedDir = projectDir.resolve("build/generated/source/graphql/sample/generated")
+        val noneVariables = generatedDir.resolve("GetViewerVariables.kt").readText()
+        assertFalse(noneVariables.contains("kotlinx.serialization"))
+        assertFalse(noneVariables.contains("com.google.gson"))
 
         // Change serializationBackend
         val buildFile = projectDir.resolve("build.gradle.kts")
@@ -334,6 +567,11 @@ class GenerateGraphQLSourcesTaskFunctionalTest {
 
         val second = gradleRunner(projectDir, "generateGraphQLSources").build()
         assertEquals(TaskOutcome.SUCCESS, second.task(":generateGraphQLSources")?.outcome)
+
+        val kotlinxVariables = generatedDir.resolve("GetViewerVariables.kt").readText()
+        assertTrue(kotlinxVariables.contains("import kotlinx.serialization.Serializable"))
+        assertTrue(kotlinxVariables.contains("@Serializable"))
+        assertNotEquals("Backend change must alter generated variable output", noneVariables, kotlinxVariables)
     }
 
     // ------------------------------------------------------------------

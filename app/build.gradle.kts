@@ -50,6 +50,7 @@ android {
 dependencies {
     implementation(project(":runtime"))
     implementation(project(":api"))
+    implementation(project(":compat"))
     implementation(project(":serialization-kotlinx"))
 
     implementation(libs.jetbrains.kotlinx.serialization.json)
@@ -220,6 +221,15 @@ tasks.register("verifyReleaseMapping") {
         assertRenamed("$unionResponseClass\$SearchEdgesNode")
         assertRenamed("$unionResponseClass\$SearchEdgesNode\$Repository")
 
+        // The neutral request contract is serialized by the explicit codec
+        // (no reflection), so R8 must be free to rename it. If this class
+        // survives obfuscation, a keep rule is leaking the backend-neutral
+        // path into the legacy Gson reflection surface.
+        assertRenamed("co.anitrend.retrofit.graphql.model.request.GraphQLOperationRequest")
+
+        // GraphQLRequest (now published from :compat) is serialized by Gson in
+        // UploadMutationHelper.createOperationsPart() of the legacy bucket
+        // upload path; field names must survive for Gson reflection.
         val graphQLRequest = "co.anitrend.retrofit.graphql.model.GraphQLRequest"
         assertNotRenamed(graphQLRequest)
         assertFieldNotRenamedIfPresent(graphQLRequest, "query")
