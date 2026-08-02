@@ -2,14 +2,18 @@ package co.anitrend.retrofit.graphql.data.bucket.source.browse
 
 import co.anitrend.arch.extension.dispatchers.contract.ISupportDispatcher
 import co.anitrend.arch.request.callback.RequestCallback
+import co.anitrend.retrofit.graphql.data.arch.controller.SampleEnvelope
 import co.anitrend.retrofit.graphql.data.arch.controller.strategy.ControllerStrategy
 import co.anitrend.retrofit.graphql.data.arch.extensions.controller
+import co.anitrend.retrofit.graphql.data.arch.extensions.mapBody
 import co.anitrend.retrofit.graphql.data.bucket.datasource.remote.BucketRemoteSource
 import co.anitrend.retrofit.graphql.data.bucket.mapper.BucketResponseMapper
+import co.anitrend.retrofit.graphql.data.bucket.model.StorageBucket
 import co.anitrend.retrofit.graphql.data.bucket.source.browse.contract.BucketSource
 import co.anitrend.retrofit.graphql.domain.entities.bucket.BucketFile
 import co.anitrend.retrofit.graphql.model.EmptyGraphQLVariables
 import co.anitrend.retrofit.graphql.model.GraphQLRequest
+import co.anitrend.retrofit.graphql.model.body.GraphContainer
 import co.anitrend.retrofit.graphql.sample.bucket.StorageBucketFiles
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
@@ -32,7 +36,9 @@ internal class BucketSourceImpl(
                     query = StorageBucketFiles.document,
                     operationName = StorageBucketFiles.name,
                 )
-            )
+            ).mapBody<GraphContainer<StorageBucket>, SampleEnvelope<StorageBucket>> {
+                SampleEnvelope.Legacy(it)
+            }
         }
 
         val controller =

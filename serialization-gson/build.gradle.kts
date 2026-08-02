@@ -7,8 +7,11 @@ android {
 }
 
 dependencies {
-    // GraphQLJson interface is exposed in public API
+    // GraphQLTransportCodec contract is exposed in public API
+    api(project(":serialization-api"))
+    // Neutral protocol contracts (GraphQLOperationRequest, GraphQLResponse, ...)
     api(project(":api"))
-    // Gson is exposed in GsonGraphQLJson public constructor
+    // Gson is exposed in the GsonGraphQLTransportCodec public constructor
     api(libs.gson)
+    // The legacy GsonGraphQLJson implementation moved to :compat
 }

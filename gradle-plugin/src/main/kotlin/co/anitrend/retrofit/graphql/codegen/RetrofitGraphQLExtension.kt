@@ -98,18 +98,16 @@ abstract class GraphQLTargetExtension @Inject constructor(val name: String) {
      * Accepted values:
      * - [SerializationBackend.NONE] — No serialization annotations emitted.
      *   Classes are generated as plain data holders. This is the default.
+     *   May be combined with [generateResponses]: response models, including
+     *   plain sealed structures for interface/union types, are emitted
+     *   without any serializer imports or annotations.
      * - [SerializationBackend.KOTLINX] — Emits `@Serializable`, `@SerialName`,
-     *   and polymorphic markers. Required when [generateResponses] is true.
+     *   and polymorphic markers.
      * - [SerializationBackend.GSON] — Emits `@SerializedName` on properties.
      *   Not compatible with [generateResponses] for operations with
      *   interface/union response types (Gson cannot deserialize polymorphic
      *   sealed interfaces needed for GraphQL unions/interfaces).
      *   Concrete-only operations are supported.
-     *
-     * Auto-selection: When set to [SerializationBackend.NONE] (default) and
-     * [generateResponses] is `true`, the codegen automatically selects
-     * [SerializationBackend.KOTLINX]. This is a convenience for consumers
-     * who only want typed responses.
      *
      * Falls back to the common {} block if not set on this target.
      * Default: [SerializationBackend.NONE]
@@ -184,9 +182,10 @@ abstract class CommonExtension {
      *
      * Accepted values: [SerializationBackend.NONE],
      * [SerializationBackend.KOTLINX], [SerializationBackend.GSON].
-     * Default: [SerializationBackend.NONE]. When [SerializationBackend.NONE]
-     * and [generateResponses] is `true`, the codegen auto-selects
-     * [SerializationBackend.KOTLINX].
+     * Default: [SerializationBackend.NONE]. The configured backend is used
+     * as-is: [SerializationBackend.NONE] combined with [generateResponses]
+     * emits plain (unannotated) response models, including plain sealed
+     * structures for abstract types.
      *
      * @see GraphQLTargetExtension.serializationBackend
      */

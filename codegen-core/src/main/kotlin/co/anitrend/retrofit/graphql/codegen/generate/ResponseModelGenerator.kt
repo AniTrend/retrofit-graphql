@@ -41,7 +41,7 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 
 /**
- * Generates kotlinx-serializable response model data classes from a normalized
+ * Generates response model data classes from a normalized
  * [ResponseSelectionSet] produced by
  * [co.anitrend.retrofit.graphql.codegen.parser.ResponseSelectionParser].
  *
@@ -58,7 +58,11 @@ import com.squareup.kotlinpoet.TypeSpec
  * the child's response path and runtime path derived from the current
  * identity. No heuristic fallback searches are used.
  *
- * The [backend] controls which serialization annotations are emitted.
+ * The [backend] controls which serialization annotations are emitted:
+ * [SerializationBackend.NONE] emits plain Kotlin structures (including
+ * plain sealed interfaces for abstract types), [SerializationBackend.KOTLINX]
+ * emits kotlinx.serialization annotations, and [SerializationBackend.GSON]
+ * emits Gson annotations on properties.
  *
  * @property schemaIndex Indexed schema metadata used to resolve type definitions.
  * @property scalarMappings Custom scalar type to Kotlin type mappings.

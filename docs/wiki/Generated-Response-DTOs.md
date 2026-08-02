@@ -1,6 +1,6 @@
 # Generated Response DTOs
 
-When `generateResponses = true` is set in the codegen DSL, the plugin generates response model data classes for each operation's selection set. `KOTLINX` supports concrete, interface, and union response paths. `GSON` supports concrete-only response paths.
+When `generateResponses = true` is set in the codegen DSL, the plugin generates response model data classes for each operation's selection set, annotated per the configured `serializationBackend`. `KOTLINX` supports concrete, interface, and union response paths. `GSON` supports concrete-only response paths. `NONE` emits plain, unannotated data holders (and plain sealed interfaces for abstract types) with no auto-selection.
 
 ## Enabling
 
@@ -8,7 +8,8 @@ When `generateResponses = true` is set in the codegen DSL, the plugin generates 
 retrofitGraphQL {
     common {
         generateResponses.set(true)      // required
-        // serializationBackend auto-selects KOTLINX when set to NONE (default)
+        // serializationBackend is used as-is: NONE stays plain, no auto-selection
+        serializationBackend.set(SerializationBackend.KOTLINX)  // or GSON or NONE
     }
     target("github") {
         schema.set(file("src/main/graphql/schema.graphql"))
@@ -19,7 +20,7 @@ retrofitGraphQL {
 
 ## Generated Output
 
-For each `.graphql` operation, the plugin produces a `{OperationName}Data` root class with nested types for every selected GraphQL object field. The output goes to `build/generated/source/graphql/{targetName}/`.
+For each `.graphql` operation, the plugin produces a `{OperationName}Data` root class with nested types for every selected GraphQL object field. The output goes to `build/generated/source/graphql/{targetName}/`. The examples below show the `KOTLINX` flavor; `GSON` emits `@SerializedName` instead, and `NONE` emits the same shapes with no annotations at all.
 
 ### Example: Simple Query
 
@@ -86,30 +87,45 @@ Generated output includes the root `GetMarketPlaceAppsData` class with nested `M
 
 ## Using in Retrofit
 
-Declare `GraphContainer<GeneratedData>` as the Retrofit return type:
+Declare the neutral contracts as the Retrofit return and body types:
 
 ```kotlin
 internal interface UserRemoteSource {
     @POST("graphql")
     suspend fun getCurrentUser(
-        @Body request: GraphQLRequest<EmptyGraphQLVariables>,
-    ): Response<GraphContainer<GetCurrentUserData>>
+        @Body request: GraphQLOperationRequest<EmptyGraphQLVariables>,
+    ): Response<GraphQLResponse<GetCurrentUserData>>
 }
 
 internal interface MarketPlaceRemoteSource {
     @POST("graphql")
     suspend fun getMarketPlaceApps(
-        @Body request: GraphQLRequest<GetMarketPlaceAppsVariables>,
-    ): Response<GraphContainer<GetMarketPlaceAppsData>>
+        @Body request: GraphQLOperationRequest<GetMarketPlaceAppsVariables>,
+    ): Response<GraphQLResponse<GetMarketPlaceAppsData>>
 }
 ```
+
+Register the explicit-codec factory on Retrofit:
+
+```kotlin
+Retrofit.Builder()
+    .addConverterFactory(
+        GraphQLConverterFactory.create(
+            codec = KotlinxGraphQLTransportCodec(),   // or GsonGraphQLTransportCodec()
+            registry = GeneratedGraphQLRegistry,
+        )
+    )
+    .build()
+```
+
+The neutral response envelope distinguishes a missing `data` entry (`GraphQLData.Absent`) from an explicit `data: null` (`GraphQLData.Present(null)`); error `message` is required and non-null, error `path` is typed (`GraphQLPathSegment.Field`/`Index`), and `extensions` are `GraphQLValue.ObjectValue` trees.
 
 ### Manual Request Construction
 
 For operations without variables, construct the request manually using generated constants:
 
 ```kotlin
-GraphQLRequest<EmptyGraphQLVariables>(
+GraphQLOperationRequest<EmptyGraphQLVariables>(
     query = GetCurrentUser.document,
     operationName = GetCurrentUser.name,
 )
@@ -183,7 +199,7 @@ val bio: String? = null,       // conditional field
 
 ### Polymorphism
 
-GraphQL interfaces and unions generate sealed interfaces with `__typename`-based polymorphism:
+GraphQL interfaces and unions generate sealed interfaces. With `KOTLINX`, dispatch uses `__typename`-based polymorphism:
 
 ```kotlin
 @Serializable
@@ -200,19 +216,29 @@ sealed interface SearchResult {
 
 No manual `Json` configuration is needed. `@JsonClassDiscriminator("__typename")` handles dispatch automatically.
 
-## Serialization Backend
-
-Generated response DTOs use kotlinx.serialization annotations (`@Serializable`, `@SerialName`). The required dependency is:
+With `NONE`, the same shape is emitted as a plain sealed interface with no annotations, serializers, or adapters. The executable document still injects `__typename` on the wire, so a polymorphic-capable runtime codec (or your own dispatch logic) can reconstruct the concrete subtype:
 
 ```kotlin
+// NONE output: plain sealed structure, no annotations
+sealed interface SearchResult {
+    data class UserValue(...) : SearchResult
+    data class RepositoryValue(...) : SearchResult
+}
+```
+
+With `GSON`, abstract response paths fail at codegen time with a path-aware diagnostic; use `KOTLINX` (or `NONE` plus a polymorphic codec) for interface or union response DTOs.
+
+## Serialization Backend
+
+Generated response DTOs carry annotations per the configured `serializationBackend` (`NONE`/`KOTLINX`/`GSON`). The kotlinx dependencies are only required when the generated types use them:
+
+```kotlin
+// Only when serializationBackend = KOTLINX:
 implementation("com.github.AniTrend.retrofit-graphql:serialization-kotlinx:{tag}")
-implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 ```
 
-`kotlinx-serialization-core` is mandatory for v0.13.x modular consumers because the public `:api` transport models are annotated for kotlinx serialization.
-
-Gson is supported for response models only when the operation response selection contains concrete object types. Those DTOs use `@SerializedName` on generated properties and are covered by codegen functional tests. Operations that select GraphQL interfaces or unions generate polymorphic sealed interfaces, which Gson cannot deserialize, so the codegen task fails before writing output and reports the operation name plus the exact abstract response path. Use `KOTLINX` for interface or union response DTOs.
+The public `:api` contracts are backend-neutral and require no serializer dependency. `NONE` needs no serializer at all beyond the runtime codec you register on `GraphQLConverterFactory`.
 
 ## See Also
 

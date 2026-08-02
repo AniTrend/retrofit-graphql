@@ -164,6 +164,33 @@ object CompilationHelper {
 
             /** Empty singleton for tests that need a concrete instance. */
             object EmptyGraphQLVariables : GraphQLVariables
+
+            /** Stub operation contract for test compilation only. */
+            interface GraphQLOperation<TVariables : GraphQLVariables> {
+                val name: String
+                val document: String
+                val sha256Hash: String
+            }
+
+            /** Stub convenience contract for no-variable operations. */
+            interface GraphQLNoVarOperation : GraphQLOperation<EmptyGraphQLVariables>
+            """.trimIndent(),
+        )
+
+        val requestDir = File(stubDir, "request").apply { mkdirs() }
+        val requestStubFile = File(requestDir, "GraphQLOperationRequest.kt")
+        requestStubFile.writeText(
+            """
+            package co.anitrend.retrofit.graphql.model.request
+
+            import co.anitrend.retrofit.graphql.model.GraphQLVariables
+
+            /** Stub backend-neutral request for test compilation only. */
+            data class GraphQLOperationRequest<TVariables : GraphQLVariables>(
+                val query: String,
+                val operationName: String,
+                val variables: TVariables? = null,
+            )
             """.trimIndent(),
         )
 

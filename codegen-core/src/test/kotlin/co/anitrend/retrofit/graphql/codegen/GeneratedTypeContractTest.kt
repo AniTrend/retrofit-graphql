@@ -50,6 +50,10 @@ class GeneratedTypeContractTest {
         assertFalse(variableSource.contains("GraphQLEnums"))
         assertTrue(requestSource.contains("status: Status"))
         assertTrue(enumSource.contains("public enum class Status"))
+
+        // Request helpers use the backend-neutral contract, not legacy GraphQLRequest
+        assertTrue(requestSource.contains("GraphQLOperationRequest<GetItemsVariables>"))
+        assertFalse(requestSource.contains("GraphQLRequest"))
     }
 
     @Test

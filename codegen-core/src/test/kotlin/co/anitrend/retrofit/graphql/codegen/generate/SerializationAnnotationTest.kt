@@ -29,6 +29,7 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -508,6 +509,82 @@ class SerializationAnnotationTest {
         assertFalse(source.contains("@Serializable"))
     }
 
+    @Test
+    fun `abstract response with NONE backend emits plain sealed structure without serialization markers`() {
+        val (schemaIndex, selectionSet) = parseSelectionSet(
+            "fixtures/advanced/unions/ThreeImplementors.graphqls",
+            fixtureText("fixtures/advanced/unions/ThreeImplementors.graphql"),
+            "ThreeImplementors",
+        )
+        val generator = ResponseModelGenerator(schemaIndex, backend = SerializationBackend.NONE)
+        val operation = buildQueryOperation(
+            "ThreeImplementors",
+            fixtureText("fixtures/advanced/unions/ThreeImplementors.graphql"),
+        )
+
+        val fileSpecs = generator.generate(operation, selectionSet, "com.example")
+        val dataClass = fileSpecs.first().members
+            .filterIsInstance<TypeSpec>()
+            .firstOrNull { it.name == "ThreeImplementorsData" }
+        assertNotNull("Should have ThreeImplementorsData", dataClass)
+
+        val sealedIface = dataClass!!.typeSpecs.find {
+            it.modifiers.contains(KModifier.SEALED)
+        }
+        assertNotNull("Should have a sealed interface among: ${dataClass.typeSpecs.map { it.name }}", sealedIface)
+        assertTrue(
+            "Sealed interface must stay a plain interface under NONE (no annotations)",
+            sealedIface!!.annotations.isEmpty(),
+        )
+        assertTrue(sealedIface.modifiers.contains(KModifier.PUBLIC))
+
+        val source = fileSpecs.first().toString()
+        assertFalse(source.contains("@Serializable"))
+        assertFalse(source.contains("@SerialName"))
+        assertFalse(source.contains("@SerializedName"))
+        assertFalse(source.contains("JsonClassDiscriminator"))
+        assertFalse(source.contains("OptIn"))
+        assertFalse(source.contains("kotlinx.serialization"))
+        assertFalse(source.contains("com.google.gson"))
+        // Plain sealed subtypes are still emitted for every possible type
+        assertTrue(source.contains("public sealed interface Result"))
+        assertTrue(source.contains("public data class Success("))
+        assertTrue(source.contains("public data class Failure("))
+        assertTrue(source.contains("public data class Pending("))
+    }
+
+    @Test
+    fun `unselected abstract subtype is emitted as plain empty class when NONE backend`() {
+        val schemaFile = fixtureFile("fixtures/schemas/activity.graphqls")
+        val schemaResult = SchemaParser().parseWithRootTypes(schemaFile)
+        val schemaIndex = SchemaIndex.from(
+            types = schemaResult.types,
+            queryTypeName = schemaResult.queryTypeName,
+            mutationTypeName = schemaResult.mutationTypeName,
+            subscriptionTypeName = schemaResult.subscriptionTypeName,
+        )
+        val document = """
+            query ActivityQuery {
+              activities {
+                ... on ListActivity { status progress }
+                ... on TextActivity { text }
+              }
+            }
+        """.trimIndent()
+        val generator = ResponseModelGenerator(schemaIndex, backend = SerializationBackend.NONE)
+        val operation = buildQueryOperation("ActivityQuery", document)
+
+        val fileSpecs = generator.generate(operation, parseSelectionSetWithIndex(schemaIndex, document, "ActivityQuery"), "com.example")
+        val source = fileSpecs.first().toString()
+
+        assertFalse(source.contains("@Serializable"))
+        assertFalse(source.contains("@SerialName"))
+        assertFalse(source.contains("@SerializedName"))
+        assertTrue(source.contains("public sealed interface Activities"))
+        // MessageActivity is not selected: emitted as a plain empty class
+        assertTrue(source.contains("public class MessageActivity :"))
+    }
+
     // ---- Alias field wireName (Concern 5) ----
 
     @Test
@@ -696,6 +773,14 @@ class SerializationAnnotationTest {
             mutationTypeName = schemaResult.mutationTypeName,
             subscriptionTypeName = schemaResult.subscriptionTypeName,
         )
+        return schemaIndex to parseSelectionSetWithIndex(schemaIndex, queryDocument, operationName)
+    }
+
+    private fun parseSelectionSetWithIndex(
+        schemaIndex: SchemaIndex,
+        queryDocument: String,
+        operationName: String,
+    ): co.anitrend.retrofit.graphql.codegen.model.ResponseSelectionSet {
         val parser = ResponseSelectionParser(schemaIndex)
         val operation = GraphQLOperationInfo(
             name = operationName,
@@ -704,6 +789,6 @@ class SerializationAnnotationTest {
             sourceFile = "$operationName.graphql",
             variables = emptyList(),
         )
-        return schemaIndex to parser.parse(operation)
+        return parser.parse(operation)
     }
 }

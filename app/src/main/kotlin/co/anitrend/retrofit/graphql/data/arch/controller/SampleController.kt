@@ -5,8 +5,6 @@ import co.anitrend.arch.data.mapper.SupportResponseMapper
 import co.anitrend.arch.request.callback.RequestCallback
 import co.anitrend.retrofit.graphql.data.arch.controller.strategy.ControllerStrategy
 import co.anitrend.retrofit.graphql.data.arch.extensions.fetchBodyWithRetry
-import co.anitrend.retrofit.graphql.model.attribute.GraphError
-import co.anitrend.retrofit.graphql.model.body.GraphContainer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.withContext
@@ -16,25 +14,25 @@ internal class SampleController<S, out D> private constructor(
     private val responseMapper: SupportResponseMapper<S, D>,
     private val strategy: ControllerStrategy<D>,
     private val dispatcher: CoroutineDispatcher
-) : ISupportResponse<Deferred<Response<GraphContainer<S>>>, D> {
+) : ISupportResponse<Deferred<Response<SampleEnvelope<S>>>, D> {
 
     @Throws
-    private fun handleErrorsIfExist(errors: List<GraphError>) {
+    private fun handleErrorsIfExist(errors: List<String>) {
         if (errors.isNotEmpty())
             throw Throwable(
-                message = errors.joinToString { "${it.message} ${it.locations}" },
+                message = errors.joinToString(),
                 cause = Throwable("GraphQL endpoint returned error/s")
             )
     }
 
     suspend operator fun invoke(
-        resource: Deferred<Response<GraphContainer<S>>>,
+        resource: Deferred<Response<SampleEnvelope<S>>>,
         requestCallback: RequestCallback,
         interceptor: (S) -> S
     ) = strategy(requestCallback) {
         val responseBody = resource.fetchBodyWithRetry(dispatcher)
         val mapped = withContext(dispatcher) {
-            handleErrorsIfExist(responseBody.errors.orEmpty())
+            handleErrorsIfExist(responseBody.errorMessages)
             responseBody.data?.let {
                 val data = interceptor(it)
                 responseMapper.onResponseMapFrom(data)
@@ -56,7 +54,7 @@ internal class SampleController<S, out D> private constructor(
      * @return resource fetched if present
      */
     override suspend fun invoke(
-        resource: Deferred<Response<GraphContainer<S>>>,
+        resource: Deferred<Response<SampleEnvelope<S>>>,
         requestCallback: RequestCallback
     ) = invoke(resource, requestCallback) { it }
 

@@ -1,76 +1,115 @@
 # Serialization Backends
 
-retrofit-graphql uses a pluggable `GraphQLJson` abstraction for request and response body serialization. Two implementations are provided, and consumers can implement custom backends.
+retrofit-graphql has **two independent serialization layers** that are often confused:
 
-## Built-in Backends
+1. **Code generation annotation setting** (`serializationBackend = NONE | KOTLINX | GSON`) -- controls which annotations the codegen plugin emits on *generated types*.
+2. **Runtime transport codecs** (`GraphQLTransportCodec` implementations) -- control how *requests and responses are serialized on the wire* by the new `GraphQLConverterFactory`.
 
-| Backend | Module | Annotation on Generated Types | Response Models | R8 Safety |
-|---------|--------|------------------------------|----------------|-----------|
-| kotlinx.serialization | `:serialization-kotlinx` | `@Serializable`, `@SerialName` | Supported | Automatic |
-| Gson | `:serialization-gson` | `@SerializedName` | Concrete operations only | Keep rules may be needed |
+They are independent: you can generate plain `NONE` types and decode them with a kotlinx or Gson codec, or generate `@Serializable` types and decode them with either codec. There is also a deprecated third layer, the legacy `GraphQLJson` seam used by `GraphConverter` (shipped from `:compat`).
 
-## kotlinx.serialization (Recommended)
+## Code Generation Setting (`serializationBackend`)
 
-### Setup
+The codegen plugin emits annotations on generated variable classes, input objects, enums, and response models. The setting is strict: the configured value is used as-is and **never auto-selected or upgraded**.
 
-```kotlin
-dependencies {
-    implementation("com.github.AniTrend.retrofit-graphql:runtime:{tag}")
-    implementation("com.github.AniTrend.retrofit-graphql:serialization-kotlinx:{tag}")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
-}
-```
+| Value | Annotations on Generated Types | Response Models | Notes |
+|-------|--------------------------------|-----------------|-------|
+| `NONE` | None | Plain data holders; plain sealed interfaces for abstract types | Strict and plain: no serializer imports, annotations, or adapters, even with `generateResponses = true`. Abstract-type dispatch is then the consumer's or the codec's responsibility. |
+| `KOTLINX` | `@Serializable`, `@SerialName`, `@JsonClassDiscriminator("__typename")` on sealed polymorphism roots | Supported, including interface/union paths | Requires the kotlinx.serialization compiler plugin in the consuming module. |
+| `GSON` | `@SerializedName` on properties | Concrete operations only | Operations with interface/union response paths fail at codegen time with a path-aware diagnostic. |
 
-The `:api` module's public models are kotlinx-enabled in v0.13.x. Keep `kotlinx-serialization-core` on the runtime classpath even when you depend on `:api` directly or use the Gson backend, because those public model classes reference kotlinx serialization annotations and runtime types.
+**Backend-independent outputs**: operation constants (`GraphQLOperations`, `GraphQLDocuments`, `GraphQLHashes`) and the generated document registry (`GeneratedGraphQLRegistry`) carry no serializer types and are identical across backends. The executable documents always inject `__typename` for abstract operations, so the wire payload is the same regardless of the annotation setting.
 
-In your Gradle module, apply the kotlinx.serialization plugin:
+**No backend is preferred.** Capability differences are expected: `KOTLINX` supports polymorphic response DTOs out of the box, `GSON` is concrete-only for responses, and `NONE` delegates everything to your runtime codec. Choose per target based on your model and tooling, not on a notion of a "default".
 
-```kotlin
-plugins {
-    kotlin("plugin.serialization") version "{kotlin_version}"
-}
-```
+## Runtime Transport Codecs (`GraphQLTransportCodec`)
 
-### Converter Wiring
+The backend-neutral `GraphQLConverterFactory` (`:runtime`) requires an explicit `GraphQLTransportCodec` on every creation path. There is **no default codec** and no reflection-based selection:
 
 ```kotlin
-val json = KotlinxGraphQLJson(
-    Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = false
-    }
+val factory = GraphQLConverterFactory.create(
+    codec = KotlinxGraphQLTransportCodec(),   // or GsonGraphQLTransportCodec()
+    registry = GeneratedGraphQLRegistry,      // optional, retained for API parity
 )
+```
+
+### Built-in Codecs
+
+| Codec | Module | Backend | Behavior |
+|-------|--------|---------|----------|
+| `KotlinxGraphQLTransportCodec` | `:serialization-kotlinx` | kotlinx.serialization | Compile-time serializers; `@SerialName` wire names on generated DTOs; R8-safe by default |
+| `GsonGraphQLTransportCodec` | `:serialization-gson` | Gson | Reflection-based; handles all envelope fields; may need consumer-owned keep rules for reflectively deserialized DTOs |
+
+Both codecs implement the same neutral protocol semantics:
+
+- **Request encoding** (`encodeRequest`): writes the `GraphQLOperationRequest` envelope (`query`, `operationName`, `variables`, `extensions`). Typed variables are resolved from the parameterized request type (e.g. `GraphQLOperationRequest<GetMarketPlaceAppsVariables>`).
+- **Response decoding** (`decodeResponse`): parses the `GraphQLResponse` envelope:
+  - `data` missing -> `GraphQLData.Absent`; explicit `data: null` -> `GraphQLData.Present(null)`
+  - `errors` entries require a non-null `message`; optional `locations` and typed `path` (`GraphQLPathSegment.Field`/`Index`)
+  - `extensions` (top-level and per-error) decode to `GraphQLValue.ObjectValue` with exact `BigDecimal` precision
+- **Failure policy**: every failure is wrapped in `GraphQLRequestEncodingException` or `GraphQLResponseDecodingException`; backend exceptions never leak.
+
+### Custom Codecs
+
+Implement `GraphQLTransportCodec` (`:serialization-api`) for any JSON framework. The codec owns:
+
+- **Adapter resolution** for `java.lang.reflect.ParameterizedType` (e.g. `GraphQLResponse<GetCurrentUserData>`)
+- **Wire names** and enum representation
+- **Polymorphism** (e.g. `__typename`-based dispatch for abstract generated types, especially with `serializationBackend = NONE`)
+- **Scalar mapping** and arbitrary `GraphQLValue` handling
+- **R8 rules** for any reflection it relies on
+
+```kotlin
+class MoshiGraphQLTransportCodec(private val moshi: Moshi) : GraphQLTransportCodec {
+    override fun encodeRequest(request: GraphQLOperationRequest<*>, requestType: Type): String =
+        try {
+            // resolve the typed variables adapter from the parameterized requestType
+            // and write the neutral envelope
+            ...
+        } catch (cause: Exception) {
+            throw GraphQLRequestEncodingException(
+                operationName = request.operationName,
+                requestType = requestType,
+                message = "Failed to encode GraphQL request",
+                cause = cause,
+            )
+        }
+
+    override fun <T : Any> decodeResponse(body: String, responseType: Type): T =
+        try {
+            // parse the envelope, resolve the data adapter from responseType,
+            // and build the neutral GraphQLResponse
+            ...
+        } catch (cause: Exception) {
+            throw GraphQLResponseDecodingException(
+                responseType = responseType,
+                message = "Failed to decode GraphQL response",
+                cause = cause,
+            )
+        }
+}
+```
+
+Register it the same way as the built-ins: `GraphQLConverterFactory.create(codec = MoshiGraphQLTransportCodec(moshi), registry = ...)`.
+
+## Legacy `GraphQLJson` Seam (Deprecated, `:compat`)
+
+The deprecated `GraphConverter` path uses a pluggable `GraphQLJson` abstraction instead of the codec SPI. Both implementations ship from `:compat`:
+
+| Backend | Class | Notes |
+|---------|-------|-------|
+| kotlinx.serialization | `KotlinxGraphQLJson` | Parameterized types via the JVM reflection extension; `@Transient` limitations below |
+| Gson | `GsonGraphQLJson` | Handles all fields including `extensions`/`path` |
+
+```kotlin
+// Legacy (deprecated, :compat)
 val converter = GraphConverter.create(
     context = context,
-    json = json,
+    json = KotlinxGraphQLJson(Json { ignoreUnknownKeys = true }),
     registry = GeneratedGraphQLRegistry,
 )
 ```
 
-### Generated Annotations
-
-When `serializationBackend` is `KOTLINX` (or auto-selected), generated types carry:
-
-```kotlin
-@Serializable
-data class GetCurrentUserData(
-    @SerialName("viewer")
-    val viewer: Viewer?,
-)
-```
-
-### What Works
-
-- All generated response DTOs with `@Serializable`
-- `GraphContainer<T>` responses where `T` is `@Serializable`
-- `GraphQLRequest<TVariables>` request serialization
-- `GraphError` and `GraphError.Location` deserialization
-- `EmptyGraphQLVariables` (serializes as `{}`)
-- Parameterized types via `kotlinx.serialization.serializer(type)` (JVM reflection extension)
-- Polymorphic sealed interfaces with `@JsonClassDiscriminator("__typename")`
-
-### Limitations
+### Legacy kotlinx Limitations
 
 | Field | Reason |
 |-------|--------|
@@ -79,117 +118,22 @@ data class GetCurrentUserData(
 | `GraphError.path` (`List<Any>`) | Cannot be statically resolved by compiler plugin |
 | `GraphError.extensions` (`Map<String, Any?>`) | Cannot be statically resolved by compiler plugin |
 
-These fields are marked `@Transient` and are excluded from kotlinx deserialization. Use the Gson backend if you need them preserved exactly on both encode and decode paths.
+These fields are marked `@Transient` and are excluded from kotlinx deserialization on the legacy path. Use the Gson-backed `GsonGraphQLJson` if you need them preserved exactly on both encode and decode. The neutral `GraphQLResponse` contract has no such limitation: extensions and error paths are `GraphQLValue` trees.
 
-### APQ Behavior
+### Legacy APQ Behavior
 
-`GraphQLRequest.withPersistedQuery()` works on the typed kotlinx request path. `GraphQLRequest.extensions` remains `@Transient` on the data class, but `KotlinxGraphQLJson.encode()` merges supported extension values, including `PersistedQuery`, into the outgoing JSON.
+`GraphQLRequest.withPersistedQuery()` works on the typed legacy kotlinx request path: `GraphQLRequest.extensions` remains `@Transient`, but `KotlinxGraphQLJson.encode()` merges supported extension values, including `PersistedQuery`, into the outgoing JSON. On the neutral path, `GraphQLOperationRequest.withPersistedQuery(...)` stores the extension structurally as `GraphQLValue.ObjectValue` and works with every codec.
 
-### R8
+## R8
 
-No custom keep rules are needed. The kotlinx.serialization compiler plugin generates consumer rules that automatically protect `@Serializable` classes and their serial descriptors.
+- **kotlinx.serialization**: the consumer rules ship with the `kotlinx-serialization-core`/`-json` artifacts and protect every `@Serializable` class (generated DTOs, legacy `:compat` models). No library module ships keep rules for these.
+- **Gson**: reflection-based; the sample app needs 2 targeted, app-owned keep rules for its upload path. Custom Gson codecs and `@SerializedName` DTOs need consumer-owned scoped rules.
+- **`EmptyGraphQLVariables`**: a plain object, no rules needed.
 
-## Gson
-
-### Setup
-
-```kotlin
-dependencies {
-    implementation("com.github.AniTrend.retrofit-graphql:runtime:{tag}")
-    implementation("com.github.AniTrend.retrofit-graphql:serialization-gson:{tag}")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
-}
-```
-
-### Converter Wiring
-
-```kotlin
-val json = GsonGraphQLJson(
-    GsonBuilder()
-        .enableComplexMapKeySerialization()
-        .serializeNulls()
-        .create()
-)
-val converter = GraphConverter.create(
-    context = context,
-    json = json,
-    registry = GeneratedGraphQLRegistry,
-)
-```
-
-### Generated Annotations
-
-When `serializationBackend` is `GSON`, generated types carry `@SerializedName`:
-
-```kotlin
-data class GetCurrentUserData(
-    @SerializedName("viewer")
-    val viewer: Viewer?,
-)
-```
-
-### What Works
-
-- All fields on all API types, including `extensions`, `path`
-- Generated response DTOs for operations whose response selection contains only concrete object types
-- `QueryContainerBuilder` (legacy builder flow stays on Gson internally)
-- Multipart upload payloads
-
-### Limitations
-
-| Limitation | Detail |
-|-----------|--------|
-| Interface or union response paths | Not supported. Gson cannot deserialize the generated polymorphic sealed interfaces used for GraphQL interfaces and unions. |
-| R8 | Reflection-based; may need keep rules for serialized classes. |
-
-When `serializationBackend = GSON` and `generateResponses = true`, the codegen task validates each operation before writing output. Concrete-only operations succeed and emit `@SerializedName` response DTOs. Operations with interface or union response paths fail at build time with a diagnostic that includes the operation name and exact response path, for example `Operation 'Search' has abstract type(s) at response path(s): search (SearchResult)`.
-
-Concrete Gson response DTO generation is covered by codegen functional tests. The sample release verification focuses on the kotlinx generated response runtime and the Gson multipart upload path because the sample app does not deserialize generated response DTOs through Gson.
-
-### R8
-
-The sample app requires 2 targeted keep rules for the Gson upload path:
-
-```proguard
--keep class co.anitrend.retrofit.graphql.model.GraphQLRequest {
-    <fields>;
-    <init>(...);
-}
--keep class co.anitrend.retrofit.graphql.sample.bucket.UploadToStorageBucketVariables {
-    <fields>;
-    <init>(...);
-}
-```
-
-The sample release verification covers kotlinx generated response DTOs and the Gson multipart upload path. Concrete Gson response DTO support is covered by codegen functional tests, not by the sample release gate. If your project uses Gson generated response DTOs in release, keep rules should be scoped to the generated DTOs you deserialize reflectively and verified by your own release test or mapping check.
-
-## Custom Backends
-
-Implement `GraphQLJson` for any JSON framework:
-
-```kotlin
-class MoshiGraphQLJson(private val moshi: Moshi) : GraphQLJson {
-    override fun <T : Any> encode(value: T, type: Type?): String {
-        val resolvedType = type ?: value::class.java
-        val adapter = moshi.adapter<T>(resolvedType)
-        return adapter.toJson(value)
-    }
-    override fun <T : Any> decode(json: String, type: Type): T {
-        val adapter = moshi.adapter<T>(type)
-        return adapter.fromJson(json) ?: throw IllegalStateException("Null response")
-    }
-}
-```
-
-Register:
-
-```kotlin
-GraphConverter.create(context, json = MoshiGraphQLJson(moshi), registry = ...)
-```
-
-**Important**: Your `decode(json, type)` implementation must handle `java.lang.reflect.ParameterizedType` when `type` is a generic like `GraphContainer<Foo>`. The type is provided by Retrofit's converter infrastructure.
+See [R8 / ProGuard](R8-ProGuard.md) for details.
 
 ## See Also
 
 - [R8 / ProGuard](R8-ProGuard.md) -- R8 configuration and keep rules
-- [Parameterized Types](Parameterized-Types.md) -- how parameterized types flow through serialization
+- [Parameterized Types](Parameterized-Types.md) -- how parameterized types flow through both serialization layers
+- [Code Generation](Codegen.md) -- the `serializationBackend` codegen setting

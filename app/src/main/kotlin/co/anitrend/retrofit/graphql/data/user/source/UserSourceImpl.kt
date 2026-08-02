@@ -2,8 +2,10 @@ package co.anitrend.retrofit.graphql.data.user.source
 
 import co.anitrend.arch.extension.dispatchers.contract.ISupportDispatcher
 import co.anitrend.arch.request.callback.RequestCallback
+import co.anitrend.retrofit.graphql.data.arch.controller.SampleEnvelope
 import co.anitrend.retrofit.graphql.data.arch.controller.strategy.ControllerStrategy
 import co.anitrend.retrofit.graphql.data.arch.extensions.controller
+import co.anitrend.retrofit.graphql.data.arch.extensions.mapBody
 import co.anitrend.retrofit.graphql.data.authentication.settings.IAuthenticationSettings
 import co.anitrend.retrofit.graphql.data.user.converters.UserEntityConverter
 import co.anitrend.retrofit.graphql.data.user.datasource.local.UserLocalSource
@@ -12,8 +14,10 @@ import co.anitrend.retrofit.graphql.data.user.entity.UserEntity
 import co.anitrend.retrofit.graphql.data.user.mapper.UserResponseMapper
 import co.anitrend.retrofit.graphql.data.user.source.contract.UserSource
 import co.anitrend.retrofit.graphql.model.EmptyGraphQLVariables
-import co.anitrend.retrofit.graphql.model.GraphQLRequest
+import co.anitrend.retrofit.graphql.model.GraphQLResponse
+import co.anitrend.retrofit.graphql.model.request.GraphQLOperationRequest
 import co.anitrend.retrofit.graphql.sample.generated.GetCurrentUser
+import co.anitrend.retrofit.graphql.sample.generated.GetCurrentUserData
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.emitAll
@@ -49,11 +53,13 @@ internal class UserSourceImpl(
         if (authId.isNotEmpty()) return
         val deferred = async {
             remoteSource.getCurrentUser(
-                GraphQLRequest<EmptyGraphQLVariables>(
+                GraphQLOperationRequest<EmptyGraphQLVariables>(
                     query = GetCurrentUser.document,
                     operationName = GetCurrentUser.name,
                 )
-            )
+            ).mapBody<GraphQLResponse<GetCurrentUserData>, SampleEnvelope<GetCurrentUserData>> {
+                SampleEnvelope.Neutral(it)
+            }
         }
 
         val controller =

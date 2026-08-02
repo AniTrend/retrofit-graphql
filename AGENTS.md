@@ -57,24 +57,32 @@ The project is organized into composable modules under the `co.anitrend.retrofit
 | Module | Type | Purpose |
 |--------|------|---------|
 | `:annotations` | Kotlin JVM | `@GraphQuery` annotation (runtime retention) |
-| `:api` | Android | Public API interfaces: `GraphQLOperation`, `GraphQLDocumentRegistry`, `QueryContainerBuilder`, `GraphQLRequest`, `GraphQLVariables`, `GraphContainer`, `GraphQLJson`, `GraphError`, `EmptyGraphQLVariables` |
+| `:api` | Android | Backend-neutral protocol/operation/registry contracts only: `GraphQLOperation`, `GraphQLDocumentRegistry`, `GraphQLVariables`, `EmptyGraphQLVariables`, `GraphQLOperationRequest`, `GraphQLResponse`/`GraphQLData`/`GraphQLResponseError`, `GraphQLValue`, `GraphQLPathSegment`. No Parcelize, no Kotlin serialization, no Gson/Kotlinx, no Android framework types. |
 | `:android-assets` | Android | Runtime asset-based query discovery: `GraphProcessor`, `AssetManagerDiscoveryPlugin`, APQ, logging |
-| `:runtime` | Android | Retrofit `Converter.Factory`: `GraphConverter`, `GraphRequestConverter`, `GraphResponseConverter`. Depends on `:api`, `:android-assets`, `:annotations`. Uses pluggable `GraphQLJson` for serialization. |
+| `:runtime` | Android | Backend-neutral Retrofit `Converter.Factory`: `GraphQLConverterFactory`, `GraphQLRequestConverter`, `GraphQLResponseConverter` (codec-backed via `GraphQLTransportCodec`). No Gson/Kotlinx dependencies; no legacy converter sources. |
+| `:compat` | Android | **Deprecated** legacy implementation module. Owns the serializer/Android-coupled surface with original FQCNs: `GraphConverter`, `GraphRequestConverter`, `GraphResponseConverter`, `GraphErrorUtil`, `GraphQLRequest`, `GraphQLJson`, `GsonGraphQLJson`, `KotlinxGraphQLJson`, `GraphContainer`, `GraphError`, `QueryContainer(Builder)`, persisted-query URL parameter types, `GraphQLResponseException`/helpers, and all 37 `io.github.wax911.library.*` type aliases. Depends on `:api`, `:runtime`, `:android-assets`, `:annotations`, Gson, and kotlinx.serialization. |
 | `:codegen-core` | Kotlin JVM | Code generation engine: parses `.graphql` files with graphql-java, generates Kotlin with KotlinPoet. Uses `SchemaIndex` for typed schema metadata, `GraphQLTypeMapper` for kind-aware mapping, `GraphQLDefaultValueRenderer` for default literals, and `GraphQLTypeUsageValidator` for recursive scalar validation. |
 | `:gradle-plugin` | Gradle Plugin | Plugin `id("co.anitrend.retrofit.graphql.codegen")`. Registers `GenerateGraphQLSourcesTask`, wires output into source sets, owns standalone functional tests, and publishes its own marker/implementation artifacts from the composite build. |
-| `:serialization-gson` | Android | Gson-backed `GraphQLJson` serialization |
-| `:serialization-kotlinx` | Android | kotlinx.serialization-backed `GraphQLJson` |
-| `:library` | Android | **Deprecated** aggregator. Re-exports all modules via `api()`. Contains type aliases from old `io.github.wax911.library` package |
-| `:app` | Android | Sample GitHub API client demonstrating both asset-based and codegen workflows. Uses generated registry, typed request helpers, and explicit multipart upload. |
+| `:serialization-api` | Android | Backend-neutral transport contract: `GraphQLTransportCodec` plus codec exceptions. Depends on `:api` only; no serializer/HTTP/Android framework APIs. |
+| `:serialization-gson` | Android | Gson-backed transport codec: `GsonGraphQLTransportCodec` only. The legacy `GsonGraphQLJson` moved to `:compat`. |
+| `:serialization-kotlinx` | Android | kotlinx.serialization-backed transport codec: `KotlinxGraphQLTransportCodec` only. The legacy `KotlinxGraphQLJson` moved to `:compat`. |
+| `:library` | Android | **Deprecated** aggregate. Re-exports `:compat` plus every module needed by the historical artifact via `api()`. No sources of its own; the `io.github.wax911.library.*` aliases now ship from `:compat`. |
+| `:app` | Android | Sample GitHub API client demonstrating the generated-request path (explicit `GraphQLConverterFactory` + `KotlinxGraphQLTransportCodec` + neutral `GraphQLResponse`/`GraphQLData`) and the legacy asset-based bucket flow through `:compat` (`GraphConverter` + `GraphContainer`). Uses generated registry, typed request helpers, and explicit multipart upload. |
 
 ### Dependency Graph
 
 ```
-:app → :runtime → :api + :android-assets + :annotations (android-assets and annotations pulled transitively via :runtime)
-:app → :serialization-gson/:serialization-kotlinx (optional)
+:app → :runtime → :api + :serialization-api + :android-assets + :annotations (serialization-api for the codec-backed factory; android-assets and annotations pulled transitively via :runtime)
+:app → :compat (legacy GraphConverter/GraphContainer/GraphQLRequest surface for the bucket asset-based flow)
+:app → :serialization-gson/:serialization-kotlinx (optional codec backends)
 :app → :gradle-plugin → :codegen-core (build-time only, generates typed operation helpers)
-:library (deprecated) → api() aggregates all modules above
+:compat → :api + :runtime + :android-assets + :annotations + gson + kotlinx-serialization (legacy implementation only)
+:serialization-api → :api (neutral codec contract, consumed via :library aggregate)
+:serialization-gson/:serialization-kotlinx → :api + :serialization-api + backend (transport codecs only)
+:library (deprecated) → api() aggregates :annotations, :api, :android-assets, :runtime, :compat, :serialization-api, :serialization-gson, :serialization-kotlinx
 ```
+
+**Compatibility guarantee**: every legacy class and alias exists exactly once, at its historical fully qualified name, and is shipped only by `:compat` (reachable through `:library`). `:api`, `:runtime`, `:serialization-api`, and the codec modules never carry a legacy class, so the aggregate classpath has no duplicates. The `io.github.wax911.library.*` names are Kotlin type aliases: each typealias-only source file emits only an empty `*Kt` file-facade class with no members, so no keep rules are needed for them.
 
 ## Build Logic & Conventions
 
@@ -84,9 +92,9 @@ The project is organized into composable modules under the `co.anitrend.retrofit
 - **SDK**: `compileSdk=37`, `minSdk=23`, `targetSdk=37`.
 - **Formatting**: Ktlint via Spotless. License header at `spotless/copyright.kt`.
 - **Publishing**: JitPack. Root modules publish from the main build; the standalone `:gradle-plugin` composite build must also publish separately. `.jitpack.yml` runs both publish commands in a single fail-fast install step using `&&` and `--no-daemon`: `CI=true ./gradlew --no-daemon build publishToMavenLocal && CI=true ./gradlew --no-daemon -p gradle-plugin publishToMavenLocal`. This keeps JitPack from reporting a partial success if the root publication fails, excludes `:app` via `settings.gradle.kts`, and still materializes the plugin marker + implementation artifacts and the included `:codegen-core` dependency. Do not commit Android Studio generated `gradle/gradle-daemon-jvm.properties` unless the CI and JitPack environments are explicitly verified, because JetBrains daemon JVM criteria can force remote toolchain provisioning instead of using JitPack's configured OpenJDK.
-- **CI**: Only `:library` is built/tested in CI environments. It serves as the aggregate facade and transitively builds all sub-modules via `api()` deps. `:app` is excluded in CI (see `settings.gradle.kts`).
-- **Dokka**: Generated via `buildSrc` `AndroidOptions.kt`. Published at `https://anitrend.github.io/retrofit-graphql/`. Currently generates from `:library` only; multi-module Dokka is a planned follow-up.
-- **Codegen DSL**: `serializationBackend` property (`NONE`/`KOTLINX`/`GSON`) on `common {}` and `target {}` blocks controls annotation emission. Auto-selects `KOTLINX` when `generateResponses=true` and `serializationBackend` is `NONE`.
+- **CI**: `android-test.yml` runs `./gradlew test -PincludeSampleApp=true` on every push/PR to `develop`, so every module including `:app` is built and unit-tested in CI. `:app` is only excluded from the default project set via `settings.gradle.kts` when the `CI` env var is set without `includeSampleApp=true` (used by JitPack). `release-r8-verification.yml` additionally runs `:app:releaseR8Verification` (managed-device release instrumentation) on `develop`.
+- **Dokka**: Generated via `buildSrc` `AndroidOptions.kt`; root `build.gradle.kts` aggregates `:annotations`, `:api`, `:android-assets`, `:runtime`, `:compat`, `:codegen-core`, `:serialization-api`, `:serialization-gson`, `:serialization-kotlinx`, and `:library`. Published at `https://anitrend.github.io/retrofit-graphql/`.
+- **Codegen DSL**: `serializationBackend` property (`NONE`/`KOTLINX`/`GSON`) on `common {}` and `target {}` blocks controls annotation emission. The configured backend is used as-is: `NONE` stays `NONE` even with `generateResponses=true`, emitting plain response models (including plain sealed structures for abstract types) with no serializer imports, annotations, or adapters.
 - **Codegen task**: `GenerateGraphQLSourcesTask` uses `@CacheableTask` + `@PathSensitive(RELATIVE)` + sorted inputs for deterministic build cache behavior.
 - **R8**: Sample app enables R8 in release builds (`isMinifyEnabled = true`, `isShrinkResources = true`) with 2 targeted keep rules for Gson upload path. kotlinx.serialization consumer rules are sufficient for generated types.
 
@@ -111,15 +119,14 @@ The project is organized into composable modules under the `co.anitrend.retrofit
 
 ## Testing
 
-- **Unit tests**: JUnit Platform (configured in `buildSrc`), MockK for mocking.
+- **Unit tests**: JUnit 4 (the JUnit Platform is disabled in `buildSrc`; see the `useJUnitPlatform()` note in `AndroidConfiguration.kt`), MockK for mocking.
 - **Focus areas**: annotation processing logic, GraphQL file parsing, variable binding, error handling.
 - **Integration tests**: Retrofit integration with sample operations, multipart uploads, error scenarios.
 - **Sample app**: Manual testing for new features. Ensure it demonstrates all major capabilities.
 
 ## GraphQL File Management
 
-- Sample `.graphql` files in the `:app` module live at `src/main/graphql/` (codegen input) or `src/main/assets/graphql/` (legacy asset-based).
-- Organize by operation type: `queries/`, `mutations/`, `fragments/`.
+- Sample `.graphql` files in the `:app` module live under `src/main/graphql/`: the GitHub schema plus `queries/`, `mutations/`, `fragments/` folders are the codegen input, and the bucket mutation under `mutations/bucket/` is excluded from codegen and served by the legacy asset-based flow through `:compat`.
 - Schema file at `src/main/graphql/schema.graphql` (used by codegen for input object/enum generation).
 - Generated output from codegen plugin at `build/generated/source/graphql/`.
 
@@ -127,7 +134,7 @@ The project is organized into composable modules under the `co.anitrend.retrofit
 
 - **Discovery plugins**: Implement the plugin interface for custom file sources (assets, external storage, network).
 - **Logger**: Implement logger contracts for custom logging frameworks.
-- **Serialization**: Implement `GraphQLJson` for alternative JSON backends (see `:serialization-gson`, `:serialization-kotlinx`). Built-in implementations: `GsonGraphQLJson` (Gson), `KotlinxGraphQLJson` (kotlinx.serialization).
+- **Serialization**: For the deprecated `GraphConverter` path, implement `GraphQLJson` (see `:compat`); built-in implementations: `GsonGraphQLJson`, `KotlinxGraphQLJson`. For the backend-neutral transport path, implement `GraphQLTransportCodec` (see `:serialization-api`); built-in implementations: `GsonGraphQLTransportCodec` (`:serialization-gson`), `KotlinxGraphQLTransportCodec` (`:serialization-kotlinx`).
 
 ## Scope & Limitations
 

@@ -27,16 +27,17 @@ package co.anitrend.retrofit.graphql.codegen.config
  * need the operation constants, registry, and variable types without JSON
  * serialization metadata.
  *
- * When `NONE` is combined with `generateResponses = true`, the codegen
- * auto-selects `KOTLINX` because response models require serialization
- * annotations to be usable.
+ * `NONE` may be combined with `generateResponses = true`: response models,
+ * including sealed interfaces for abstract (interface/union) types, are
+ * emitted as plain Kotlin structures with no serializer imports,
+ * annotations, or adapters. `NONE` is never upgraded to another backend.
  *
  * ### KOTLINX
  * Emits `@Serializable` on classes and sealed interfaces, `@SerialName` on
  * properties and enum constants, and `@JsonClassDiscriminator("__typename")`
- * on sealed polymorphism roots. This is the **recommended** backend for
- * response model generation. kotlinx.serialization is R8-safe by default
- * (no custom keep rules needed for generated types).
+ * on sealed polymorphism roots. It is an optional backend for response model
+ * generation. kotlinx.serialization is R8-safe by default (no custom keep
+ * rules needed for generated types).
  *
  * ### GSON
  * Emits `@SerializedName` on properties and enum constants. Gson does not

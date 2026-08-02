@@ -71,6 +71,13 @@ import java.io.File
  * - Enum classes from schema
  * - Per-operation request helper objects
  *
+ * The [serializationBackend] property controls annotation emission. Under
+ * [SerializationBackend.NONE], generated classes (including response models
+ * and abstract sealed structures) remain plain Kotlin with no serializer
+ * imports, annotations, or adapters. Under [SerializationBackend.KOTLINX] or
+ * [SerializationBackend.GSON], the corresponding annotations are emitted.
+ * NONE is never upgraded to another backend.
+ *
  * Task is cacheable: output depends solely on declared inputs. Input files
  * are sorted before processing to ensure deterministic name allocation and
  * byte-identical output across environments.
@@ -234,8 +241,10 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
         // Generate source files
         val pkg = packageName.get()
 
-        // Resolve and validate serialization backend
-        val backend = resolveBackend()
+        // The configured serialization backend is used as-is. NONE is never
+        // upgraded to another backend: response models, variables, input
+        // objects, and enums are emitted as plain Kotlin under NONE.
+        val backend = serializationBackend.get()
 
         val generatedFiles = mutableListOf<FileSpec>()
 
@@ -281,7 +290,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                 throw GradleException(
                     "generateResponses is enabled but no valid schema file is set. " +
                         "Provide a schema file to generate response models, " +
-                            "or set generateResponses = false.",
+                        "or set generateResponses = false.",
                 )
             } else {
                 generatedFiles.addAll(
@@ -309,27 +318,6 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
             "Generated GraphQL sources for ${typedOps.size} operation(s) " +
                 "in package '$pkg'",
         )
-    }
-
-    /**
-     * Resolves the effective [SerializationBackend] from the Gradle property,
-     * applying backward-compatible auto-selection.
-     *
-     * - If [generateResponses] is `true` and the configured backend is [SerializationBackend.NONE],
-     *   auto-selects [SerializationBackend.KOTLINX] with a warning (backward compatibility).
-     * - Otherwise returns the configured backend.
-     */
-    private fun resolveBackend(): SerializationBackend {
-        val backend = serializationBackend.get()
-        if (generateResponses.get() && backend == SerializationBackend.NONE) {
-            logger.warn(
-                "generateResponses is enabled but serializationBackend is NONE. " +
-                    "Auto-selecting KOTLINX for backward compatibility. " +
-                    "Explicitly set serializationBackend = KOTLINX to silence this warning.",
-            )
-            return SerializationBackend.KOTLINX
-        }
-        return backend
     }
 
     private fun generateVariableArtifacts(
@@ -412,7 +400,7 @@ abstract class GenerateGraphQLSourcesTask : DefaultTask() {
                                 "$path ($type)"
                             } +
                             ". Gson cannot deserialize polymorphic sealed interfaces. " +
-                            "Use SerializationBackend.KOTLINX for this operation.",
+                            "Use SerializationBackend.KOTLINX or SerializationBackend.NONE for this operation.",
                     )
                 }
             }

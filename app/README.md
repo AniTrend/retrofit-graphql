@@ -1,19 +1,20 @@
 # Sample Application
 
-This sample demonstrates retrofit-graphql with build-time code generated types, kotlinx.serialization for response DTOs, Gson for multipart uploads, and R8 in release builds.
+This sample demonstrates retrofit-graphql with build-time code generated types, the backend-neutral converter path, a legacy compatibility flow, Gson for multipart uploads, and R8 in release builds.
 
 ## Architecture
 
-### Serialization Strategy
+### Serialization Strategy (Dual Wiring)
 
-The sample uses **kotlinx.serialization** for the Retrofit response path and **Gson** only for the multipart upload path:
+The sample intentionally demonstrates **both** converter paths, one per endpoint:
 
-| Concern | Backend | Module |
-|---------|---------|--------|
-| GitHub API responses | kotlinx.serialization | `:serialization-kotlinx` |
-| GitHub API requests | kotlinx.serialization | `:serialization-kotlinx` |
-| Multipart upload payloads | Gson | Bundled via `:runtime` |
-| Generated response DTOs | kotlinx.serialization | `@Serializable` from codegen |
+| Endpoint | Converter | Codec / Serializer | Contracts |
+|----------|-----------|--------------------|-----------|
+| GitHub API (market, user) | `GraphQLConverterFactory` (`:runtime`) | `KotlinxGraphQLTransportCodec` (`:serialization-kotlinx`) | `GraphQLOperationRequest` + `GraphQLResponse`/`GraphQLData` (neutral) |
+| Bucket API (asset-based, uploads) | `GraphConverter` (`:compat`, deprecated legacy) | `KotlinxGraphQLJson` (`:compat`) | `GraphQLRequest` + `GraphContainer` (legacy) |
+| Multipart upload payloads | Gson, directly in `UploadMutationHelper` | `Gson` (app dependency) | operations JSON + file map |
+
+The GitHub endpoints demonstrate the new generated-request path: `GraphQLConverterFactory` requires an explicit `GraphQLTransportCodec`, accepts `GraphQLOperationRequest` bodies only, and decodes the neutral `GraphQLResponse` envelope (with `GraphQLData.Absent` vs `Present(null)`, typed error paths, and `GraphQLValue` extensions). The bucket endpoints keep the deprecated `GraphConverter`/`GraphContainer` flow through `:compat` as the legacy asset-based demonstration.
 
 ### Codegen Configuration
 
@@ -26,7 +27,7 @@ retrofitGraphQL {
         generateVariables.set(true)
         generateResponses.set(true)
         serializationBackend.set(SerializationBackend.KOTLINX)
-        // serializationBackend auto-selects KOTLINX when generateResponses=true
+        // serializationBackend is used as-is: NONE stays plain, no auto-selection
     }
     packageName.set("co.anitrend.retrofit.graphql.sample.generated")
     schema.set(file("src/main/graphql/schema.graphql"))
@@ -61,48 +62,83 @@ single<GraphQLDocumentRegistry> {
 
 ### Converter Wiring
 
+The Retrofit builder factory is parameterized by endpoint type (`data/arch/koin/Modules.kt`): GitHub gets the explicit-codec factory, bucket keeps the legacy converter:
+
 ```kotlin
-factory {
-    val graphQLJson = KotlinxGraphQLJson(
-        Json {
-            ignoreUnknownKeys = true
-            encodeDefaults = false
-        }
-    )
-    Retrofit.Builder()
-        .addConverterFactory(RequestBodyPassThroughConverterFactory)
-        .addConverterFactory(
+factory { (endpointType: EndpointType) ->
+    val registry = get<GraphQLDocumentRegistry>()
+
+    val converterFactory =
+        if (endpointType == EndpointType.GITHUB) {
+            // Generated-request path: backend-neutral explicit codec.
+            GraphQLConverterFactory.create(
+                codec = KotlinxGraphQLTransportCodec(
+                    Json { ignoreUnknownKeys = true; encodeDefaults = false }
+                ),
+                registry = registry,
+            )
+        } else {
+            // Bucket asset-based demonstration: legacy GraphConverter via :compat.
+            val level = if (BuildConfig.DEBUG)
+                ILogger.Level.VERBOSE
+            else
+                ILogger.Level.ERROR
+
+            val graphQLJson = KotlinxGraphQLJson(
+                Json { ignoreUnknownKeys = true; encodeDefaults = false }
+            )
             GraphConverter.create(
                 context = androidContext(),
                 json = graphQLJson,
-                registry = get<GraphQLDocumentRegistry>(),
+                registry = registry,
                 level = level,
             )
-        )
+        }
+
+    Retrofit.Builder()
+        .addConverterFactory(RequestBodyPassThroughConverterFactory)
+        .addConverterFactory(converterFactory)
 }
 ```
 
 ### Generated Response DTO Usage
 
+GitHub endpoints use the neutral contracts (see `data/user/datasource/remote/UserRemoteSource.kt` and `data/market/datasource/remote/MarketPlaceRemoteSource.kt`):
+
 ```kotlin
-// Retrofit interface
+// Retrofit interface (generated-request path)
 @POST("graphql")
 suspend fun getCurrentUser(
-    @Body request: GraphQLRequest<EmptyGraphQLVariables>,
-): Response<GraphContainer<GetCurrentUserData>>
+    @Body request: GraphQLOperationRequest<EmptyGraphQLVariables>,
+): Response<GraphQLResponse<GetCurrentUserData>>
 
 // With variables
 @POST("graphql")
 suspend fun getMarketPlaceApps(
-    @Body request: GraphQLRequest<GetMarketPlaceAppsVariables>,
-): Response<GraphContainer<GetMarketPlaceAppsData>>
+    @Body request: GraphQLOperationRequest<GetMarketPlaceAppsVariables>,
+): Response<GraphQLResponse<GetMarketPlaceAppsData>>
 ```
+
+The controller layer adapts both envelopes (`SampleEnvelope.Legacy` for `GraphContainer`, `SampleEnvelope.Neutral` for `GraphQLResponse`) so market, user, and bucket flows share one pipeline.
 
 ### Multipart Upload (Gson Path)
 
-The upload path uses Gson for serializing the operations payload because the upload mutation uses a separate bucket schema. Two R8 keep rules protect the Gson-serialized classes.
+The upload path uses Gson for serializing the operations payload because the upload mutation uses a separate bucket schema and multipart body format. Two app-owned R8 keep rules protect the Gson-serialized classes.
 
 See `app/proguard-rules.pro` and `bucket/UploadMutationHelper.kt`.
+
+## Dependencies
+
+The app depends on the neutral modules plus `:compat` for the legacy bucket flow (see `app/build.gradle.kts`):
+
+```kotlin
+implementation(project(":runtime"))               // GraphQLConverterFactory
+implementation(project(":api"))                    // GraphQLOperationRequest, GraphQLResponse
+implementation(project(":compat"))                 // legacy GraphConverter/GraphContainer/GraphQLRequest/KotlinxGraphQLJson
+implementation(project(":serialization-kotlinx"))  // KotlinxGraphQLTransportCodec
+```
+
+Gson is available to the app directly (shared dependency strategy); it is used only by the upload helper, not by the converter path.
 
 ## GraphQL Files
 
@@ -127,7 +163,7 @@ android {
 }
 ```
 
-Two keep rules in `proguard-rules.pro` for the Gson upload path. Generated types and `@Serializable` API types are protected automatically by kotlinx consumer rules.
+Two app-owned keep rules in `proguard-rules.pro` for the Gson upload path (`GraphQLRequest`, `UploadToStorageBucketVariables`). Generated `@Serializable` types and the legacy `@Serializable` `:compat` models are protected automatically by the kotlinx.serialization artifact consumer rules. The neutral `GraphQLOperationRequest` is deliberately not kept: `verifyReleaseMapping` asserts R8 renames it, proving the generated-request path uses no reflection.
 
 ## Running Tests
 
@@ -165,6 +201,6 @@ managed-device `pixel2api30ReleaseAndroidTest` task against the minified APK.
 
 | Test | Location | Purpose |
 |------|----------|---------|
-| `ResponseDecodingTest` | `app/src/test/` | Validates `KotlinxGraphQLJson.decode` with generated DTOs |
+| `ResponseDecodingTest` | `app/src/test/` | Validates the legacy `KotlinxGraphQLJson.decode` (`:compat`) with generated DTOs through `GraphContainer` |
 | `MapperTest` | `app/src/test/` | Validates response DTO-to-entity mapping |
 | `ReleaseSerializationTest` | `app/src/androidTest/` | Validates serialization against R8-optimized APK on device |

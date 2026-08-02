@@ -28,28 +28,26 @@ internal class DependencyStrategy(
     }
 
     /**
-     * Applies Gson as an [api] dependency. Used by library modules
-     * whose public API signatures expose [com.google.gson.Gson] directly
-     * (e.g. [PersistedQueryUrlParameterBuilder] in :api).
-     *
-     * :app receives Gson as [implementation] instead.
+     * Applies Retrofit and OkHttp as [api] dependencies.
+     * Used by :runtime whose public API signatures expose
+     * [retrofit2.Converter.Factory], [retrofit2.Retrofit], [okhttp3.RequestBody],
+     * and [okhttp3.ResponseBody]. No JSON backend is exposed: the new
+     * codec-backed converter path is backend-neutral.
      */
-    private fun DependencyHandler.applyGsonDependency() {
-        api(project.libs.gson)
+    private fun DependencyHandler.applyRetrofitDependencies() {
+        api(project.libs.square.okhttp)
+        api(project.libs.square.retrofit)
     }
 
     /**
-     * Applies Gson, Retrofit, OkHttp, and converter-gson as [api] dependencies.
-     * Used by :runtime whose public API signatures expose
-     * [retrofit2.Converter.Factory], [retrofit2.Retrofit], [okhttp3.RequestBody],
-     * [okhttp3.ResponseBody], and [com.google.gson.Gson].
-     *
-     * :app receives all three as [implementation] instead.
+     * Applies Gson and converter-gson as [api] dependencies on top of the
+     * Retrofit/OkHttp pair. Used by :compat whose legacy public API exposes
+     * [com.google.gson.Gson] (factory overloads, GsonGraphQLJson,
+     * PersistedQueryUrlParameterBuilder) and the Gson-backed GraphConverter
+     * default path.
      */
-    private fun DependencyHandler.applyRetrofitDependencies() {
+    private fun DependencyHandler.applyGsonRetrofitDependencies() {
         api(project.libs.gson)
-        api(project.libs.square.okhttp)
-        api(project.libs.square.retrofit)
         api(project.libs.square.retrofit.gson.converter)
     }
 
@@ -69,19 +67,27 @@ internal class DependencyStrategy(
         handler.applyDefaultDependencies()
 
         when (project.name) {
-            // :api exposes Gson in PersistedQueryUrlParameterBuilder constructor
-            Modules.Components.Api.id -> handler.applyGsonDependency()
-
-            // :runtime exposes Retrofit, OkHttp, converter-gson, and Gson in
-            // GraphConverter, GraphRequestConverter, GraphResponseConverter
+            // :runtime exposes Retrofit and OkHttp in the codec-backed
+            // GraphQLConverterFactory and converters. No Gson or backend
+            // dependency: serialization is delegated to GraphQLTransportCodec.
             Modules.Components.Runtime.id -> handler.applyRetrofitDependencies()
+
+            // :compat exposes Retrofit, OkHttp, Gson, and converter-gson in
+            // the legacy GraphConverter, GraphRequestConverter,
+            // GraphResponseConverter, and GraphErrorUtil public API.
+            Modules.Components.Compat.id -> {
+                handler.applyRetrofitDependencies()
+                handler.applyGsonRetrofitDependencies()
+            }
 
             // :app consumes all dependencies from above modules but uses
             // implementation scope to avoid leaking them transitively
             Modules.Components.App.id -> handler.applyRetrofitAsImplementation()
 
+            Modules.Components.Api.id,
             Modules.Components.AndroidAssets.id,
             Modules.Components.Library.id,
+            Modules.Components.SerializationApi.id,
             Modules.Components.SerializationGson.id,
             Modules.Components.SerializationKotlinx.id,
             -> { /* Dependencies handled in module build.gradle.kts */ }

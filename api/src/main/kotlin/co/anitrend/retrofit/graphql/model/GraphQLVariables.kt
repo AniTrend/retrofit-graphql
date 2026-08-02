@@ -16,8 +16,6 @@
 
 package co.anitrend.retrofit.graphql.model
 
-import kotlinx.serialization.Serializable
-
 /**
  * Marker interface for generated GraphQL variable classes.
  *
@@ -25,7 +23,7 @@ import kotlinx.serialization.Serializable
  * allowing the runtime to treat them uniformly. Generated variable classes
  * are produced when `generateVariables = true` is set in the codegen DSL.
  *
- * @see GraphQLRequest
+ * @see GraphQLOperationRequest
  * @see EmptyGraphQLVariables
  */
 interface GraphQLVariables
@@ -33,15 +31,18 @@ interface GraphQLVariables
 /**
  * Sentinel type for operations that take no variables.
  *
- * Annotated with [kotlinx.serialization.Serializable] so that it can be
- * serialized as part of `GraphQLRequest<EmptyGraphQLVariables>` by kotlinx.
- * As an `object` (singleton), it serializes to an empty JSON object `{}`.
+ * This is a plain, backend-neutral marker object: it carries no serializer
+ * annotations and no state. It serializes as an empty JSON object `{}` on
+ * any backend (Gson reflects the empty instance, kotlinx.serialization
+ * receives the special case in the legacy [co.anitrend.retrofit.graphql.model.GraphQLJson]
+ * implementation inside `:compat`), and the neutral
+ * [GraphQLOperationRequest] flow never serializes it because no-variable
+ * operations pass a null [GraphQLOperationRequest.variables].
  *
  * Generated operation objects for no-variable queries implement
  * `GraphQLOperation<EmptyGraphQLVariables>` via `GraphQLNoVarOperation`.
  *
- * @see GraphQLRequest
+ * @see GraphQLOperationRequest
  * @see GraphQLVariables
  */
-@Serializable
 object EmptyGraphQLVariables : GraphQLVariables
