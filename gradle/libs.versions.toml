@@ -47,7 +47,7 @@ square-retrofit = "3.0.0"
 square-okhttp = "5.5.0"
 
 graphql-java = "26.1"
-kotlinpoet = "2.3.0"
+kotlinpoet = "2.4.0"
 
 [plugins]
 jetbrains-dokka = { id = "org.jetbrains.dokka", version.ref = "jetbrains-dokka" }
