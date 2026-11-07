@@ -44,7 +44,7 @@ gson = "2.14.0"
 robolectric = "4.17"
 
 square-retrofit = "3.0.0"
-square-okhttp = "5.5.0"
+square-okhttp = "5.5.1"
 
 graphql-java = "26.1"
 kotlinpoet = "2.4.0"
