@@ -30,7 +30,7 @@ coil = "2.7.0"
 
 google-material = "1.14.0"
 
-jetbrains-dokka = "2.2.0"
+jetbrains-dokka = "2.3.0"
 jetbrains-kotlin = "2.4.21"
 symbol-processing = "2.3.13"
 kotlin-metadata-jvm = "2.4.21"
